@@ -28,15 +28,26 @@ import { ApiError } from "@/lib/api/types";
 import type { FlowGraph } from "@/lib/followup/graph-schema";
 import type { PublishValidationError } from "@/lib/followup/validate-publish";
 import { useT } from "@/hooks/i18n/useT";
+import { useRouter } from "next/navigation";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   useDisableFollowupFlow,
   usePublishFollowupFlow,
   useRollbackFollowupFlow,
   useSaveFollowupFlowDraft,
   useUpdateHandoffPolicy,
+  useDuplicateFollowupFlow,
+  useRenameFollowupFlow,
   type FollowupFlowDetailRow,
 } from "@/hooks/followup/useFollowupFlow";
-import { Trash, TreeStructure } from "@/lib/ui/icons";
+import { Trash, TreeStructure, Copy, PencilSimple } from "@/lib/ui/icons";
 import { FlowStatusBadge } from "../../_components/FlowStatusBadge";
 import { DeleteFollowupFlowButton } from "../../_components/DeleteFollowupFlowButton";
 import { TriggerConfigControl } from "./TriggerConfigControl";
@@ -75,15 +86,40 @@ export function PublishBar({
   canAutoFit = false,
 }: Props) {
   const t = useT();
+  const router = useRouter();
+  const [openRename, setOpenRename] = useState(false);
+  const [newName, setNewName] = useState(flow.name);
   const [openDeleteSelection, setOpenDeleteSelection] = useState(false);
+
   const save = useSaveFollowupFlowDraft(flowId);
   const publish = usePublishFollowupFlow(flowId);
   const disable = useDisableFollowupFlow(flowId);
   const rollback = useRollbackFollowupFlow(flowId);
   const handoffPolicy = useUpdateHandoffPolicy(flowId);
+  const duplicate = useDuplicateFollowupFlow();
+  const rename = useRenameFollowupFlow(flowId);
 
   const onSave = () => {
     save.mutate(graph, { onSuccess: () => onSaved(graph) });
+  };
+
+  const onDuplicate = () => {
+    duplicate.mutate(flowId, {
+      onSuccess: (duplicated) => {
+        router.push(`/app/ai/followups/${duplicated.id}`);
+      },
+    });
+  };
+
+  const onRenameSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newName.trim() || newName.trim() === flow.name) {
+      setOpenRename(false);
+      return;
+    }
+    rename.mutate(newName.trim(), {
+      onSuccess: () => setOpenRename(false),
+    });
   };
 
   const onPublish = async () => {
@@ -124,12 +160,25 @@ export function PublishBar({
     rollback.mutate(flow.previous_version_id);
   };
 
-  const busy = save.isPending || publish.isPending || disable.isPending || rollback.isPending;
+  const busy = save.isPending || publish.isPending || disable.isPending || rollback.isPending || duplicate.isPending || rename.isPending;
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-surface px-4 py-3">
       <div className="flex items-center gap-2">
         <h1 className="text-sm font-semibold text-text">{flow.name}</h1>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6 text-text-muted hover:text-text"
+          onClick={() => {
+            setNewName(flow.name);
+            setOpenRename(true);
+          }}
+          title={t("Renomear fluxo")}
+        >
+          <PencilSimple size={14} />
+        </Button>
         <FlowStatusBadge status={flow.status} />
         {dirty && (
           <Badge variant="warning" data-testid="dirty-indicator">
@@ -137,6 +186,33 @@ export function PublishBar({
           </Badge>
         )}
       </div>
+
+      <Dialog open={openRename} onOpenChange={setOpenRename}>
+        <DialogContent className="sm:max-w-[425px]">
+          <form onSubmit={onRenameSubmit}>
+            <DialogHeader>
+              <DialogTitle>{t("Renomear Fluxo")}</DialogTitle>
+            </DialogHeader>
+            <div className="py-4 space-y-2">
+              <Input
+                value={newName}
+                maxLength={80}
+                onChange={(e) => setNewName(e.target.value)}
+                placeholder={t("Nome do fluxo")}
+                autoFocus
+              />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setOpenRename(false)}>
+                {t("Cancelar")}
+              </Button>
+              <Button type="submit" disabled={rename.isPending || !newName.trim()}>
+                {rename.isPending ? t("Salvando…") : t("Salvar")}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <div className="flex flex-wrap items-center gap-2">
         <TriggerConfigControl flowId={flowId} triggerConfig={flow.trigger_config} />
@@ -153,6 +229,18 @@ export function PublishBar({
             ))}
           </SelectContent>
         </Select>
+
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={busy}
+          onClick={onDuplicate}
+          title={t("Criar uma cópia deste fluxo")}
+        >
+          <Copy size={14} className="mr-1" />
+          {t("Duplicar")}
+        </Button>
 
         <Button type="button" variant="secondary" size="sm" disabled={!dirty || busy} onClick={onSave}>
           {save.isPending ? t("Salvando…") : t("Salvar")}

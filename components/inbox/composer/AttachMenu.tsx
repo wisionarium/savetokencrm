@@ -4,16 +4,17 @@ import { useT } from "@/hooks/i18n/useT";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { FileText, ImageSquare, Plus, UserCircle } from "@/lib/ui/icons";
+import { FileText, FlowArrow, ImageSquare, Plus, UserCircle } from "@/lib/ui/icons";
 
 interface Props {
   disabled?: boolean;
   onPick: (file: File) => void;
   onPickContact?: () => void;
+  onPickFlow?: () => void;
 }
 
-/** Menu "+" do composer (padrão WhatsApp): Fotos e vídeos / Documento / Contato. */
-export function AttachMenu({ disabled, onPick, onPickContact }: Props) {
+/** Menu "+" do composer (padrão WhatsApp): Fotos e vídeos / Documento / Contato / Fluxo de disparo. */
+export function AttachMenu({ disabled, onPick, onPickContact, onPickFlow }: Props) {
   const t = useT();
   const mediaRef = useRef<HTMLInputElement | null>(null);
   const docRef = useRef<HTMLInputElement | null>(null);
@@ -64,6 +65,16 @@ export function AttachMenu({ disabled, onPick, onPickContact }: Props) {
             >
               <UserCircle size={18} weight="duotone" className="text-primary" aria-hidden />
               {t("Contato")}
+            </button>
+          )}
+          {onPickFlow && (
+            <button
+              type="button"
+              className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm hover:bg-muted"
+              onClick={onPickFlow}
+            >
+              <FlowArrow size={18} weight="duotone" className="text-primary" aria-hidden />
+              {t("Fluxo de disparo")}
             </button>
           )}
         </PopoverContent>

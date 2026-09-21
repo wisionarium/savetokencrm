@@ -75,6 +75,11 @@ function SeletorDeModelo({
   );
 }
 
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { createClient } from "@/lib/supabase/browser";
+import { UploadSimple, X as ClearIcon, ImageSquare, CircleNotch } from "@/lib/ui/icons";
+
 export function ActionForm({
   config,
   onChange,
@@ -85,6 +90,10 @@ export function ActionForm({
   const t = useT();
   const [mode, setMode] = useState(config.mode);
   const [body, setBody] = useState(config.mode === "text" ? config.body : "");
+  const [mediaUrl, setMediaUrl] = useState(
+    config.mode === "text" ? (config as { media_url?: string }).media_url ?? "" : "",
+  );
+  const [isUploading, setIsUploading] = useState(false);
   const [promptHint, setPromptHint] = useState(config.mode === "ai_message" ? config.prompt_hint : "");
   const [fallbackTemplateId, setFallbackTemplateId] = useState(
     config.mode === "ai_message" ? (config.fallback_template_id ?? "") : "",
@@ -95,13 +104,18 @@ export function ActionForm({
   const commit = (next: {
     mode: ModoDaAcao;
     body: string;
+    mediaUrl: string;
     promptHint: string;
     fallbackTemplateId: string;
     templateId: string;
   }) => {
     const candidate =
       next.mode === "text"
-        ? { mode: "text" as const, body: next.body }
+        ? {
+            mode: "text" as const,
+            body: next.body,
+            ...(next.mediaUrl.trim() ? { media_url: next.mediaUrl.trim() } : {}),
+          }
         : next.mode === "ai_message"
           ? {
               mode: "ai_message" as const,
@@ -109,6 +123,7 @@ export function ActionForm({
               ...(next.fallbackTemplateId.trim() ? { fallback_template_id: next.fallbackTemplateId } : {}),
             }
           : { mode: "template" as const, template_id: next.templateId };
+
     const parsed = actionConfigSchema.safeParse(candidate);
     if (!parsed.success) {
       setError(parsed.error.issues[0]?.message ?? t("Configuração inválida."));
@@ -118,10 +133,50 @@ export function ActionForm({
     onChange(parsed.data);
   };
 
-  const fields = { body, promptHint, fallbackTemplateId, templateId };
+  const fields = { body, mediaUrl, promptHint, fallbackTemplateId, templateId };
+
+  const handleFileUpload = async (file: File) => {
+    if (!file.type.startsWith("image/")) return;
+    setIsUploading(true);
+    setError(null);
+    try {
+      const supabase = createClient();
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `dispatch-flows/${Date.now()}-${Math.random().toString(36).substring(2, 7)}.${ext}`;
+      const { error: uploadErr } = await supabase.storage.from("whatsapp-media").upload(path, file);
+      if (uploadErr) {
+        setError(uploadErr.message);
+        return;
+      }
+      const { data: publicData } = supabase.storage.from("whatsapp-media").getPublicUrl(path);
+      const url = publicData.publicUrl;
+      setMediaUrl(url);
+      commit({ mode, ...fields, mediaUrl: url });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item?.type.includes("image")) {
+        const file = item.getAsFile();
+        if (file) {
+          e.preventDefault();
+          void handleFileUpload(file);
+          break;
+        }
+      }
+    }
+  };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" onPaste={handlePaste}>
       <div className="space-y-2">
         <Label htmlFor="action-mode">{t("Como escrever a mensagem")}</Label>
         <Select
@@ -146,21 +201,94 @@ export function ActionForm({
       </div>
 
       {mode === "text" ? (
-        <div className="space-y-2">
-          <Label htmlFor="action-body">{t("Texto enviado ao contato")}</Label>
-          <Textarea
-            id="action-body"
-            maxLength={4000}
-            value={body}
-            onChange={(e) => {
-              setBody(e.target.value);
-              commit({ mode, ...fields, body: e.target.value });
-            }}
-          />
-          <p className="text-xs text-text-muted">
-            {t("Sai exatamente assim, sem IA. No laço,")} {t("{{volta}}")} e {t("{{voltas}}")} {t("viram o número da volta.")}
-          </p>
-        </div>
+        <>
+          <div className="space-y-2 rounded-lg border border-border p-3 bg-muted/10">
+            <div className="flex items-center justify-between">
+              <Label className="flex items-center gap-1.5 text-xs font-semibold">
+                <ImageSquare size={16} className="text-accent" />
+                {t("Imagem do produto (opcional)")}
+              </Label>
+              {mediaUrl && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2 text-xs text-destructive"
+                  onClick={() => {
+                    setMediaUrl("");
+                    commit({ mode, ...fields, mediaUrl: "" });
+                  }}
+                >
+                  <ClearIcon size={12} className="mr-1" />
+                  {t("Remover")}
+                </Button>
+              )}
+            </div>
+
+            {mediaUrl ? (
+              <div className="relative overflow-hidden rounded border border-border bg-black/5">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={mediaUrl} alt="Preview" className="h-32 w-full object-cover rounded" />
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="url"
+                    placeholder={t("Cole a URL da imagem ou dê Ctrl+V...")}
+                    value={mediaUrl}
+                    className="text-xs"
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setMediaUrl(val);
+                      commit({ mode, ...fields, mediaUrl: val });
+                    }}
+                  />
+                  <label className="cursor-pointer shrink-0">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="sr-only"
+                      disabled={isUploading}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) void handleFileUpload(file);
+                      }}
+                    />
+                    <div className="flex h-9 items-center gap-1 rounded-md border border-input bg-background px-3 text-xs font-medium hover:bg-accent hover:text-accent-foreground">
+                      {isUploading ? (
+                        <CircleNotch size={14} className="animate-spin" />
+                      ) : (
+                        <UploadSimple size={14} />
+                      )}
+                      <span>{t("Upload")}</span>
+                    </div>
+                  </label>
+                </div>
+                <p className="text-[11px] text-text-muted">
+                  {t("Você pode colar uma imagem (Ctrl+V), escolher um arquivo local do PC/Celular ou colar um link.")}
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="action-body">{t("Texto com especificações")}</Label>
+            <Textarea
+              id="action-body"
+              maxLength={4000}
+              rows={4}
+              value={body}
+              onChange={(e) => {
+                setBody(e.target.value);
+                commit({ mode, ...fields, body: e.target.value });
+              }}
+            />
+            <p className="text-xs text-text-muted">
+              {t("Sai exatamente assim, sem IA.")}
+            </p>
+          </div>
+        </>
       ) : mode === "ai_message" ? (
         <>
           <div className="space-y-2">

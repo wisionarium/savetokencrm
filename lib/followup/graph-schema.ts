@@ -232,6 +232,7 @@ export const actionConfigSchema = z.discriminatedUnion('mode', [
   z.strictObject({
     mode: z.literal('text'),
     body: z.string().min(1).max(4000),
+    media_url: z.string().max(1000).optional(),
   }),
   z.strictObject({
     mode: z.literal('ai_message'),

@@ -7196,6 +7196,7 @@ create table if not exists followup_flow_pointers (
   draft_graph jsonb,
   handoff_policy text not null default 'pause' check (handoff_policy in ('pause','cancel','allow')),
   trigger_config jsonb not null default '{"kind":"manual"}',
+  inbox_enabled boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique (organization_id, name)

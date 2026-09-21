@@ -213,15 +213,17 @@ function FlowCanvasInner({ flowId, initialData }: Props) {
     [setEdges, nodes],
   );
 
+  const isDispatchFlow = Boolean(initialData.inbox_enabled || flow?.inbox_enabled);
+
   const addNodeAt = useCallback(
-    (type: NodeType, position: { x: number; y: number }) => {
+    (type: NodeType, position: { x: number; y: number }, presetConfig?: Record<string, unknown>) => {
       const visual = NODE_VISUALS[type];
       const id = `${type}-${nextId.current++}`;
       const newNode: RFNode = {
         id,
         type,
         position,
-        data: { label: t(visual.defaultLabel), config: visual.defaultConfig() },
+        data: { label: t(visual.defaultLabel), config: (presetConfig ?? visual.defaultConfig()) as RFNodeData["config"] },
       };
       setNodes((nds) => nds.concat(newNode));
     },
@@ -229,9 +231,9 @@ function FlowCanvasInner({ flowId, initialData }: Props) {
   );
 
   const onPaletteAdd = useCallback(
-    (type: NodeType) => {
+    (type: NodeType, presetConfig?: Record<string, unknown>) => {
       const index = nodes.length;
-      addNodeAt(type, { x: 80 + (index % 4) * 220, y: 80 + Math.floor(index / 4) * 150 });
+      addNodeAt(type, { x: 80 + (index % 4) * 220, y: 80 + Math.floor(index / 4) * 150 }, presetConfig);
     },
     [nodes.length, addNodeAt],
   );
@@ -290,8 +292,17 @@ function FlowCanvasInner({ flowId, initialData }: Props) {
       e.preventDefault();
       const type = e.dataTransfer.getData(DND_MIME) as NodeType | "";
       if (!type) return;
+      const rawConfig = e.dataTransfer.getData("application/x-followup-node-config");
+      let presetConfig: Record<string, unknown> | undefined;
+      if (rawConfig) {
+        try {
+          presetConfig = JSON.parse(rawConfig) as Record<string, unknown>;
+        } catch {
+          // fallback default
+        }
+      }
       const position = screenToFlowPosition({ x: e.clientX, y: e.clientY });
-      addNodeAt(type, position);
+      addNodeAt(type, position, presetConfig);
     },
     [screenToFlowPosition, addNodeAt],
   );
@@ -314,7 +325,7 @@ function FlowCanvasInner({ flowId, initialData }: Props) {
         />
       )}
       <div className="flex flex-1 overflow-hidden">
-        <NodePalette onAdd={onPaletteAdd} />
+        <NodePalette onAdd={onPaletteAdd} isDispatchFlow={isDispatchFlow} />
         {/* Abaixo de `lg` a paleta fixa de 224px não cabe do lado do canvas —
             vira um drawer, disparado por este botão flutuante. */}
         <Sheet open={paletteOpen} onOpenChange={setPaletteOpen}>
@@ -322,8 +333,9 @@ function FlowCanvasInner({ flowId, initialData }: Props) {
             <SheetTitle className="sr-only">{t("Adicionar nó")}</SheetTitle>
             <NodePalette
               variant="mobile"
-              onAdd={(type) => {
-                onPaletteAdd(type);
+              isDispatchFlow={isDispatchFlow}
+              onAdd={(type, presetConfig) => {
+                onPaletteAdd(type, presetConfig);
                 setPaletteOpen(false);
               }}
             />
@@ -343,15 +355,9 @@ function FlowCanvasInner({ flowId, initialData }: Props) {
             onPaneClick={onPaneClick}
             defaultEdgeOptions={{ type: "smoothstep" }}
             connectionLineType={ConnectionLineType.SmoothStep}
-            // Enquadrar só o que já existia ao abrir. Num fluxo vazio o XYFlow
-            // guarda o enquadramento para quando o PRIMEIRO nó for medido — e
-            // enquadrar um nó só é ampliá-lo ao zoom máximo (2x): quem acabou de
-            // criar o fluxo clica em "Gatilho" e a tela salta para 200%, com os
-            // nós seguintes nascendo fora da vista (medido no trace do e2e
-            // followup-cartoes: scale 1 → 2 logo após o primeiro clique).
             fitView={initial.nodes.length > 0}
           >
-            <Background />
+            {!isDispatchFlow && <Background />}
             <Controls />
           </ReactFlow>
           <Button

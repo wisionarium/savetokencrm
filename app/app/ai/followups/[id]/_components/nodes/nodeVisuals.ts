@@ -1,6 +1,6 @@
 import type { ComponentType } from "react";
 
-import { Play, Clock, GitBranch, Brain, ChatCircle, ArrowsClockwise, PaperPlaneTilt, Flag } from "@/lib/ui/icons";
+import { Play, Clock, GitBranch, Brain, ChatCircle, ArrowsClockwise, PaperPlaneTilt, Flag, ImageSquare } from "@/lib/ui/icons";
 import type { FlowNode, NodeType } from "@/lib/followup/graph-schema";
 import { RESULTADOS_DO_FIM } from "@/lib/followup/vocabulario";
 
@@ -129,6 +129,16 @@ export const NODE_VISUALS: Record<NodeType, NodeVisual> = {
     defaultLabel: "Fim do fluxo",
     defaultConfig: () => ({ outcome: "exhausted" }),
   },
+};
+
+export const IMAGE_NODE_VISUAL: NodeVisual = {
+  type: "action",
+  paletteLabel: "Imagem",
+  icon: ImageSquare,
+  chipClassName: "bg-info-bg text-info-fg",
+  borderClassName: "border-l-info",
+  defaultLabel: "Enviar Imagem",
+  defaultConfig: () => ({ mode: "text", body: "Especificações do produto...", media_url: "" }),
 };
 
 export const NODE_VISUAL_LIST = Object.values(NODE_VISUALS);

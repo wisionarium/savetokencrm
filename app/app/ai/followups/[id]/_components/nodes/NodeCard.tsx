@@ -41,6 +41,7 @@ interface Props {
    * sem nome trocaria um problema por outro.
    */
   branches?: FlowBranch[];
+  children?: React.ReactNode;
 }
 
 /**
@@ -68,6 +69,7 @@ export function NodeCard({
   showTarget = true,
   showSource = true,
   branches,
+  children,
 }: Props) {
   const t = useT();
   const { nomes } = useEtapasDoFluxo();
@@ -107,6 +109,7 @@ export function NodeCard({
           </p>
         </div>
       </div>
+      {children && <div className="px-3 pb-2.5 pt-0">{children}</div>}
       {hasError && (
         <p
           className="border-t border-error/30 px-3 py-1.5 text-xs leading-snug text-error-fg"

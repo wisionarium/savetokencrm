@@ -11,18 +11,13 @@ import { QueueTab } from "./_components/QueueTab";
 
 export const dynamic = "force-dynamic";
 
-const FLOW_COLUMNS = "id, name, status, active_version_id, handoff_policy, updated_at";
+const FLOW_COLUMNS = "id, name, status, active_version_id, handoff_policy, inbox_enabled, updated_at";
 
 export default async function FollowupFlowsPage() {
   const user = await requireAuth();
-  // `t` local em vez do hook: esta página é componente de SERVIDOR, e lá o
-  // idioma vem resolvido em `user.idioma` (a cadeia pessoa → organização →
-  // padrão vive em `lib/auth/server.ts`).
   const t = (texto: string) => traduzir(texto, user.idioma);
   const activeOrg = await resolveActiveOrg(user);
   if (!activeOrg) redirect("/app");
-  // Fluxos (edição) segue exigindo manager+; a Fila (leitura) é de qualquer
-  // member — o gate por tela fica dentro das abas (canWrite), não na rota.
 
   const supabase = await createClient();
   const { data } = await supabase
@@ -46,11 +41,15 @@ export default async function FollowupFlowsPage() {
       </header>
       <Tabs defaultValue="fluxos" className="flex flex-1 flex-col">
         <TabsList>
-          <TabsTrigger value="fluxos">{t("Fluxos")}</TabsTrigger>
-          <TabsTrigger value="fila">Fila</TabsTrigger>
+          <TabsTrigger value="fluxos">{t("Fluxos de IA")}</TabsTrigger>
+          <TabsTrigger value="disparo">{t("Fluxos de disparo")}</TabsTrigger>
+          <TabsTrigger value="fila">{t("Fila")}</TabsTrigger>
         </TabsList>
         <TabsContent value="fluxos">
-          <FlowsList initialData={flows} canWrite={canWrite} />
+          <FlowsList initialData={flows} canWrite={canWrite} filterMode="ai" />
+        </TabsContent>
+        <TabsContent value="disparo">
+          <FlowsList initialData={flows} canWrite={canWrite} filterMode="disparo" />
         </TabsContent>
         <TabsContent value="fila">
           <QueueTab canWrite={canWrite} />

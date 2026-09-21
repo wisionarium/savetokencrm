@@ -13,6 +13,7 @@ export interface FollowupFlowPointerRow {
   status: FollowupFlowStatus;
   active_version_id: string | null;
   handoff_policy: string;
+  inbox_enabled: boolean;
   updated_at: string;
 }
 
@@ -62,3 +63,32 @@ export function useCreateFollowupFlow() {
     },
   });
 }
+
+export function useUpdateFollowupFlow() {
+  const t = useT();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["followup", "flows", "update"],
+    mutationFn: async ({
+      id,
+      patch,
+    }: {
+      id: string;
+      patch: { name?: string; status?: FollowupFlowStatus; inbox_enabled?: boolean };
+    }) => {
+      const res = await apiClient.patch<SingleResponse>(`/api/v1/ai/followup-flows/${id}`, patch);
+      return res.data;
+    },
+    onSuccess: (updated) => {
+      qc.setQueryData<FollowupFlowPointerRow[]>(followupFlowsListQueryKey, (prev) =>
+        prev ? prev.map((item) => (item.id === updated.id ? { ...item, ...updated } : item)) : [updated],
+      );
+      qc.invalidateQueries({ queryKey: followupFlowsListQueryKey });
+      toast.success(t("Fluxo atualizado."));
+    },
+    onError: (err) => {
+      showApiError(err);
+    },
+  });
+}
+

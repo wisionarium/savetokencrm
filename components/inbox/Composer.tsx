@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { AttachMenu } from "@/components/inbox/composer/AttachMenu";
 import { AttachmentPreviewDialog } from "@/components/inbox/composer/AttachmentPreviewDialog";
 import { ContactPickerDialog } from "@/components/inbox/composer/ContactPickerDialog";
+import { DispatchFlowsDialog } from "@/components/inbox/composer/DispatchFlowsDialog";
 import { AudioRecorder } from "@/components/inbox/composer/AudioRecorder";
 import { ReplyReviewPanel } from "@/components/inbox/composer/ReplyReviewPanel";
 import { EmojiButton } from "@/components/inbox/composer/EmojiButton";
@@ -77,6 +78,7 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
   const [text, setText] = useState("");
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [contactPickerOpen, setContactPickerOpen] = useState(false);
+  const [dispatchFlowsOpen, setDispatchFlowsOpen] = useState(false);
   const [menuDismissed, setMenuDismissed] = useState(false);
   const [mode, setMode] = useState<"reply" | "note">("reply");
   const taRef = useRef<HTMLTextAreaElement | null>(null);
@@ -212,6 +214,10 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
           query={slash.query}
           templates={templates.data ?? []}
           onPick={applyTemplate}
+          onPickFlow={() => {
+            setDispatchFlowsOpen(true);
+            setMenuDismissed(true);
+          }}
           onClose={() => setMenuDismissed(true)}
         />
         <div className="mb-1.5 flex gap-1">
@@ -276,6 +282,7 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
               disabled={respostaBarrada}
               onPick={setPendingFile}
               onPickContact={() => setContactPickerOpen(true)}
+              onPickFlow={() => setDispatchFlowsOpen(true)}
             />
           )}
           <EmojiButton
@@ -398,6 +405,11 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
             { onSuccess: () => setContactPickerOpen(false) },
           );
         }}
+      />
+      <DispatchFlowsDialog
+        open={dispatchFlowsOpen}
+        onOpenChange={setDispatchFlowsOpen}
+        conversationId={conversationId}
       />
     </>
   );

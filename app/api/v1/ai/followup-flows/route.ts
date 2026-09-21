@@ -16,7 +16,7 @@ import { traduzir } from "@/lib/i18n/dicionario";
 
 export const dynamic = "force-dynamic";
 
-const LIST_COLUMNS = "id, name, status, active_version_id, handoff_policy, updated_at";
+const LIST_COLUMNS = "id, name, status, active_version_id, handoff_policy, inbox_enabled, updated_at";
 
 export async function GET(_req?: NextRequest): Promise<Response> {
   const requestId = randomUUID();
@@ -62,7 +62,14 @@ export async function POST(req: NextRequest): Promise<Response> {
   const supabase = await createClient();
   const { data: created, error: insErr } = await supabase
     .from("followup_flow_pointers")
-    .insert({ organization_id: activeOrg.orgId, name: parsed.data.name })
+    .insert({
+      organization_id: activeOrg.orgId,
+      name: parsed.data.name,
+      ...(parsed.data.inbox_enabled !== undefined ? { inbox_enabled: parsed.data.inbox_enabled } : {}),
+      ...(parsed.data.status ? { status: parsed.data.status } : {}),
+      ...(parsed.data.trigger_config ? { trigger_config: parsed.data.trigger_config as object } : {}),
+      ...(parsed.data.draft_graph ? { draft_graph: parsed.data.draft_graph } : {}),
+    })
     .select("*")
     .single();
 

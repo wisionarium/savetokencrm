@@ -13,6 +13,10 @@ export type FollowupFlowSurface = (typeof FOLLOWUP_FLOW_SURFACES)[number];
 
 export const createFollowupFlowSchema = z.strictObject({
   name: z.string().trim().min(1).max(80),
+  inbox_enabled: z.boolean().optional(),
+  status: z.enum(["draft", "active", "disabled"]).optional(),
+  trigger_config: z.unknown().optional(),
+  draft_graph: flowGraphSchema.optional(),
 });
 
 // `cancel_on_reply` (Task 5.2 — reatividade): se true, um enrollment `waiting_reply`
@@ -77,9 +81,11 @@ export const instalarModeloSchema = z.strictObject({
 
 export const patchFollowupFlowSchema = z.strictObject({
   name: z.string().trim().min(1).max(80).optional(),
+  status: z.enum(["draft", "active", "disabled"]).optional(),
   draft_graph: flowGraphSchema.optional(),
   handoff_policy: z.enum(["pause", "cancel", "allow"]).optional(),
   trigger_config: triggerConfigSchema.optional(),
+  inbox_enabled: z.boolean().optional(),
 });
 
 export const rollbackFollowupFlowSchema = z.strictObject({

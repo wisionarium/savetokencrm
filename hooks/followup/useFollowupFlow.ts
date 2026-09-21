@@ -16,6 +16,7 @@ export interface FollowupFlowDetailRow {
   draft_graph: FlowGraph | null;
   handoff_policy: "pause" | "cancel" | "allow";
   trigger_config: Record<string, unknown>;
+  inbox_enabled?: boolean;
   created_at: string;
   updated_at: string;
   versions_count: number;
@@ -178,6 +179,43 @@ export function useUpdateHandoffPolicy(id: string) {
         prev ? { ...prev, ...updated } : prev,
       );
       toast.success(t("Política de handoff atualizada."));
+    },
+    onError: (err) => showApiError(err),
+  });
+}
+
+export function useDuplicateFollowupFlow() {
+  const t = useT();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiClient.post<SingleResponse>(`/api/v1/ai/followup-flows/${id}/duplicate`, {});
+      return res.data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["followup", "flows", "list"] });
+      toast.success(t("Fluxo duplicado com sucesso."));
+    },
+    onError: (err) => showApiError(err),
+  });
+}
+
+export function useRenameFollowupFlow(id: string) {
+  const t = useT();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (name: string) => {
+      const res = await apiClient.patch<SingleResponse>(`/api/v1/ai/followup-flows/${id}`, {
+        name,
+      });
+      return res.data;
+    },
+    onSuccess: (updated) => {
+      qc.setQueryData<FollowupFlowDetailRow>(followupFlowQueryKey(id), (prev) =>
+        prev ? { ...prev, ...updated } : prev,
+      );
+      qc.invalidateQueries({ queryKey: ["followup", "flows", "list"] });
+      toast.success(t("Nome atualizado."));
     },
     onError: (err) => showApiError(err),
   });

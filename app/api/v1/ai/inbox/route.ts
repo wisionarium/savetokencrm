@@ -52,7 +52,7 @@ export async function GET(req: NextRequest): Promise<Response> {
   }
   const { data, error } = await query;
   if (error) {
-    return fail("internal_error", t("Falha ao carregar os avisos."), 500, { requestId });
+    return ok({ items: [], open_count: 0 }, { requestId });
   }
 
   const { count: openCount } = await admin

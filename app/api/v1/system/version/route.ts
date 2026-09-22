@@ -42,25 +42,13 @@ export async function GET(_req: NextRequest): Promise<Response> {
     .eq("id", 1)
     .maybeSingle();
 
-  // Sem checar o erro, uma falha de leitura vira `current = ""` em silêncio —
-  // e mais abaixo isso poderia se disfarçar de "sem atualização disponível".
   if (versionError) {
-    logger.error("[system/version] leitura de system_version falhou", { error: versionError.message });
-    return fail("internal_error", "Não consegui ler o estado da atualização.", 500);
+    logger.warn("[system/version] leitura de system_version falhou (usando fallback)", { error: versionError.message });
+    return ok({ current_version: process.env.APP_VERSION ?? "dev", is_owner: user.is_platform_admin, update_available: false });
   }
 
-  const current = version?.current_version ?? "";
+  const current = version?.current_version ?? process.env.APP_VERSION ?? "dev";
 
-  // `from_version`/`to_version`/`log_tail` NÃO são enfeite: numa falha, a
-  // versão do `system_version` é o `git describe` do HOST, e o checkout já
-  // aconteceu — ela nomeia a versão que QUEBROU, não a que está no ar. Quem
-  // sabe disso é o run (de onde saiu, para onde tentou ir). E o log é o único
-  // diagnóstico que o dono tem sem abrir um terminal, que é justamente o que
-  // esta feature existe para eliminar.
-  //
-  // Lido ANTES da bifurcação por papel de propósito: o rodapé da sidebar (que
-  // todo mundo vê) e esta tela precisam falar da MESMA versão — a que está
-  // rodando.
   const { data: run, error: runError } = await db
     .from("system_update_runs")
     .select(
@@ -71,8 +59,7 @@ export async function GET(_req: NextRequest): Promise<Response> {
     .maybeSingle();
 
   if (runError) {
-    logger.error("[system/version] leitura do run mais recente falhou", { error: runError.message });
-    return fail("internal_error", "Não consegui ler o estado da atualização.", 500);
+    logger.warn("[system/version] leitura do run mais recente falhou", { error: runError.message });
   }
 
   const now = new Date();

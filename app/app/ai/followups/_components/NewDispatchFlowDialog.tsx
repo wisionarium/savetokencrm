@@ -162,18 +162,9 @@ export function NewDispatchFlowDialog({ open, onOpenChange }: Props) {
             position: { x: 100, y: 250 },
             config: {
               mode: "text",
-              body: activeImage.trim() ? activeImage.trim() : "Imagem do produto",
+              body: "Imagem do produto",
+              ...(activeImage.trim() ? { media_url: activeImage.trim() } : {}),
             },
-            ...(activeImage.trim()
-              ? {
-                  data: {
-                    media_storage_path: storagePath || activeImage.trim(),
-                    media_type: "image",
-                    media_mime: mediaMime,
-                    preview_url: previewUrl || activeImage.trim(),
-                  },
-                }
-              : {}),
           },
           {
             id: "node_wait",

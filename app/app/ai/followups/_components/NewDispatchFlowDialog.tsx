@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { Image as ImageIcon, Upload, X, Loader2, Link as LinkIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -20,7 +21,6 @@ import { useT } from "@/hooks/i18n/useT";
 import { apiClient } from "@/lib/api/client";
 import { followupFlowsListQueryKey } from "@/hooks/followup/useFollowupFlows";
 import type { FlowGraph } from "@/lib/followup/graph-schema";
-import { Image } from "lucide-react";
 
 interface Props {
   open: boolean;
@@ -30,17 +30,109 @@ interface Props {
 export function NewDispatchFlowDialog({ open, onOpenChange }: Props) {
   const t = useT();
   const qc = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [name, setName] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [storagePath, setStoragePath] = useState("");
+  const [previewUrl, setPreviewUrl] = useState("");
+  const [mediaMime, setMediaMime] = useState("image/jpeg");
+  const [fileName, setFileName] = useState("");
   const [specifications, setSpecifications] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showUrlInput, setShowUrlInput] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
   const resetForm = () => {
     setName("");
     setImageUrl("");
+    setStoragePath("");
+    setPreviewUrl("");
+    setMediaMime("image/jpeg");
+    setFileName("");
     setSpecifications("");
+    setShowUrlInput(false);
+    setIsUploading(false);
     setErro(null);
+  };
+
+  const uploadFile = async (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      toast.error(t("Selecione um arquivo de imagem válido (PNG, JPG, WEBP)."));
+      return;
+    }
+
+    setIsUploading(true);
+    setErro(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/v1/ai/followup-flows/upload-media", {
+        method: "POST",
+        body: formData,
+      });
+
+      const json = await res.json();
+      if (!res.ok || !json.data) {
+        throw new Error(json.error?.message || t("Erro ao fazer upload da imagem."));
+      }
+
+      const { storage_path, url, mime, name: uploadedName } = json.data;
+      setStoragePath(storage_path);
+      setPreviewUrl(url);
+      setImageUrl(url || storage_path);
+      setMediaMime(mime || file.type || "image/jpeg");
+      setFileName(uploadedName || file.name);
+      toast.success(t("Imagem carregada com sucesso!"));
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : t("Falha no envio da imagem.");
+      setErro(msg);
+      toast.error(msg);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      void uploadFile(file);
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item?.type.includes("image")) {
+        const file = item.getAsFile();
+        if (file) {
+          e.preventDefault();
+          void uploadFile(file);
+          break;
+        }
+      }
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith("image/")) {
+      void uploadFile(file);
+    }
+  };
+
+  const removeImage = () => {
+    setImageUrl("");
+    setStoragePath("");
+    setPreviewUrl("");
+    setFileName("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -49,6 +141,8 @@ export function NewDispatchFlowDialog({ open, onOpenChange }: Props) {
 
     setIsSubmitting(true);
     setErro(null);
+
+    const activeImage = previewUrl || imageUrl || storagePath;
 
     try {
       // Montar o grafo de disparo: Imagem -> Espera 2.6s -> Especificações
@@ -68,14 +162,15 @@ export function NewDispatchFlowDialog({ open, onOpenChange }: Props) {
             position: { x: 100, y: 250 },
             config: {
               mode: "text",
-              body: imageUrl.trim() ? imageUrl.trim() : "Imagem do produto",
+              body: activeImage.trim() ? activeImage.trim() : "Imagem do produto",
             },
-            ...(imageUrl.trim()
+            ...(activeImage.trim()
               ? {
                   data: {
-                    media_storage_path: imageUrl.trim(),
+                    media_storage_path: storagePath || activeImage.trim(),
                     media_type: "image",
-                    media_mime: "image/jpeg",
+                    media_mime: mediaMime,
+                    preview_url: previewUrl || activeImage.trim(),
                   },
                 }
               : {}),
@@ -139,6 +234,8 @@ export function NewDispatchFlowDialog({ open, onOpenChange }: Props) {
     }
   };
 
+  const hasImage = Boolean(previewUrl || imageUrl || storagePath);
+
   return (
     <Dialog
       open={open}
@@ -147,7 +244,7 @@ export function NewDispatchFlowDialog({ open, onOpenChange }: Props) {
         onOpenChange(next);
       }}
     >
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg" onPaste={handlePaste}>
         <DialogHeader>
           <DialogTitle>{t("Novo fluxo de disparo")}</DialogTitle>
           <DialogDescription>
@@ -169,21 +266,121 @@ export function NewDispatchFlowDialog({ open, onOpenChange }: Props) {
             />
           </div>
 
+          {/* Área de Upload de Imagem / Galeria */}
           <div className="space-y-2">
-            <Label htmlFor="flow-image">{t("URL ou Caminho da Imagem")}</Label>
-            <div className="relative">
-              <Image size={16} className="absolute left-3 top-3 text-muted-foreground" />
-              <Input
-                id="flow-image"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                placeholder="https://... ou caminho da imagem"
-                className="pl-9"
-              />
+            <div className="flex items-center justify-between">
+              <Label>{t("Imagem do produto")}</Label>
+              <button
+                type="button"
+                onClick={() => setShowUrlInput((prev) => !prev)}
+                className="text-xs text-primary hover:underline flex items-center gap-1"
+              >
+                <LinkIcon size={12} />
+                {showUrlInput ? t("Upload por arquivo") : t("Ou colar URL da imagem")}
+              </button>
             </div>
-            <p className="text-xs text-muted-foreground">
-              {t("URL pública da imagem ou caminho de mídia. Se deixado em branco, enviará apenas o texto.")}
-            </p>
+
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              accept="image/*"
+              className="hidden"
+            />
+
+            {hasImage ? (
+              <div className="relative flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/20">
+                <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-md border border-border bg-background">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={previewUrl || imageUrl}
+                    alt="Prévia"
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <div className="flex flex-1 flex-col min-w-0 gap-1">
+                  <span className="text-xs font-medium truncate">
+                    {fileName || t("Imagem selecionada")}
+                  </span>
+                  <span className="text-[11px] text-muted-foreground">
+                    {t("Pronta para envio no WhatsApp")}
+                  </span>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-xs px-2"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploading}
+                    >
+                      <Upload size={12} className="mr-1" />
+                      {t("Trocar imagem")}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs px-2 text-destructive hover:text-destructive"
+                      onClick={removeImage}
+                      disabled={isUploading}
+                    >
+                      <X size={12} className="mr-1" />
+                      {t("Remover")}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ) : showUrlInput ? (
+              <div className="space-y-1.5">
+                <div className="relative">
+                  <ImageIcon size={16} className="absolute left-3 top-3 text-muted-foreground" />
+                  <Input
+                    id="flow-image"
+                    value={imageUrl}
+                    onChange={(e) => {
+                      setImageUrl(e.target.value);
+                      setPreviewUrl(e.target.value);
+                    }}
+                    placeholder="https://... URL pública da imagem"
+                    className="pl-9"
+                  />
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  {t("Cole um link público direto de imagem.")}
+                </p>
+              </div>
+            ) : (
+              <div
+                onClick={() => !isUploading && fileInputRef.current?.click()}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={handleDrop}
+                className="group relative flex flex-col items-center justify-center gap-2 p-6 rounded-lg border-2 border-dashed border-border hover:border-primary/70 transition-colors cursor-pointer bg-muted/10 hover:bg-muted/20 text-center"
+              >
+                {isUploading ? (
+                  <div className="flex flex-col items-center gap-2 py-2">
+                    <Loader2 size={24} className="animate-spin text-primary" />
+                    <span className="text-xs font-medium text-muted-foreground">
+                      {t("Enviando imagem...")}
+                    </span>
+                  </div>
+                ) : (
+                  <>
+                    <div className="rounded-full bg-primary/10 p-2.5 text-primary group-hover:scale-105 transition-transform">
+                      <Upload size={20} />
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-xs font-semibold text-foreground">
+                        {t("Carregar imagem da galeria ou arquivo")}
+                      </span>
+                      <span className="text-[11px] text-muted-foreground">
+                        {t("PNG, JPG, WEBP até 15MB · Arraste ou use Ctrl+V")}
+                      </span>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -212,13 +409,13 @@ export function NewDispatchFlowDialog({ open, onOpenChange }: Props) {
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              disabled={isSubmitting}
+              disabled={isSubmitting || isUploading}
             >
               {t("Cancelar")}
             </Button>
             <Button
               type="submit"
-              disabled={isSubmitting || !name.trim() || !specifications.trim()}
+              disabled={isSubmitting || isUploading || !name.trim() || !specifications.trim()}
             >
               {isSubmitting ? t("Criando...") : t("Criar fluxo de disparo")}
             </Button>

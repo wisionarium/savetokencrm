@@ -30,6 +30,8 @@ vi.mock("@/hooks/followup/useFollowupFlow", () => {
     useRollbackFollowupFlow: mutacao,
     useSaveFollowupFlowDraft: mutacao,
     useUpdateHandoffPolicy: mutacao,
+    useDuplicateFollowupFlow: mutacao,
+    useRenameFollowupFlow: mutacao,
   };
 });
 

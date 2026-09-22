@@ -16,7 +16,7 @@ import { traduzir } from "@/lib/i18n/dicionario";
 
 export const dynamic = "force-dynamic";
 
-const LIST_COLUMNS = "id, name, status, active_version_id, handoff_policy, inbox_enabled, updated_at";
+const LIST_COLUMNS = "id, name, status, active_version_id, handoff_policy, inbox_enabled, draft_graph, updated_at";
 
 export async function GET(_req?: NextRequest): Promise<Response> {
   const requestId = randomUUID();

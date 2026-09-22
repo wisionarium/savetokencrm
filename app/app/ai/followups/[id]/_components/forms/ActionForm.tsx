@@ -140,16 +140,20 @@ export function ActionForm({
     setIsUploading(true);
     setError(null);
     try {
-      const supabase = createClient();
-      const ext = file.name.split(".").pop() || "jpg";
-      const path = `dispatch-flows/${Date.now()}-${Math.random().toString(36).substring(2, 7)}.${ext}`;
-      const { error: uploadErr } = await supabase.storage.from("whatsapp-media").upload(path, file);
-      if (uploadErr) {
-        setError(uploadErr.message);
-        return;
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/v1/ai/followup-flows/upload-media", {
+        method: "POST",
+        body: formData,
+      });
+
+      const json = await res.json();
+      if (!res.ok || !json.data) {
+        throw new Error(json.error?.message || "Erro ao fazer upload da imagem.");
       }
-      const { data: publicData } = supabase.storage.from("whatsapp-media").getPublicUrl(path);
-      const url = publicData.publicUrl;
+
+      const url = json.data.url || json.data.storage_path;
       setMediaUrl(url);
       commit({ mode, ...fields, mediaUrl: url });
     } catch (err) {

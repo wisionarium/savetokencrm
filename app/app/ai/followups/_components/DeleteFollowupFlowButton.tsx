@@ -25,7 +25,9 @@ type Props = {
   /** Depois de apagar o fluxo aberto no editor, volta pra lista. */
   redirectToList?: boolean;
   variant?: "outline" | "ghost";
-  size?: "sm" | "default";
+  size?: "sm" | "default" | "icon";
+  iconOnly?: boolean;
+  className?: string;
 };
 
 export function DeleteFollowupFlowButton({
@@ -34,6 +36,8 @@ export function DeleteFollowupFlowButton({
   redirectToList = false,
   variant = "outline",
   size = "sm",
+  iconOnly = false,
+  className = "",
 }: Props) {
   const t = useT();
   const [open, setOpen] = useState(false);
@@ -46,17 +50,18 @@ export function DeleteFollowupFlowButton({
         type="button"
         variant={variant}
         size={size}
-        className="text-destructive"
+        className={`text-destructive ${className}`}
         disabled={del.isPending}
         data-testid="delete-followup-flow"
+        title={iconOnly ? t("Excluir fluxo") : undefined}
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
           setOpen(true);
         }}
       >
-        <Trash size={14} aria-hidden className="mr-1" />
-        {t("Excluir")}
+        <Trash size={14} aria-hidden className={iconOnly ? "" : "mr-1"} />
+        {!iconOnly && t("Excluir")}
       </Button>
       <AlertDialog open={open} onOpenChange={setOpen}>
         <AlertDialogContent onClick={(e) => e.stopPropagation()}>

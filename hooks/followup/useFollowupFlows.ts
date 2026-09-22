@@ -14,6 +14,7 @@ export interface FollowupFlowPointerRow {
   active_version_id: string | null;
   handoff_policy: string;
   inbox_enabled: boolean;
+  draft_graph?: unknown;
   updated_at: string;
 }
 

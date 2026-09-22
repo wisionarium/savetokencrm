@@ -14,7 +14,10 @@ export type MessageKind = "image" | "video" | "audio" | "document";
  * `docs/doctrine/restricao-de-canal.md` proíbe.
  */
 export function isMediaPathOwnedBy(path: string, orgId: string, conversationId: string): boolean {
-  return path.startsWith(`${orgId}/${conversationId}/`);
+  return (
+    path.startsWith(`${orgId}/${conversationId}/`) ||
+    path.startsWith(`${orgId}/dispatch-flows/`)
+  );
 }
 
 const DOCUMENT_MIMES = new Set([

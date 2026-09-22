@@ -308,7 +308,12 @@ export const endConfigSchema = z.strictObject({
  * Each node type has its specific config schema.
  */
 export const flowNodeSchema = z.discriminatedUnion('type', [
-  // Trigger node: entry point, no config
+  // Trigger node: entry point. `dispatch_delay_ms` existe SÓ para fluxo de
+  // disparo (inbox): intervalo "digitando…" entre as mensagens do disparo
+  // manual, editável no DispatchFlowEditor (0–30s, default 2600 — 30s é a
+  // parede do apiClient para mutações). O motor de follow-up automático
+  // ignora (usa nós `wait`, com piso de 5 min) — por isso mora aqui,
+  // opcional, em vez de afrouxar o piso global.
   z.strictObject({
     id: z.string().min(1),
     type: z.literal('trigger'),
@@ -317,7 +322,9 @@ export const flowNodeSchema = z.discriminatedUnion('type', [
       x: z.number(),
       y: z.number(),
     }),
-    config: z.strictObject({}),
+    config: z.strictObject({
+      dispatch_delay_ms: z.number().int().min(0).max(30000).optional(),
+    }),
   }),
   // Wait node: pauses flow for a duration
   z.strictObject({

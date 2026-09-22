@@ -14,6 +14,7 @@ import { AttachMenu } from "@/components/inbox/composer/AttachMenu";
 import { AttachmentPreviewDialog } from "@/components/inbox/composer/AttachmentPreviewDialog";
 import { ContactPickerDialog } from "@/components/inbox/composer/ContactPickerDialog";
 import { DispatchFlowsDialog } from "@/components/inbox/composer/DispatchFlowsDialog";
+import { SeletorDaGaleria, type GaleriaPick } from "@/components/galeria/SeletorDaGaleria";
 import { AudioRecorder } from "@/components/inbox/composer/AudioRecorder";
 import { ReplyReviewPanel } from "@/components/inbox/composer/ReplyReviewPanel";
 import { EmojiButton } from "@/components/inbox/composer/EmojiButton";
@@ -79,6 +80,7 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [contactPickerOpen, setContactPickerOpen] = useState(false);
   const [dispatchFlowsOpen, setDispatchFlowsOpen] = useState(false);
+  const [galeriaOpen, setGaleriaOpen] = useState(false);
   const [menuDismissed, setMenuDismissed] = useState(false);
   const [mode, setMode] = useState<"reply" | "note">("reply");
   const taRef = useRef<HTMLTextAreaElement | null>(null);
@@ -283,6 +285,7 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
               onPick={setPendingFile}
               onPickContact={() => setContactPickerOpen(true)}
               onPickFlow={() => setDispatchFlowsOpen(true)}
+              onPickGallery={() => setGaleriaOpen(true)}
             />
           )}
           <EmojiButton
@@ -410,6 +413,19 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
         open={dispatchFlowsOpen}
         onOpenChange={setDispatchFlowsOpen}
         conversationId={conversationId}
+      />
+      <SeletorDaGaleria
+        open={galeriaOpen}
+        onOpenChange={setGaleriaOpen}
+        onPick={(pick: GaleriaPick) => {
+          // Já está no bucket: envia direto, sem novo upload.
+          send.mutate({
+            conversation_id: conversationId,
+            type: "image",
+            media_storage_path: pick.storage_path,
+            ...(respondendo ? { reply_to_message_id: respondendo.id } : {}),
+          });
+        }}
       />
     </>
   );

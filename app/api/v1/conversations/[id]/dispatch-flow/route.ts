@@ -8,6 +8,13 @@ import { audit } from "@/lib/audit";
 import { requireRole } from "@/lib/auth/require-role";
 import { createClient } from "@/lib/supabase/server";
 import { traduzir } from "@/lib/i18n/dicionario";
+import { sinalizarDigitando } from "@/lib/messaging/presenca";
+import {
+  guessDispatchMime,
+  isDispatchPlaceholderBody,
+  readDispatchDelay,
+  resolveDispatchMedia,
+} from "@/lib/followup/dispatch-graph";
 import type { FlowGraph, FlowNode } from "@/lib/followup/graph-schema";
 
 export const dynamic = "force-dynamic";
@@ -109,17 +116,30 @@ export async function POST(req: NextRequest, ctx: RouteCtx): Promise<Response> {
   // Se nenhum nó ordenado foi encontrado, pegar todos os nós que enviam mensagem/ação
   const actionNodes = nodesToProcess.length > 0 ? nodesToProcess : graph.nodes.filter((n) => n.type === "action" || n.type === "wait");
 
+  // Intervalo "digitando…" entre mensagens: configurado no trigger do
+  // grafo (editável no editor, 0–30s, default 2600 — 30s é a parede do
+  // apiClient para mutações). Nós `wait` legados continuam respeitados.
+  const typingDelayMs = readDispatchDelay(graph);
+
+  // "digitando…" de verdade no aparelho do cliente durante o intervalo
+  // (best-effort: sessão fora do ar ou canal sem presença = silêncio, sem
+  // erro). Fire-and-forget para não entrar na latência da resposta.
+  const acenderDigitando = () => {
+    void sinalizarDigitando(supabase, {
+      organizationId: activeOrg.orgId,
+      conversationId,
+    }).catch(() => {});
+  };
+
   let sentCount = 0;
 
   for (let i = 0; i < actionNodes.length; i++) {
     const node = actionNodes[i]!;
 
     if (node.type === "wait") {
-      // Delay padrão entre imagem e texto de 2.6 segundos (ou duration_ms se configurado)
-      const waitMs = node.config.mode === "fixed" ? node.config.duration_ms : 2600;
-      // Delay curto no endpoint para envio sequencial
-      const delay = Math.min(waitMs, 5000); // Teto de 5s no request HTTP
-      await new Promise((resolve) => setTimeout(resolve, delay));
+      const waitMs = node.config.mode === "fixed" ? node.config.duration_ms : typingDelayMs;
+      acenderDigitando();
+      await new Promise((resolve) => setTimeout(resolve, Math.min(waitMs, 30000)));
       continue;
     }
 
@@ -127,24 +147,31 @@ export async function POST(req: NextRequest, ctx: RouteCtx): Promise<Response> {
       const config = node.config;
       let bodyText = "";
       let mediaStoragePath: string | undefined;
-      let mediaMime: string | undefined;
+      let mediaUrl: string | undefined;
       let messageType: "text" | "image" | "video" | "document" = "text";
 
       if (config.mode === "text") {
-        bodyText = config.body;
+        // Placeholder ("Imagem do produto") e URL no body nunca viram legenda:
+        // a mídia vai por media_storage_path/media_url, o texto vem do nó de
+        // especificações. Sem isso o lead recebia o nome do campo como mensagem.
+        if (!isDispatchPlaceholderBody(config.body)) bodyText = config.body;
+        const media = resolveDispatchMedia(node);
+        if (media?.kind === "storage") {
+          mediaStoragePath = media.path;
+          messageType = "image";
+        } else if (media?.kind === "url") {
+          mediaUrl = media.url;
+          messageType = "image";
+        }
       } else if (config.mode === "ai_message") {
         bodyText = config.prompt_hint;
       }
 
-      // Checar se há dados de mídia guardados no nó (ex: url/storage path)
-      const nodeData = (node as unknown as { data?: { media_storage_path?: string; media_mime?: string; media_type?: string } }).data;
-      if (nodeData?.media_storage_path) {
-        mediaStoragePath = nodeData.media_storage_path;
-        mediaMime = nodeData.media_mime;
-        messageType = (nodeData.media_type as "image" | "video" | "document") ?? "image";
-      }
-
-      if (bodyText || mediaStoragePath) {
+      const mediaMime =
+        mediaStoragePath || mediaUrl
+          ? guessDispatchMime(mediaStoragePath ?? mediaUrl ?? "")
+          : undefined;
+      if (bodyText || mediaStoragePath || mediaUrl) {
         await sendMessageHandler(
           supabase,
           {
@@ -158,16 +185,19 @@ export async function POST(req: NextRequest, ctx: RouteCtx): Promise<Response> {
             type: messageType,
             body: bodyText || undefined,
             media_storage_path: mediaStoragePath,
+            media_url: mediaUrl,
             media_mime: mediaMime,
-          }
+          },
         );
         sentCount++;
       }
 
-      // Se for a mensagem com imagem e a próxima for texto sem nó de wait explícito, aguardar 2.6s
+      // Se for mensagem com mídia e a próxima for outra ação sem nó de
+      // wait explícito: acende o "digitando…" e aguarda o intervalo do trigger.
       const nextNode = actionNodes[i + 1];
-      if (mediaStoragePath && nextNode && nextNode.type === "action") {
-        await new Promise((resolve) => setTimeout(resolve, 2600));
+      if ((mediaStoragePath || mediaUrl) && nextNode && nextNode.type === "action") {
+        acenderDigitando();
+        await new Promise((resolve) => setTimeout(resolve, typingDelayMs));
       }
     }
   }

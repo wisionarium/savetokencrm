@@ -520,7 +520,10 @@ export async function patchConversationHandler(
           : input.status === "archived"
             ? "conversation.archived"
             : "conversation.released";
-    await audit({
+    // Fire-and-forget DE PROPÓSITO (lib/audit: nunca lança, nunca bloqueia):
+    // o `await` aqui punha 2-4 roundtrips de banco na latência de toda ação
+    // de conversa do inbox (assumir, fechar, arquivar).
+    void audit({
       action,
       actorUserId: a.actorUserId,
       organizationId: conv.organization_id,
@@ -531,7 +534,8 @@ export async function patchConversationHandler(
     });
   }
   if (input.tags !== undefined) {
-    await audit({
+    // Fire-and-forget: ver comentário acima.
+    void audit({
       action: "conversation.tags_changed",
       actorUserId: a.actorUserId,
       organizationId: conv.organization_id,

@@ -44,6 +44,9 @@ export function useFollowupFlow(id: string, opts?: { initialData?: FollowupFlowD
       }
     },
     initialData: opts?.initialData,
+    // Mesmo motivo de useFollowupFlows: sem staleTime o SSR é descartado
+    // e o editor refaz o GET no mount.
+    staleTime: 30_000,
   });
 }
 

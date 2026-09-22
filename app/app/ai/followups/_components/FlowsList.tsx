@@ -41,13 +41,13 @@ import {
 } from "@/hooks/followup/useFollowupFlows";
 import { useDuplicateFollowupFlow } from "@/hooks/followup/useFollowupFlow";
 import { apiClient } from "@/lib/api/client";
+import { dispatchImagePreview } from "@/lib/followup/dispatch-graph";
 import type { FlowGraph } from "@/lib/followup/graph-schema";
 import { DeleteFollowupFlowButton } from "./DeleteFollowupFlowButton";
 import { FlowStatusBadge } from "./FlowStatusBadge";
 import { ModelosDialog } from "./ModelosDialog";
 import { NewFlowDialog } from "./NewFlowDialog";
-import { NewDispatchFlowDialog } from "./NewDispatchFlowDialog";
-import { EditDispatchFlowDialog } from "./EditDispatchFlowDialog";
+import { useRouter } from "next/navigation";
 
 interface Props {
   initialData: FollowupFlowPointerRow[];
@@ -64,34 +64,19 @@ function formatUpdatedAt(iso: string, idioma: string): string {
 }
 
 function getFlowImage(graphRaw: unknown): string | null {
-  const graph = graphRaw as FlowGraph | undefined;
-  if (!graph?.nodes) return null;
-  const imgNode = graph.nodes.find(
-    (n) =>
-      n.label === "Imagem do produto" ||
-      (n as unknown as { data?: { media_storage_path?: string; preview_url?: string } }).data?.media_storage_path,
-  );
-  if (!imgNode) return null;
-  const data = (imgNode as unknown as { data?: { preview_url?: string; media_storage_path?: string } }).data;
-  if (data?.preview_url) return data.preview_url;
-  if (data?.media_storage_path && data.media_storage_path.startsWith("http")) return data.media_storage_path;
-  if (imgNode.type === "action" && imgNode.config.mode === "text" && imgNode.config.body.startsWith("http")) {
-    return imgNode.config.body;
-  }
-  return null;
+  return dispatchImagePreview(graphRaw as FlowGraph | null | undefined);
 }
 
 export function FlowsList({ initialData, canWrite, filterMode = "ai" }: Props) {
   const tagDoIdioma = useTagDeIdioma();
   const t = useT();
   const qc = useQueryClient();
+  const router = useRouter();
   const { data } = useFollowupFlows({ initialData });
   const updateFlow = useUpdateFollowupFlow();
   const duplicateFlow = useDuplicateFollowupFlow();
 
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [newDispatchOpen, setNewDispatchOpen] = useState(false);
-  const [editDispatchFlow, setEditDispatchFlow] = useState<FollowupFlowPointerRow | null>(null);
   const [modelosOpen, setModelosOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [search, setSearch] = useState("");
@@ -119,7 +104,7 @@ export function FlowsList({ initialData, canWrite, filterMode = "ai" }: Props) {
 
   const newFlowButton =
     filterMode === "disparo" ? (
-      <Button onClick={() => setNewDispatchOpen(true)} className="w-full sm:w-auto">
+      <Button onClick={() => router.push("/app/ai/followups/novo-disparo")} className="w-full sm:w-auto">
         <Plus size={14} aria-hidden className="mr-2" /> {t("Novo fluxo de disparo")}
       </Button>
     ) : (
@@ -131,12 +116,6 @@ export function FlowsList({ initialData, canWrite, filterMode = "ai" }: Props) {
   const dialogos = canWrite && (
     <>
       <NewFlowDialog open={dialogOpen} onOpenChange={setDialogOpen} />
-      <NewDispatchFlowDialog open={newDispatchOpen} onOpenChange={setNewDispatchOpen} />
-      <EditDispatchFlowDialog
-        flow={editDispatchFlow}
-        open={!!editDispatchFlow}
-        onOpenChange={(open) => !open && setEditDispatchFlow(null)}
-      />
       <ModelosDialog
         open={modelosOpen}
         onOpenChange={setModelosOpen}
@@ -444,7 +423,7 @@ export function FlowsList({ initialData, canWrite, filterMode = "ai" }: Props) {
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                              onClick={() => setEditDispatchFlow(flow)}
+                              onClick={() => router.push(`/app/ai/followups/${flow.id}`)}
                               title={t("Edição rápida")}
                             >
                               <Pencil size={15} />

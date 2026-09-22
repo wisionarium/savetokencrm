@@ -151,6 +151,16 @@ export const NAV_CATALOG = [
     group: "atendimento",
     sidebar: true,
   },
+  {
+    // Biblioteca do time: tudo que foi subido no chat, nos fluxos e direto
+    // aqui. Inbound do cliente nunca entra — a origem é de quem escreve.
+    href: "/app/galeria",
+    label: "Galeria",
+    description: "As imagens do time: do chat, dos fluxos e as suas pastas.",
+    icon: "ImageSquare",
+    group: "atendimento",
+    sidebar: true,
+  },
 
   // ---- CRM — o funil ----
   {
@@ -294,6 +304,18 @@ export const NAV_CATALOG = [
     section: "Montar o agente",
     minRole: "manager",
     sidebar: true,
+  },
+  {
+    // Sem `sidebar`: chega-se pelo botão "Novo fluxo de disparo" (aba
+    // Disparo) e pelo breadcrumb do editor — como Credenciais, existe para
+    // busca/palette sem ocupar o menu.
+    href: "/app/ai/followups/novo-disparo",
+    label: "Novo fluxo de disparo",
+    description: "Criar imagem + texto para os atendentes dispararem no chat.",
+    icon: "FlowArrow",
+    group: "ia",
+    section: "Montar o agente",
+    minRole: "manager",
   },
   {
     href: "/app/ai/routers",

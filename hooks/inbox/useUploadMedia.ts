@@ -3,6 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { ApiError, type ApiErrorBody } from "@/lib/api/types";
+import { prepararImagemParaUpload } from "@/lib/midia/comprimir-imagem";
 
 export interface UploadedMedia {
   storage_path: string;
@@ -14,8 +15,13 @@ export interface UploadedMedia {
 export function useUploadMedia() {
   return useMutation({
     mutationFn: async (args: { conversationId: string; file: File | Blob; filename?: string }) => {
+      // Imagem do time: compacta antes de subir (menos MB, mesma aparência).
+      const pronta = await prepararImagemParaUpload(
+        args.file,
+        args.filename ?? (args.file instanceof File ? args.file.name : "audio"),
+      );
       const form = new FormData();
-      form.append("file", args.file, args.filename ?? (args.file instanceof File ? args.file.name : "audio"));
+      form.append("file", pronta.blob, pronta.filename);
       const res = await fetch(`/api/v1/conversations/${args.conversationId}/media`, {
         method: "POST",
         body: form,

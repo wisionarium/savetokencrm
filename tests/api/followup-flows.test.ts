@@ -316,6 +316,51 @@ describe("POST /api/v1/ai/followup-flows — create draft", () => {
     const res = await POST(req("POST", { name: "" }));
     expect(res.status).toBe(422);
   });
+
+  it("payload do dialog de disparo (imagem + texto, sem wait) → 201", async () => {
+    const { buildDispatchGraph } = await import("@/lib/followup/dispatch-graph");
+    const db = makeDb([], []);
+    session("manager", db);
+    const { POST } = await import("@/app/api/v1/ai/followup-flows/route");
+    const res = await POST(
+      req("POST", {
+        name: "Fyron F1",
+        inbox_enabled: true,
+        status: "active",
+        trigger_config: { kind: "manual", cancel_on_reply: false },
+        draft_graph: buildDispatchGraph({
+          imageMediaUrl: `${ORG_ID}/dispatch-flows/abc.jpg`,
+          specifications: "12x de R$ 825,00 no cartão de crédito",
+        }),
+      }),
+    );
+    expect(res.status).toBe(201);
+    const body = (await res.json()) as { data: Row };
+    expect(body.data.name).toBe("Fyron F1");
+  });
+
+  it("wait de 2.6s (formato antigo do dialog) → 422: piso de 5 min", async () => {
+    const { buildDispatchGraph } = await import("@/lib/followup/dispatch-graph");
+    const base = buildDispatchGraph({ specifications: "x" });
+    const graph = {
+      ...base,
+      nodes: [
+        ...base.nodes,
+        {
+          id: "node_wait",
+          type: "wait",
+          label: "Aguardar 2.6s",
+          position: { x: 100, y: 400 },
+          config: { mode: "fixed", duration_ms: 2600 },
+        },
+      ],
+    };
+    const db = makeDb([], []);
+    session("manager", db);
+    const { POST } = await import("@/app/api/v1/ai/followup-flows/route");
+    const res = await POST(req("POST", { name: "Fyron F1", draft_graph: graph }));
+    expect(res.status).toBe(422);
+  });
 });
 
 describe("GET /api/v1/ai/followup-flows — list", () => {

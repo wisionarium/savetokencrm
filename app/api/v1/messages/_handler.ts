@@ -849,6 +849,25 @@ export async function sendMessageHandler(
           // cópia guardada no envio, que poderia divergir da linha.
           replyToExternalId: citada?.external_id ?? null,
         }));
+      } else if (input.media_url) {
+        // URL pública (https) de mídia — o CANAL baixa, o servidor nunca
+        // faz fetch (sem SSRF por construção). Espelha o ramo do storage.
+        await checkBoundary();
+        ({ externalId } = await adapter.send({
+          beforeSend: checkBoundary,
+          organizationId: ctx.organization_id,
+          sessionRef: resolveSessionRef(c.channel_sessions),
+          to: chatId,
+          providerConversationId: c.provider_conversation_id,
+          kind: input.type,
+          media: {
+            url: input.media_url,
+            mime: input.media_mime ?? "application/octet-stream",
+            filename: undefined,
+            caption: input.body ?? null,
+          },
+          replyToExternalId: citada?.external_id ?? null,
+        }));
       } else if (input.type === "contact") {
         const sc = outboundMetadata.shared_contact as
           { name: string; phone_number: string } | undefined;
@@ -1028,7 +1047,9 @@ export async function sendMessageHandler(
 
   }
   const a = actorAuditPayload(ctx.actor);
-  await audit({
+  // Fire-and-forget DE PROPÓSITO (lib/audit: nunca lança, nunca bloqueia):
+  // o `await` aqui punha roundtrips extras na latência de CADA mensagem enviada.
+  void audit({
     action: "message.sent",
     actorUserId: a.actorUserId,
     organizationId: c.organization_id,

@@ -11,10 +11,11 @@ interface Props {
   onPick: (file: File) => void;
   onPickContact?: () => void;
   onPickFlow?: () => void;
+  onPickGallery?: () => void;
 }
 
-/** Menu "+" do composer (padrão WhatsApp): Fotos e vídeos / Documento / Contato / Fluxo de disparo. */
-export function AttachMenu({ disabled, onPick, onPickContact, onPickFlow }: Props) {
+/** Menu "+" do composer: Fotos e vídeos / Galeria / Documento / Contato / Fluxo de disparo. */
+export function AttachMenu({ disabled, onPick, onPickContact, onPickFlow, onPickGallery }: Props) {
   const t = useT();
   const mediaRef = useRef<HTMLInputElement | null>(null);
   const docRef = useRef<HTMLInputElement | null>(null);
@@ -49,6 +50,16 @@ export function AttachMenu({ disabled, onPick, onPickContact, onPickFlow }: Prop
             <ImageSquare size={18} weight="duotone" className="text-primary" aria-hidden />
             {t("Fotos e vídeos")}
           </button>
+          {onPickGallery && (
+            <button
+              type="button"
+              className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm hover:bg-muted"
+              onClick={onPickGallery}
+            >
+              <ImageSquare size={18} weight="duotone" className="text-primary" aria-hidden />
+              {t("Galeria")}
+            </button>
+          )}
           <button
             type="button"
             className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm hover:bg-muted"

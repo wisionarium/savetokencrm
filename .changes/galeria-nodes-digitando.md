@@ -1,0 +1,7 @@
+---
+impacto: capacidade_nova
+secao: adicionado
+titulo: Galeria de imagens, nodes de disparo livres e digitando de verdade
+---
+
+Chegou a Galeria (menu lateral, em Atendimento): tudo que o time subiu no chat, nos fluxos e direto nela — o que o cliente mandou nunca entra. Dá para pesquisar por nome, criar pastas, mover, renomear e apagar (só aqui apaga do armazenamento, avisando onde a imagem é usada; apagar fluxo continua sem apagar imagem). A mesma Galeria abre de um botão no chat (+) e no editor de disparo, para reaproveitar imagem sem subir de novo. Uploads de imagem agora são compactados no navegador antes de subir (menos MB, mesma aparência). **Exige a migration 0344 aplicada no banco** (`supabase/migrations/20260922090000_0344_galeria_de_midias.sql`, já no `baseline.sql` para instalação nova/atualização via kit); sem ela as rotas devolvem 503 explicando. No editor de disparo: os cartões aceitam arrastar para reordenar (além das setinhas), dá para adicionar várias mensagens por fluxo (cada uma com imagem e/ou texto), o cartão de imagem aparece sempre (era impossível subir a primeira imagem), salvar vai sempre para rascunho com botão Publicar/Desativar separado (desativar não exige nome; publicar, sim) e o "digitando por" vai até 30 segundos. Pré-vias de imagem agora usam URL assinada (storage path cru quebrava o `<img>`). No disparo, o cliente vê o "digitando…" de verdade no WhatsApp durante o intervalo.

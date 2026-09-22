@@ -41,6 +41,10 @@ export function useFollowupFlows(opts?: { initialData?: FollowupFlowPointerRow[]
       }
     },
     initialData: opts?.initialData,
+    // Sem isto, o initialData do SSR nasce "stale" e a página refaz o GET
+    // inteiro (com N draft_graphs) no primeiro frame. Mutações invalidam
+    // a chave explicitamente, então nada fica velho.
+    staleTime: 30_000,
   });
 }
 

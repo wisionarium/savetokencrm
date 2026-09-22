@@ -44,22 +44,40 @@ export async function POST(req: NextRequest): Promise<Response> {
   const storagePath = `${activeOrg.orgId}/dispatch-flows/${Date.now()}-${randomUUID().slice(0, 8)}.${ext}`;
 
   const admin = createAdminClient();
-  const { error: upErr } = await admin.storage
+  let { error: upErr } = await admin.storage
     .from("whatsapp-media")
-    .upload(storagePath, buffer, { contentType: mime, upsert: false });
+    .upload(storagePath, buffer, { contentType: mime, upsert: true });
 
   if (upErr) {
-    console.error("[followup-flows.upload-media] upload failed:", upErr.message);
-    return fail("internal_error", t("Erro ao salvar imagem no servidor."), 500, { requestId });
+    try {
+      await admin.storage.createBucket("whatsapp-media", { public: false });
+      const retry = await admin.storage
+        .from("whatsapp-media")
+        .upload(storagePath, buffer, { contentType: mime, upsert: true });
+      upErr = retry.error;
+    } catch {
+      // ignore bucket creation error
+    }
   }
 
-  // URL assinada com validade de 5 anos para prévia imediata no navegador
-  const FIVE_YEARS_S = 5 * 365 * 24 * 60 * 60;
-  const { data: signed, error: signErr } = await admin.storage
-    .from("whatsapp-media")
-    .createSignedUrl(storagePath, FIVE_YEARS_S);
+  let url = "";
+  if (!upErr) {
+    const FIVE_YEARS_S = 5 * 365 * 24 * 60 * 60;
+    const { data: signed } = await admin.storage
+      .from("whatsapp-media")
+      .createSignedUrl(storagePath, FIVE_YEARS_S);
+    url = signed?.signedUrl || "";
+    if (!url) {
+      const { data: pub } = admin.storage.from("whatsapp-media").getPublicUrl(storagePath);
+      url = pub.publicUrl;
+    }
+  }
 
-  const url = signed?.signedUrl || "";
+  if (upErr || !url) {
+    console.warn("[followup-flows.upload-media] Storage upload unavailable, using Data URL fallback:", upErr?.message);
+    const base64 = buffer.toString("base64");
+    url = `data:${mime};base64,${base64}`;
+  }
 
   return ok(
     {

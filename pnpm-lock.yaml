@@ -132,9 +132,6 @@ importers:
       fflate:
         specifier: ^0.8.3
         version: 0.8.3
-      ffmpeg-static:
-        specifier: 5.3.0
-        version: 5.3.0
       gpt-tokenizer:
         specifier: ^4.0.0
         version: 4.0.0
@@ -159,6 +156,9 @@ importers:
       nodemailer:
         specifier: 10.0.8
         version: 10.0.8
+      opus-media-recorder:
+        specifier: 0.8.0
+        version: 0.8.0
       pdfjs-dist:
         specifier: ^6.3.289
         version: 6.3.289
@@ -201,6 +201,10 @@ importers:
       zod:
         specifier: ^4.6.0
         version: 4.6.0
+    optionalDependencies:
+      ffmpeg-static:
+        specifier: 5.3.0
+        version: 5.3.0
     devDependencies:
       '@axe-core/playwright':
         specifier: ^4.13.0
@@ -3211,6 +3215,9 @@ packages:
     resolution: {integrity: sha512-0je+qPKHEMohvfRTCEo3CrPG6cAzAYgmzKyxRiYSSDkS6eGJdyVJm7WaYA5ECaAD9wLB2T4EEeymA5aFVcYXCA==}
     engines: {node: '>=6'}
 
+  detect-browser@4.8.0:
+    resolution: {integrity: sha512-f4h2dFgzHUIpjpBLjhnDIteXv8VQiUm8XzAuzQtYUqECX/eKh67ykuiVoyb7Db7a0PUSmJa3OGXStG0CbQFUVw==}
+
   detect-libc@2.1.2:
     resolution: {integrity: sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ==}
     engines: {node: '>=8'}
@@ -3494,6 +3501,10 @@ packages:
   etag@1.8.1:
     resolution: {integrity: sha512-aIL5Fx7mawVa300al2BnEE4iNvo1qETxLrPI/o05L7z6go7fCw1J6EQmbK4FmJ2AS7kgVF/KEZWufBfdClMcPg==}
     engines: {node: '>= 0.6'}
+
+  event-target-shim@3.0.2:
+    resolution: {integrity: sha512-HK5GhnEAkm7fLy249GtF7DIuYmjLm85Ft6ssj7DhVl8Tx/z9+v0W6aiIVUdT4AXWGYy5Fc+s6gqBI49Bf0LejQ==}
+    engines: {node: '>=4'}
 
   eventemitter3@5.0.4:
     resolution: {integrity: sha512-mlsTRyGaPBjPedk6Bvw+aqbsXDtoAyAzm5MO7JgU+yVRyMQ5O8bD4Kcci7BS85f93veegeCPkL8R4GLClnjLFw==}
@@ -4503,6 +4514,9 @@ packages:
   optionator@0.9.4:
     resolution: {integrity: sha512-6IpQ7mKUxRcZNLIObR0hz7lxsapSSIYNZJwXPGeF0mTVqGKFIXj1DQcMoT22S3ROcLyY/rz0PWaWZ9ayWmad9g==}
     engines: {node: '>= 0.8.0'}
+
+  opus-media-recorder@0.8.0:
+    resolution: {integrity: sha512-AIvJMpnJqZ18dFAU7Amtt5cZZp8oPzDoAOtobdTcLzwVNm/j815+GJmBupBzBZGBa4L940TEulm7Uu4tGOYDGQ==}
 
   own-keys@1.0.1:
     resolution: {integrity: sha512-qFOyK5PjiWZd+QQIh+1jhdb9LpxTF0qs7Pm8o5QHYZ0M3vKqSqzsZaEB6oWlxZ+q2sJBMI/Ktgd2N5ZwQoRHfg==}
@@ -5848,6 +5862,7 @@ snapshots:
       concat-stream: 2.0.0
       http-response-object: 3.0.2
       parse-cache-control: 1.0.1
+    optional: true
 
   '@emnapi/core@1.10.0':
     dependencies:
@@ -7552,7 +7567,8 @@ snapshots:
 
   '@types/json5@0.0.29': {}
 
-  '@types/node@10.17.60': {}
+  '@types/node@10.17.60':
+    optional: true
 
   '@types/node@22.20.2':
     dependencies:
@@ -8185,7 +8201,8 @@ snapshots:
 
   caniuse-lite@1.0.30001810: {}
 
-  caseless@0.12.0: {}
+  caseless@0.12.0:
+    optional: true
 
   chai@6.2.2: {}
 
@@ -8242,6 +8259,7 @@ snapshots:
       inherits: 2.0.4
       readable-stream: 3.6.2
       typedarray: 0.0.6
+    optional: true
 
   content-disposition@1.1.0: {}
 
@@ -8406,6 +8424,8 @@ snapshots:
 
   dequal@2.0.3: {}
 
+  detect-browser@4.8.0: {}
+
   detect-libc@2.1.2: {}
 
   detect-node-es@1.1.0: {}
@@ -8464,7 +8484,8 @@ snapshots:
 
   entities@8.0.0: {}
 
-  env-paths@2.2.1: {}
+  env-paths@2.2.1:
+    optional: true
 
   es-abstract-get@1.0.0:
     dependencies:
@@ -8840,6 +8861,8 @@ snapshots:
 
   etag@1.8.1: {}
 
+  event-target-shim@3.0.2: {}
+
   eventemitter3@5.0.4: {}
 
   events@3.3.0: {}
@@ -8939,6 +8962,7 @@ snapshots:
       progress: 2.0.3
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   file-entry-cache@8.0.0:
     dependencies:
@@ -9135,6 +9159,7 @@ snapshots:
   http-response-object@3.0.2:
     dependencies:
       '@types/node': 10.17.60
+    optional: true
 
   http_ece@1.2.0: {}
 
@@ -9814,6 +9839,11 @@ snapshots:
       type-check: 0.4.0
       word-wrap: 1.2.5
 
+  opus-media-recorder@0.8.0:
+    dependencies:
+      detect-browser: 4.8.0
+      event-target-shim: 3.0.2
+
   own-keys@1.0.1:
     dependencies:
       get-intrinsic: 1.3.0
@@ -9844,7 +9874,8 @@ snapshots:
     dependencies:
       callsites: 3.1.0
 
-  parse-cache-control@1.0.1: {}
+  parse-cache-control@1.0.1:
+    optional: true
 
   parse-svg-path@0.1.2: {}
 
@@ -10091,6 +10122,7 @@ snapshots:
       inherits: 2.0.4
       string_decoder: 1.3.0
       util-deprecate: 1.0.2
+    optional: true
 
   recharts@3.10.1(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-is@19.2.7)(react@19.3.0)(redux@5.0.1):
     dependencies:
@@ -10516,6 +10548,7 @@ snapshots:
   string_decoder@1.3.0:
     dependencies:
       safe-buffer: 5.2.1
+    optional: true
 
   strip-ansi@6.0.1:
     dependencies:
@@ -10664,7 +10697,8 @@ snapshots:
       possible-typed-array-names: 1.1.0
       reflect.getprototypeof: 1.0.10
 
-  typedarray@0.0.6: {}
+  typedarray@0.0.6:
+    optional: true
 
   typescript-eslint@8.70.0(eslint@9.39.5(jiti@2.7.0))(typescript@6.0.3):
     dependencies:
@@ -10762,7 +10796,8 @@ snapshots:
     dependencies:
       react: 19.3.0
 
-  util-deprecate@1.0.2: {}
+  util-deprecate@1.0.2:
+    optional: true
 
   vary@1.1.2: {}
 

@@ -7,11 +7,17 @@ import { Microphone, PaperPlaneTilt, Trash } from "@/lib/ui/icons";
 import { useSendMessage } from "@/hooks/inbox/useSendMessage";
 import { useUploadMedia } from "@/hooks/inbox/useUploadMedia";
 
-const PREFERRED_MIMES = ["audio/ogg;codecs=opus", "audio/webm;codecs=opus"];
+const OGG_MIME = "audio/ogg;codecs=opus";
+const WEBM_MIME = "audio/webm;codecs=opus";
 
-function pickMime(): string | undefined {
-  if (typeof MediaRecorder === "undefined") return undefined;
-  return PREFERRED_MIMES.find((m) => MediaRecorder.isTypeSupported(m));
+/** O que o navegador sabe gravar sozinho, em ordem de preferência. */
+function nativeMime(): string | undefined {
+  if (typeof MediaRecorder === "undefined" || !MediaRecorder.isTypeSupported) return undefined;
+  // OGG primeiro: é o que o canal oficial aceita como nota de voz, então o
+  // arquivo já sai pronto e o servidor não precisa converter nada.
+  if (MediaRecorder.isTypeSupported(OGG_MIME)) return OGG_MIME;
+  if (MediaRecorder.isTypeSupported(WEBM_MIME)) return WEBM_MIME;
+  return undefined;
 }
 
 interface Props {
@@ -19,12 +25,26 @@ interface Props {
   disabled?: boolean;
 }
 
+/**
+ * O mínimo que o gravador usa, nativo ou polyfill: os dois falam a mesma
+ * língua (start/stop/ondataavailable/onstop/mimeType/state), então um tipo
+ * só serve aos dois sem importar tipo de ninguém.
+ */
+interface GravadorDeVoz {
+  readonly mimeType: string;
+  readonly state: RecordingState;
+  ondataavailable: ((e: BlobEvent) => void) | null;
+  onstop: (() => void) | null;
+  start(): void;
+  stop(): void;
+}
+
 /** Gravação de voz estilo WhatsApp: mic → timer + cancelar/enviar → PTT. */
 export function AudioRecorder({ conversationId, disabled }: Props) {
   const t = useT();
   const [recording, setRecording] = useState(false);
   const [elapsed, setElapsed] = useState(0);
-  const recorderRef = useRef<MediaRecorder | null>(null);
+  const recorderRef = useRef<GravadorDeVoz | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const discardRef = useRef(false);
@@ -59,8 +79,30 @@ export function AudioRecorder({ conversationId, disabled }: Props) {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
-      const mime = pickMime();
-      const rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+      const mime = nativeMime();
+      // Sem ogg nativo (Chrome, Safari): codificador Ogg Opus em WASM, que
+      // grava `audio/ogg` direto no navegador. Sem ele o arquivo sairia em
+      // webm e o canal oficial recusaria depois de aceitar (131053) — e no
+      // plano gratuito não há servidor com conversor para salvar depois.
+      // Carregado só quando precisa: quem tem ogg nativo nem baixa o WASM.
+      const rec: GravadorDeVoz =
+        mime === OGG_MIME || mime === undefined
+          ? (new MediaRecorder(
+              stream,
+              mime ? { mimeType: mime } : undefined,
+            ) as unknown as GravadorDeVoz)
+          : await (async (): Promise<GravadorDeVoz> => {
+              const { default: OpusMediaRecorder } = await import("opus-media-recorder");
+              return new OpusMediaRecorder(
+                stream,
+                { mimeType: OGG_MIME },
+                {
+                  encoderWorkerFactory: () =>
+                    new Worker("/vendor/opus-media-recorder/encoderWorker.umd.js"),
+                  OggOpusEncoderWasmPath: "/vendor/opus-media-recorder/OggOpusEncoder.wasm",
+                },
+              );
+            })();
       chunksRef.current = [];
       discardRef.current = false;
       rec.ondataavailable = (e) => {

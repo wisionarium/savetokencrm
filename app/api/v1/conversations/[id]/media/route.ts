@@ -12,7 +12,8 @@ import { resolveAuthDual } from "@/lib/api/auth-dual";
 import { IDIOMA_PADRAO } from "@/lib/i18n/idiomas";
 import { extFromMime, MAX_MEDIA_BYTES } from "@/lib/messaging/media/types";
 import { validateOutboundMedia } from "@/lib/messaging/media/upload-validation";
-import { transcodificarNotaDeVoz } from "@/lib/messaging/media/voice-transcode";
+import { precisaTranscodificar, transcodificarNotaDeVoz } from "@/lib/messaging/media/voice-transcode";
+import { logger } from "@/lib/logger";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { traduzir } from "@/lib/i18n/dicionario";
 
@@ -95,6 +96,15 @@ export async function POST(req: NextRequest, ctx: RouteCtx): Promise<Response> {
   const audio = await transcodificarNotaDeVoz({ buffer: bruto, mime });
   const mimeFinal = audio.mime;
   const buffer = audio.buffer;
+  if (precisaTranscodificar(mime) && !audio.convertido) {
+    logger.warn("[conversations.media] webm mantido: ffmpeg indisponível ou falhou", {
+      requestId,
+      organizationId: activeOrg.orgId,
+      conversationId,
+      mimeOriginal: mime,
+      tamanho: bruto.length,
+    });
+  }
 
   const storagePath = `${activeOrg.orgId}/${conversationId}/out-${randomUUID()}.${extFromMime(mimeFinal)}`;
   const admin = createAdminClient();

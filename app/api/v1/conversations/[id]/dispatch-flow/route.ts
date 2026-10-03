@@ -11,10 +11,12 @@ import { traduzir } from "@/lib/i18n/dicionario";
 import { sinalizarDigitando } from "@/lib/messaging/presenca";
 import {
   guessDispatchMime,
+  inferDispatchKind,
   isDispatchPlaceholderBody,
   readDispatchDelay,
   resolveDispatchMedia,
 } from "@/lib/followup/dispatch-graph";
+import { logger } from "@/lib/logger";
 import type { FlowGraph, FlowNode } from "@/lib/followup/graph-schema";
 
 export const dynamic = "force-dynamic";
@@ -148,7 +150,7 @@ export async function POST(req: NextRequest, ctx: RouteCtx): Promise<Response> {
       let bodyText = "";
       let mediaStoragePath: string | undefined;
       let mediaUrl: string | undefined;
-      let messageType: "text" | "image" | "video" | "document" = "text";
+      let messageType: "text" | "image" | "video" | "audio" | "document" = "text";
 
       if (config.mode === "text") {
         // Placeholder ("Imagem do produto") e URL no body nunca viram legenda:
@@ -158,10 +160,10 @@ export async function POST(req: NextRequest, ctx: RouteCtx): Promise<Response> {
         const media = resolveDispatchMedia(node);
         if (media?.kind === "storage") {
           mediaStoragePath = media.path;
-          messageType = "image";
+          messageType = inferDispatchKind(media.path);
         } else if (media?.kind === "url") {
           mediaUrl = media.url;
-          messageType = "image";
+          messageType = inferDispatchKind(media.url);
         }
       } else if (config.mode === "ai_message") {
         bodyText = config.prompt_hint;
@@ -172,24 +174,43 @@ export async function POST(req: NextRequest, ctx: RouteCtx): Promise<Response> {
           ? guessDispatchMime(mediaStoragePath ?? mediaUrl ?? "")
           : undefined;
       if (bodyText || mediaStoragePath || mediaUrl) {
-        await sendMessageHandler(
-          supabase,
-          {
-            organization_id: activeOrg.orgId,
-            actor: { type: "user", id: user.id },
+        try {
+          await sendMessageHandler(
+            supabase,
+            {
+              organization_id: activeOrg.orgId,
+              actor: { type: "user", id: user.id },
+              requestId,
+              idioma: authz.user.idioma,
+            },
+            {
+              conversation_id: conversationId,
+              type: messageType,
+              body: bodyText || undefined,
+              media_storage_path: mediaStoragePath,
+              media_url: mediaUrl,
+              media_mime: mediaMime,
+            },
+          );
+          sentCount++;
+        } catch (erro) {
+          const codigo =
+            erro && typeof erro === "object" && "code" in erro && typeof erro.code === "string"
+              ? erro.code
+              : "dispatch_failed";
+          logger.error("[dispatch-flow] falha ao enviar passo", {
             requestId,
-            idioma: authz.user.idioma,
-          },
-          {
-            conversation_id: conversationId,
-            type: messageType,
-            body: bodyText || undefined,
-            media_storage_path: mediaStoragePath,
-            media_url: mediaUrl,
-            media_mime: mediaMime,
-          },
-        );
-        sentCount++;
+            organizationId: activeOrg.orgId,
+            conversationId,
+            pointerId: pointer.id,
+            nodeId: node.id,
+            codigo,
+            erro: erro instanceof Error ? erro.message : String(erro),
+          });
+          return fail(codigo, t("Falha ao disparar o fluxo nesta conversa."), 422, {
+            requestId,
+          });
+        }
       }
 
       // Se for mensagem com mídia e a próxima for outra ação sem nó de

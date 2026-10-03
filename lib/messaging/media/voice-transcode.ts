@@ -39,6 +39,11 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
+// O `require` só existe no runtime CJS do servidor (nunca no browser e nunca
+// nos testes, que injetam `run`). Declarado aqui para o TS compilar com
+// `module: esnext` sem importar tipo de ninguém.
+declare const require: ((id: string) => unknown) | undefined;
+
 /**
  * O que o WhatsApp aceita como nota de voz.
  *
@@ -75,9 +80,9 @@ export interface Transcodificacao {
 }
 
 /** Roda ffmpeg; rejeita se sair diferente de zero. Injetável para teste. */
-async function runFfmpeg(args: string[], cwd: string): Promise<void> {
+async function spawnFfmpeg(bin: string, args: string[], cwd: string): Promise<void> {
   await new Promise<void>((resolve, reject) => {
-    const proc = spawn("ffmpeg", ["-nostdin", "-y", ...args], { cwd });
+    const proc = spawn(bin, ["-nostdin", "-y", ...args], { cwd });
     let erro = "";
     proc.stderr?.on("data", (d: Buffer) => {
       // Só o fim interessa: ffmpeg escreve muito e o erro vem por último.
@@ -88,6 +93,41 @@ async function runFfmpeg(args: string[], cwd: string): Promise<void> {
       code === 0 ? resolve() : reject(new Error(`ffmpeg_exit_${code}: ${erro}`)),
     );
   });
+}
+
+/**
+ * Candidatos a binário, nesta ordem: `FFMPEG_PATH` (o operador manda) →
+ * sistema (`ffmpeg` no PATH — Docker/VPS com apt) → empacotado
+ * (`ffmpeg-static`, cobre serverless/Vercel, onde não há binário no PATH).
+ */
+function candidatosFfmpeg(): string[] {
+  const lista: string[] = [];
+  if (process.env.FFMPEG_PATH) lista.push(process.env.FFMPEG_PATH);
+  lista.push("ffmpeg");
+  try {
+    const empacotado =
+      typeof require === "function" ? (require("ffmpeg-static") as unknown) : null;
+    if (typeof empacotado === "string" && empacotado.length > 0 && !lista.includes(empacotado)) {
+      lista.push(empacotado);
+    }
+  } catch {
+    // Pacote ausente ou plataforma sem binário: segue com o que já tem.
+  }
+  return lista;
+}
+
+/** Roda ffmpeg; rejeita se sair diferente de zero. Injetável para teste. */
+async function runFfmpeg(args: string[], cwd: string): Promise<void> {
+  let ultimo: unknown = null;
+  for (const bin of candidatosFfmpeg()) {
+    try {
+      await spawnFfmpeg(bin, args, cwd);
+      return;
+    } catch (erro) {
+      ultimo = erro;
+    }
+  }
+  throw ultimo instanceof Error ? ultimo : new Error("ffmpeg_unavailable");
 }
 
 /**

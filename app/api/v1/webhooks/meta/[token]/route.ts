@@ -157,12 +157,36 @@ export async function POST(req: NextRequest, ctx: RouteCtx): Promise<NextRespons
         .eq("waba_id", e.wabaId)
         .eq("name", e.templateName)
         .eq("language", e.templateLanguage);
+    } else if (e.kind === "message_status") {
+      // O `failed` da plataforma vinha sem motivo: `errorCode`/`errorTitle`
+      // eram lidos no parse e descartados aqui, e a linha caía em `failed`
+      // com `error_code`/`error_message` NULL — o operador via "falhou" sem
+      // saber se foi formato (131053), janela ou número. Sem código o log é
+      // estoque morto (sistema-vivo 7).
+      if (e.status === "failed") {
+        await admin
+          .from("messages")
+          .update({
+            status: "failed",
+            error_code: e.errorCode != null ? `meta_${e.errorCode}` : "meta_error",
+            error_message:
+              e.errorTitle ??
+              `A plataforma recusou a entrega (código ${e.errorCode ?? "desconhecido"}).`,
+            updated_at: now,
+          })
+          .eq("organization_id", session.organizationId)
+          .eq("external_id", e.externalId);
+      } else {
+        await admin
+          .from("messages")
+          .update({ status: "sent", updated_at: now })
+          .eq("organization_id", session.organizationId)
+          .eq("external_id", e.externalId);
+      }
     } else {
-      await admin
-        .from("messages")
-        .update({ status: e.status === "failed" ? "failed" : "sent", updated_at: now })
-        .eq("organization_id", session.organizationId)
-        .eq("external_id", e.externalId);
+      // Tipo futuro/desconhecido: não toca em mensagem — marcar `sent` aqui
+      // diria "entregue" sobre algo que não entendemos.
+      continue;
     }
   }
 

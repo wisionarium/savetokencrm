@@ -70,6 +70,15 @@ const nextConfig: NextConfig = {
       "./node_modules/.pnpm/@napi-rs+canvas-*/node_modules/@napi-rs/*/*.node",
       // pdfjs-dist em si (ver comentário acima).
       "./node_modules/.pnpm/pdfjs-dist@*/node_modules/pdfjs-dist/**",
+      // ffmpeg-static: o binário é resolvido em runtime
+      // (`lib/messaging/media/voice-transcode.ts`), e o tracer não segue
+      // `require()` defensivo — sem esta linha o serverless sobe sem o
+      // binário e toda nota de voz webm cai no fallback intacto (a Meta
+      // recusa com 131053). Arquivos, não diretório: o pnpm põe symlinks
+      // de plataforma ao lado, e glob em diretório derruba o build
+      // (mesmo defeito do @napi-rs acima).
+      "./node_modules/.pnpm/ffmpeg-static@*/node_modules/ffmpeg-static/ffmpeg",
+      "./node_modules/.pnpm/ffmpeg-static@*/node_modules/ffmpeg-static/ffmpeg.exe",
     ],
   },
   reactStrictMode: true,

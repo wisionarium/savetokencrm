@@ -77,6 +77,8 @@ export interface Transcodificacao {
   mime: string;
   /** `false` = devolvido intacto, porque não precisava (ou não deu). */
   convertido: boolean;
+  /** Por que não converteu (só quando precisava e falhou) — vai ao log da rota. */
+  erro?: string;
 }
 
 /** Roda ffmpeg; rejeita se sair diferente de zero. Injetável para teste. */
@@ -160,8 +162,13 @@ export async function transcodificarNotaDeVoz(
     const buffer = await readFile(saida);
     if (buffer.length === 0) return { buffer: input.buffer, mime: input.mime, convertido: false };
     return { buffer, mime: VOICE_MIME, convertido: true };
-  } catch {
-    return { buffer: input.buffer, mime: input.mime, convertido: false };
+  } catch (erro) {
+    return {
+      buffer: input.buffer,
+      mime: input.mime,
+      convertido: false,
+      erro: erro instanceof Error ? erro.message.slice(0, 300) : String(erro).slice(0, 300),
+    };
   } finally {
     await rm(dir, { recursive: true, force: true }).catch(() => {});
   }

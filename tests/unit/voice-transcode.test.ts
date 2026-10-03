@@ -97,6 +97,15 @@ describe("a conversão", () => {
     expect(r.mime).toBe(webm.mime);
   });
 
+  it("falha carrega o motivo — sem ele o log da rota não diz nada", async () => {
+    const run = vi.fn(async () => {
+      throw new Error("ffmpeg_spawn_failed: ENOENT");
+    });
+    const r = await transcodificarNotaDeVoz(webm, { run });
+    expect(r.convertido).toBe(false);
+    expect(r.erro).toContain("ffmpeg_spawn_failed");
+  });
+
   it("arquivo grande demais passa intacto em vez de travar o upload", async () => {
     const run = vi.fn(async () => {});
     const grande = { buffer: Buffer.alloc(17 * 1024 * 1024), mime: "audio/webm" };

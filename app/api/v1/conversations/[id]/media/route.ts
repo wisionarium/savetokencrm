@@ -103,6 +103,7 @@ export async function POST(req: NextRequest, ctx: RouteCtx): Promise<Response> {
       conversationId,
       mimeOriginal: mime,
       tamanho: bruto.length,
+      motivo: audio.erro ?? "desconhecido",
     });
   }
 

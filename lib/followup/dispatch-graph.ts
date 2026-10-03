@@ -61,13 +61,36 @@ function looksLikeUrl(v: string): boolean {
   return v.startsWith("http://") || v.startsWith("https://") || v.startsWith("data:");
 }
 
-/** Palpite de MIME pela extensão (o upload só aceita imagem; sem extensão, jpeg). */
+/** Palpite de MIME pela extensão (imagens, áudio, vídeo e documentos do disparo). */
 export function guessDispatchMime(pathOrUrl: string): string {
   const clean = pathOrUrl.split("?")[0]?.toLowerCase() ?? "";
   if (clean.endsWith(".png")) return "image/png";
   if (clean.endsWith(".webp")) return "image/webp";
   if (clean.endsWith(".gif")) return "image/gif";
+  if (clean.endsWith(".ogg") || clean.endsWith(".oga")) return "audio/ogg";
+  if (clean.endsWith(".mp3")) return "audio/mpeg";
+  if (clean.endsWith(".m4a")) return "audio/mp4";
+  if (clean.endsWith(".wav")) return "audio/wav";
+  if (clean.endsWith(".mp4")) return "video/mp4";
+  if (clean.endsWith(".pdf")) return "application/pdf";
   return "image/jpeg";
+}
+
+/** Tipo da mensagem a partir da extensão (o disparo antes forçava tudo para image). */
+export function inferDispatchKind(pathOrUrl: string): "image" | "video" | "audio" | "document" {
+  const clean = pathOrUrl.split("?")[0]?.toLowerCase() ?? "";
+  if (
+    clean.endsWith(".ogg") ||
+    clean.endsWith(".oga") ||
+    clean.endsWith(".mp3") ||
+    clean.endsWith(".m4a") ||
+    clean.endsWith(".wav") ||
+    clean.endsWith(".webm")
+  )
+    return "audio";
+  if (clean.endsWith(".mp4") || clean.endsWith(".mov") || clean.endsWith(".3gp")) return "video";
+  if (clean.endsWith(".pdf") || clean.endsWith(".doc") || clean.endsWith(".docx")) return "document";
+  return "image";
 }
 
 /** Classifica um valor bruto de mídia (storage path ou URL) sem validar rede. */

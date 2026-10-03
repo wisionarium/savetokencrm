@@ -16,7 +16,8 @@ export type MessageKind = "image" | "video" | "audio" | "document";
 export function isMediaPathOwnedBy(path: string, orgId: string, conversationId: string): boolean {
   return (
     path.startsWith(`${orgId}/${conversationId}/`) ||
-    path.startsWith(`${orgId}/dispatch-flows/`)
+    path.startsWith(`${orgId}/dispatch-flows/`) ||
+    path.startsWith(`${orgId}/galeria/`)
   );
 }
 

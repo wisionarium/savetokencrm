@@ -16,6 +16,7 @@ import { useConversationNotes } from "@/hooks/inbox/useConversationNotes";
 import { usePassagensDaConversa } from "@/hooks/inbox/usePassagensDaConversa";
 import { useClaimConversation } from "@/hooks/inbox/useClaimConversation";
 import { useDeleteNote } from "@/hooks/inbox/useDeleteNote";
+import { useDeleteMessage } from "@/hooks/inbox/useDeleteMessage";
 import { useDebugToggle } from "@/hooks/ai/useDebugToggle";
 import { useActiveOrg, useUser } from "@/hooks/auth/AuthProvider";
 import { ROLE_RANK } from "@/lib/auth/types";
@@ -98,6 +99,7 @@ export function ChatThread({ conversationId, onResponder, dono, contatoId }: Pro
   const activeOrg = useActiveOrg();
   const currentUser = useUser();
   const deleteNote = useDeleteNote(conversationId ?? "");
+  const deleteMessage = useDeleteMessage(conversationId ?? "");
   const canManage = activeOrg != null && ROLE_RANK[activeOrg.role] >= ROLE_RANK.manager;
   const { enabled: debugCitations } = useDebugToggle(activeOrg?.role ?? null);
 
@@ -334,6 +336,14 @@ export function ChatThread({ conversationId, onResponder, dono, contatoId }: Pro
                   message={item.data}
                   debugCitations={debugCitations}
                   onResponder={onResponder}
+                  // Mesmo gesto do excluir nota: só autor ou manager+ vê o
+                  // botão — o backend barra o resto (403), então não mostramos
+                  // um botão que daria erro. A bolha só o desenha em `failed`.
+                  onDelete={
+                    item.data.sent_by_user_id === currentUser.id || canManage
+                      ? (m) => deleteMessage.mutate(m.id)
+                      : undefined
+                  }
                   // A citada sai da MESMA lista já carregada: buscar no servidor
                   // por cada citação faria uma consulta por bolha. Quando a
                   // citada é antiga demais e ficou fora da página, o fio some —

@@ -3,7 +3,7 @@
 import { useLocaleDeData } from "@/hooks/i18n/useLocaleDeData";
 import { format } from "date-fns";
 import { useT } from "@/hooks/i18n/useT";
-import { ArrowBendUpLeft, Check, Checks, Robot, WarningOctagon } from "@/lib/ui/icons";
+import { ArrowBendUpLeft, Check, Checks, Robot, Trash, WarningOctagon } from "@/lib/ui/icons";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Message } from "@/lib/types/messaging";
@@ -33,6 +33,12 @@ interface Props {
    * "Atendente", que é verdadeiro para todo mundo.
    */
   viewerUserId?: string | null;
+  /**
+   * Apagar ESTA mensagem. Só é passado para linha `failed` de quem pode
+   * (autor ou manager+) — mensagem enviada nunca apaga por aqui, e o backend
+   * barra o resto (403/422), então botão sem permissão nem aparece.
+   */
+  onDelete?: (m: Message) => void;
 }
 
 function AckIndicator({ status, t }: { status: string; t: (texto: string) => string }) {
@@ -54,6 +60,7 @@ export function MessageBubble({
   onResponder,
   citada,
   viewerUserId,
+  onDelete,
 }: Props) {
   const localeDaData = useLocaleDeData();
   const t = useT();
@@ -271,6 +278,17 @@ export function MessageBubble({
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
+          )}
+          {isFailed && onDelete && (
+            <button
+              type="button"
+              onClick={() => onDelete(message)}
+              className="inline-flex items-center gap-0.5 font-semibold text-destructive hover:underline"
+              aria-label={t("Excluir mensagem com falha")}
+              title={t("Apaga esta tentativa — ela nunca chegou ao cliente")}
+            >
+              <Trash size={10} weight="bold" aria-hidden /> {t("Excluir")}
+            </button>
           )}
         </div>
       </div>

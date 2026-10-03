@@ -127,6 +127,10 @@ export const AUDIT_ACTIONS = [
   // Uma rodada do cron `recover-stuck-messages` que de fato marcou mensagem
   // como falha (rodada vazia não vira linha — varredura não é mutação).
   "message.recover_stuck_run",
+  // Apagar mensagem FALHADA pelo inbox (DELETE /api/v1/messages/[id]): ela
+  // nunca chegou ao canal, então não há histórico a preservar. Enviada não
+  // apaga por aqui — o log de auditoria é append-only.
+  "message.deleted",
   "contact.blocked",
   "ai.handoff_triggered",
   "ai.reactivated_by_agent",

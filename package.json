@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "next dev",
+    "opencode": "opencode serve --port 3005",
     "dev:webpack": "next dev",
     "build": "next build",
     "build:webpack": "next build",

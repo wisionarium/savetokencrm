@@ -36,6 +36,9 @@ vi.mock("@/hooks/contacts/useContactTagVocabulary", () => ({
 vi.mock("@/hooks/inbox/useConversationCounts", () => ({
   useConversationCounts: () => ({ data: { unassigned: 3, mine: 2, all: 5, closed: 1 } }),
 }));
+vi.mock("@/hooks/inbox/useAssignableMembers", () => ({
+  useAssignableMembers: () => ({ data: [] }),
+}));
 
 const { InboxFilters } = await import("@/components/inbox/InboxFilters");
 type Valor = import("@/components/inbox/InboxFilters").InboxFiltersValue;
@@ -48,7 +51,7 @@ afterEach(() => {
 
 describe("o debounce da busca não desfaz a troca de aba", () => {
   it("⭐ digitar e trocar de aba em <250 ms preserva a ABA NOVA", () => {
-    let atual: Valor = { tab: "unassigned", search: "", onlyUnread: false };
+    let atual: Valor = { tab: "unassigned", search: "", leitura: "todas" };
     const onChange = vi.fn((next: Valor) => {
       atual = next;
     });
@@ -73,7 +76,7 @@ describe("o debounce da busca não desfaz a troca de aba", () => {
 
   it("CONTROLE: a busca digitada CHEGA — o conserto não pode calar o debounce", () => {
     // Sem este caso, "nunca propagar nada" passaria no de cima.
-    let atual: Valor = { tab: "unassigned", search: "", onlyUnread: false };
+    let atual: Valor = { tab: "unassigned", search: "", leitura: "todas" };
     const onChange = vi.fn((next: Valor) => {
       atual = next;
     });
@@ -95,7 +98,7 @@ describe("o debounce da busca não desfaz a troca de aba", () => {
     // Guarda de vacuidade: um efeito que propagasse a cada render manteria os dois
     // casos de cima verdes e encheria a lista de requisições iguais.
     const onChange = vi.fn();
-    const valor: Valor = { tab: "unassigned", search: "", onlyUnread: false };
+    const valor: Valor = { tab: "unassigned", search: "", leitura: "todas" };
     render(<InboxFilters value={valor} onChange={onChange} />);
     act(() => {
       vi.advanceTimersByTime(300);

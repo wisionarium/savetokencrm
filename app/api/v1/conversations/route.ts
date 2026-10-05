@@ -56,6 +56,10 @@ export async function GET(req: NextRequest): Promise<Response> {
     // Achado por @jmpo, no cabeçalho do teste que ele escreveu no PR #199.
     tag: url.searchParams.get("tag") ?? undefined,
     unread: url.searchParams.get("unread") ?? undefined,
+    // O outro lado do filtro de leitura (seletor Todas/Lidas/Não lidas).
+    // `unread=false` continua significando "sem filtro" — mudar isso quebraria
+    // todo cliente com a página aberta desde antes do deploy.
+    read: url.searchParams.get("read") ?? undefined,
     channel_session_id: url.searchParams.get("channel_session_id") ?? undefined,
     search: url.searchParams.get("search") ?? undefined,
     cursor: url.searchParams.get("cursor") ?? undefined,

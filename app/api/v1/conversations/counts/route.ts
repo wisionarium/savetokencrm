@@ -67,6 +67,11 @@ export function contagemSoNaoLidas(sp: URLSearchParams): boolean {
   return sp.get("unread") === "true";
 }
 
+/** Verdadeiro quando a contagem deve pedir só as lidas (`unread_count == 0`). */
+export function contagemSoLidas(sp: URLSearchParams): boolean {
+  return sp.get("read") === "true";
+}
+
 export async function GET(req: NextRequest): Promise<Response> {
   const requestId = randomUUID();
   const supabase = await createClient();
@@ -94,6 +99,8 @@ export async function GET(req: NextRequest): Promise<Response> {
   const sp = req.nextUrl.searchParams;
   const auxiliares = filtrosAuxiliaresDaContagem(sp);
   const soNaoLidas = contagemSoNaoLidas(sp);
+  const soLidas = contagemSoLidas(sp);
+  const atribuidoPara = sp.get("assigned_to");
   const marcador = sp.get("tag");
 
   // ⚠️ TODA contagem nasce daqui, e daqui já sai com `organization_id` E com os
@@ -108,6 +115,12 @@ export async function GET(req: NextRequest): Promise<Response> {
     // O marcador entra pela régua da LISTA — a mesma função, não uma segunda.
     q = aplicarMarcador(q, marcador);
     if (soNaoLidas) q = q.gt("unread_count_for_assignee", 0);
+    if (soLidas) q = q.eq("unread_count_for_assignee", 0);
+    // O dono entra aqui como igualdade, igual à lista (`_handler.ts`): `me` é
+    // o próprio usuário (a rota tem o `user` do cookie), `unassigned` é NULL.
+    if (atribuidoPara === "me") q = q.eq("assigned_to_user_id", user.id);
+    else if (atribuidoPara === "unassigned") q = q.is("assigned_to_user_id", null);
+    else if (atribuidoPara) q = q.eq("assigned_to_user_id", atribuidoPara);
     return q;
   };
 

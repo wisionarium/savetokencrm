@@ -110,6 +110,12 @@ describe("listConversationsQuerySchema", () => {
     const r = listConversationsQuerySchema.safeParse({ limit: "200" });
     expect(r.success).toBe(false);
   });
+
+  it("aceita read=true (o outro lado do filtro de leitura)", () => {
+    const r = listConversationsQuerySchema.safeParse({ read: "true" });
+    expect(r.success).toBe(true);
+    if (r.success) expect(r.data.read).toBe(true);
+  });
 });
 
 describe("claimConversationSchema", () => {

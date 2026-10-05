@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { ChipDeEtiqueta } from "@/components/tags/ChipDeEtiqueta";
 import { OwnerBadge } from "@/components/kanban/OwnerBadge";
 import { comandoDaConversa, esperaDaConversa } from "@/lib/inbox/comando-da-conversa";
+import { engajamentoDaConversa } from "@/lib/inbox/engajamento";
+import { ChamaDeEngajamento } from "./ChamaDeEngajamento";
 import { cn } from "@/lib/utils";
 import type { ConversationWithContact } from "@/hooks/inbox/useConversationsRealtime";
 import { rotuloDoContato } from "@/lib/contacts/rotulo-do-contato";
@@ -198,6 +200,16 @@ export function ConversationListItem({
     Boolean(c?.is_blocked) ||
     Boolean(c?.is_anonymized);
 
+  // O streak mora na linha, não no servidor (v1 visual): a régua lê o que a
+  // lista já carrega — recência do inbound + não-lidas. Sem chamada extra por
+  // linha, sem migration; quando o backend agregar de verdade, a régua troca
+  // por dentro (`lib/inbox/engajamento.ts`) e a tela não muda.
+  const engajamento = engajamentoDaConversa({
+    last_inbound_at: conversation.last_inbound_at,
+    last_outbound_at: conversation.last_outbound_at,
+    unread_count_for_assignee: conversation.unread_count_for_assignee ?? 0,
+  });
+
   return (
     <button
       type="button"
@@ -294,7 +306,7 @@ export function ConversationListItem({
           )}
         </div>
 
-        {temSelos && (
+        {(temSelos || engajamento.nivel === "quente") && (
           <div className="mt-1.5 flex flex-wrap items-center gap-1">
             {visibleTags.map((t) => (
               <ChipDeEtiqueta key={t} tag={t} className="h-4 px-1.5 text-[10px]" />
@@ -324,6 +336,9 @@ export function ConversationListItem({
               <Badge variant="outline" className="h-4 px-1.5 text-[10px]">
                 {t("Anonimizado")}
               </Badge>
+            )}
+            {engajamento.nivel === "quente" && engajamento.motivo && (
+              <ChamaDeEngajamento motivo={engajamento.motivo} />
             )}
           </div>
         )}

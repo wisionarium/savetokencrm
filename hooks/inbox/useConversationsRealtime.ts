@@ -91,6 +91,12 @@ export interface ConversationsFilters {
    * a coluna `unread_count_for_assignee` já existe.
    */
   unread?: boolean;
+  /**
+   * Só as lidas (`unread_count_for_assignee == 0`). O par do `unread` — ver o
+   * comentário no schema (`lib/schemas/messaging.ts`): `unread=false` é ausência
+   * de filtro, então este predicado tem nome próprio.
+   */
+  read?: boolean;
   channel_session_id?: string;
   tag?: string;
 }
@@ -128,6 +134,7 @@ export function useConversationsRealtime(
       if (filters.assigned_to) qs.set("assigned_to", filters.assigned_to);
       if (filters.search) qs.set("search", filters.search);
       if (filters.unread) qs.set("unread", "true");
+      if (filters.read) qs.set("read", "true");
       if (filters.channel_session_id) qs.set("channel_session_id", filters.channel_session_id);
       if (filters.tag) qs.set("tag", filters.tag);
       if (pageParam) qs.set("cursor", pageParam);

@@ -965,6 +965,35 @@
   }
 }
 
+/* ---- Chama do lead quente (streak de engajamento, inbox) ------------------
+   Vivo é o que RESPONDE, não o que se agita: a chama pulsa suave, em loop
+   lento — é sinal de "olhe aqui", não alarme. `prefers-reduced-motion` mostra
+   a chama parada: o caminho de acessibilidade é igual, não pior (o aviso
+   continua legível para quem desligou animação). Tinta e fundo vêm dos tokens
+   `warning`, então a chama acompanha claro/escuro e a marca da instalação. */
+@keyframes deskcomm-chama {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.18);
+    opacity: 0.85;
+  }
+}
+
+.chama-quente {
+  color: var(--color-warning);
+  transform-origin: 50% 90%;
+  animation: deskcomm-chama 1.6s var(--ease-in-out) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chama-quente {
+    animation: none;
+  }
+}
+
 /* ---- Toasts (sonner) na identidade Sage --------------------------------
    O default do sonner é outro produto: fundo branco/preto puro, ícone de
    erro num vermelho saturado (#e5484d) e raio próprio. Como todo toast do

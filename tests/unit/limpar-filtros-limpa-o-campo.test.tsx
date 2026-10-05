@@ -49,6 +49,9 @@ vi.mock("@/hooks/contacts/useContactTagVocabulary", () => ({
 vi.mock("@/hooks/inbox/useConversationCounts", () => ({
   useConversationCounts: () => ({ data: undefined }),
 }));
+vi.mock("@/hooks/inbox/useAssignableMembers", () => ({
+  useAssignableMembers: () => ({ data: [] }),
+}));
 
 const { InboxFilters } = await import("@/components/inbox/InboxFilters");
 
@@ -62,13 +65,13 @@ function Arnes() {
   const [value, setValue] = useState<InboxFiltersValue>({
     tab: "all",
     search: "",
-    onlyUnread: false,
+    leitura: "todas",
   });
   return (
     <>
       <InboxFilters value={value} onChange={setValue} />
       <span data-testid="search-aplicado">{value.search}</span>
-      <button onClick={() => setValue((v) => ({ ...v, search: "", onlyUnread: false }))}>
+      <button onClick={() => setValue((v) => ({ ...v, search: "", leitura: "todas" }))}>
         Limpar filtros
       </button>
     </>

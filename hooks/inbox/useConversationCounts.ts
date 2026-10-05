@@ -24,8 +24,11 @@ export interface ConversationCounts {
 /** Os filtros auxiliares ligados na barra, que a contagem tem de aplicar junto. */
 export interface FiltrosDaContagem {
   unread?: boolean;
+  read?: boolean;
   tag?: string;
   channel_session_id?: string;
+  /** `me` | `unassigned` | uuid — o mesmo vocabulário da lista. */
+  assigned_to?: string;
 }
 
 /**
@@ -38,8 +41,10 @@ export function useConversationCounts(
 ) {
   const qs = new URLSearchParams();
   if (filtros.unread) qs.set("unread", "true");
+  if (filtros.read) qs.set("read", "true");
   if (filtros.tag) qs.set("tag", filtros.tag);
   if (filtros.channel_session_id) qs.set("channel_session_id", filtros.channel_session_id);
+  if (filtros.assigned_to) qs.set("assigned_to", filtros.assigned_to);
   const sufixo = qs.toString();
 
   return useQuery({

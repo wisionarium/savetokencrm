@@ -47,8 +47,11 @@ vi.mock("@/hooks/contacts/useContactTagVocabulary", () => ({
 vi.mock("@/hooks/inbox/useConversationCounts", () => ({
   useConversationCounts: () => ({ data: { unassigned: 3, mine: 2, all: 5 } }),
 }));
+vi.mock("@/hooks/inbox/useAssignableMembers", () => ({
+  useAssignableMembers: () => ({ data: [] }),
+}));
 
-const VALUE: InboxFiltersValue = { tab: "unassigned", search: "", onlyUnread: false };
+const VALUE: InboxFiltersValue = { tab: "unassigned", search: "", leitura: "todas" };
 
 function setOrg(role: ActiveOrg["role"], visibility_mode: ActiveOrg["visibility_mode"]) {
   activeOrgRef.current = { orgId: "org-1", name: "Org", role, visibility_mode };
@@ -232,5 +235,54 @@ describe("InboxFilters — seletor de número e o filtro órfão", () => {
       <InboxFilters value={{ ...VALUE, channel_session_id: "canal-1" }} onChange={() => {}} />,
     );
     expect(screen.queryByText("Número removido")).not.toBeInTheDocument();
+  });
+});
+
+describe("InboxFilters — leitura em 3 estados", () => {
+  it("o radiogroup existe com as 3 opções e marca a ativa", () => {
+    setOrg("agent", "own_and_unassigned");
+    render(<InboxFilters value={VALUE} onChange={() => {}} />);
+    const grupo = screen.getByRole("radiogroup", { name: /Filtrar por leitura/i });
+    expect(grupo).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Todas" })).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByRole("radio", { name: "Não lidas" })).toHaveAttribute(
+      "aria-checked",
+      "false",
+    );
+    expect(screen.getByRole("radio", { name: "Lidas" })).toHaveAttribute("aria-checked", "false");
+  });
+
+  it("valor lidas marca Lidas — os dois escrevem o mesmo campo, nunca divergem", () => {
+    setOrg("agent", "own_and_unassigned");
+    render(<InboxFilters value={{ ...VALUE, leitura: "lidas" }} onChange={() => {}} />);
+    expect(screen.getByRole("radio", { name: "Lidas" })).toHaveAttribute("aria-checked", "true");
+  });
+});
+
+describe("InboxFilters — 'Atribuído para' é ferramenta de gestão", () => {
+  const SELETOR_ATENDENTE = "Filtrar por atendente";
+
+  it("agent NÃO vê o seletor — só os filtros dela", () => {
+    setOrg("agent", "own_and_unassigned");
+    render(<InboxFilters value={VALUE} onChange={() => {}} />);
+    expect(screen.queryByLabelText(SELETOR_ATENDENTE)).not.toBeInTheDocument();
+  });
+
+  it("viewer NÃO vê o seletor", () => {
+    setOrg("viewer", "all");
+    render(<InboxFilters value={VALUE} onChange={() => {}} />);
+    expect(screen.queryByLabelText(SELETOR_ATENDENTE)).not.toBeInTheDocument();
+  });
+
+  it("manager VÊ o seletor", () => {
+    setOrg("manager", "all");
+    render(<InboxFilters value={VALUE} onChange={() => {}} />);
+    expect(screen.getByLabelText(SELETOR_ATENDENTE)).toBeInTheDocument();
+  });
+
+  it("admin VÊ o seletor", () => {
+    setOrg("admin", "all");
+    render(<InboxFilters value={VALUE} onChange={() => {}} />);
+    expect(screen.getByLabelText(SELETOR_ATENDENTE)).toBeInTheDocument();
   });
 });

@@ -137,7 +137,7 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
   // tab vive na URL (?filter=); os demais filtros são estado local de sessão.
   const [aux, setAux] = useState<Omit<InboxFiltersValue, "tab">>({
     search: "",
-    onlyUnread: false,
+    leitura: "todas",
   });
   const filterValue: InboxFiltersValue = { tab, ...aux };
   const setFilterValue = useCallback(
@@ -156,7 +156,7 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
   // Desliga só os AUXILIARES e mantém a aba: a aba é onde a pessoa está, e
   // limpá-la junto a tiraria do lugar sem ela ter pedido.
   const limparFiltrosAuxiliares = useCallback(() => {
-    setFilterValue({ tab, search: "", onlyUnread: false });
+    setFilterValue({ tab, search: "", leitura: "todas" });
   }, [tab, setFilterValue]);
 
   const [selectedId, setSelectedId] = useState<string | null>(initialSelectedId);
@@ -186,26 +186,38 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
   const composerRef = useRef<ComposerHandle | null>(null);
 
   const filters: ConversationsFilters = useMemo(
-    () => ({
-      ...tabToFilter(filterValue.tab, automaticoDaOrg),
-      // A tela NÃO pede o que a rota recusa: o hook trata falha com
-      // `showApiError`, então digitar a primeira letra de qualquer busca faria
-      // piscar um erro na cara de quem digita. A regra é a MESMA que o schema
-      // usa (`lib/inbox/termo-de-busca.ts`) — nunca repetida aqui.
-      search: buscaValeConsulta(filterValue.search)
-        ? filterValue.search
-        : undefined,
-      channel_session_id: filterValue.channel_session_id,
-      tag: filterValue.tag,
-      unread: filterValue.onlyUnread || undefined,
-    }),
+    () => {
+      const daAba = tabToFilter(filterValue.tab, automaticoDaOrg);
+      return {
+        ...daAba,
+        // O "Atribuído para" da gestão VENCE o dono que a aba pediu: sem isso,
+        // escolher uma atendente com a aba "Minhas" aberta faria AND
+        // (`assigned_to=me` E `assigned_to=<uuid>`) — lista sempre vazia sem
+        // nada dizendo por quê. Nas abas de status (Fechadas/Arquivadas) não há
+        // dono vindo da aba, então o filtro soma (AND verdadeiro: atribuídas a
+        // X E arquivadas — que é o que o pedido quer dizer).
+        assigned_to: filterValue.assigned_to ?? daAba.assigned_to,
+        // A tela NÃO pede o que a rota recusa: o hook trata falha com
+        // `showApiError`, então digitar a primeira letra de qualquer busca faria
+        // piscar um erro na cara de quem digita. A regra é a MESMA que o schema
+        // usa (`lib/inbox/termo-de-busca.ts`) — nunca repetida aqui.
+        search: buscaValeConsulta(filterValue.search)
+          ? filterValue.search
+          : undefined,
+        channel_session_id: filterValue.channel_session_id,
+        tag: filterValue.tag,
+        unread: filterValue.leitura === "nao_lidas" || undefined,
+        read: filterValue.leitura === "lidas" || undefined,
+      };
+    },
     [
       filterValue.tab,
       automaticoDaOrg,
       filterValue.search,
       filterValue.channel_session_id,
       filterValue.tag,
-      filterValue.onlyUnread,
+      filterValue.leitura,
+      filterValue.assigned_to,
     ],
   );
 

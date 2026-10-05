@@ -224,6 +224,11 @@ export async function listConversationsHandler(
   // Este handler usa o admin client, que passa por cima da RLS: esse filtro é a Única
   // barreira. Consulta nova só para os não lidos nasceria sem barreira nenhuma.
   if (q.unread) query = query.gt("unread_count_for_assignee", 0);
+  // O outro lado da leitura. `unread=false` NÃO é "lidas" — é ausência de
+  // filtro, e é por isso que este predicado tem nome próprio. Os dois juntos
+  // são contradição e devolvem lista vazia (AND), nunca um lado escolhido em
+  // silêncio — mesma regra do `exclude_finished` + status terminal.
+  if (q.read) query = query.eq("unread_count_for_assignee", 0);
 
   if (q.assigned_to === "me") {
     if (ctx.actor.type !== "user") {

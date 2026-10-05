@@ -329,6 +329,17 @@ export const listConversationsQuerySchema = z.object({
    */
   unread: z.coerce.boolean().optional(),
   /**
+   * Só as que NÃO têm mensagem não lida para o dono (`unread_count == 0`).
+   *
+   * O par do `unread`: o botão "Não lidos" virou um seletor de 3 estados
+   * (Todas/Lidas/Não lidas) e a lista precisava perguntar o outro lado sem
+   * inventar semântica para `unread=false` — que hoje significa "sem filtro".
+   * Os dois juntos são contradição e a resposta certa para uma contradição é
+   * recusar, não escolher um lado em silêncio (mesma regra do
+   * `exclude_finished` + status terminal).
+   */
+  read: z.coerce.boolean().optional(),
+  /**
    * O termo de busca. A régua inteira vive em `lib/inbox/termo-de-busca.ts`, e a
    * tela lê a MESMA — repetir aqui faria os dois divergirem, e a divergência
    * apareceria como erro na cara de quem digita (a rota recusa e o hook mostra).

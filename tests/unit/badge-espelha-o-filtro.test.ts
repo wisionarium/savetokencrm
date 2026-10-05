@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 import {
+  contagemSoLidas,
   contagemSoNaoLidas,
   filtrosAuxiliaresDaContagem,
 } from "@/app/api/v1/conversations/counts/route";
@@ -68,6 +69,11 @@ describe("quais filtros a contagem aplica", () => {
   it("não lidos é lido à parte, porque não é igualdade e sim `> 0`", () => {
     expect(contagemSoNaoLidas(sp("unread=true"))).toBe(true);
     expect(contagemSoNaoLidas(sp(""))).toBe(false);
+  });
+
+  it("lidas é lido à parte, porque não é igualdade e sim `= 0`", () => {
+    expect(contagemSoLidas(sp("read=true"))).toBe(true);
+    expect(contagemSoLidas(sp(""))).toBe(false);
   });
 
   it("CONTROLE: sem filtro na URL, nenhum predicado extra", () => {
@@ -175,7 +181,7 @@ describe("nenhuma contagem é montada por fora da fábrica", () => {
     ).toEqual([]);
   });
 
-  it("a fábrica aplica os auxiliares E o não-lidas", () => {
+  it("a fábrica aplica os auxiliares, o não-lidas E o lidas", () => {
     const fabrica = fonte.slice(
       fonte.indexOf("const countExact = () =>"),
       fonte.indexOf("await Promise.all(["),
@@ -183,6 +189,7 @@ describe("nenhuma contagem é montada por fora da fábrica", () => {
     expect(fabrica).toContain("organization_id");
     expect(fabrica, "os filtros auxiliares não entram na fábrica").toContain("auxiliares");
     expect(fabrica, "o filtro de não lidas não entra na fábrica").toContain("soNaoLidas");
+    expect(fabrica, "o filtro de lidas não entra na fábrica").toContain("soLidas");
   });
 
   it("a fábrica aplica a régua do marcador (#1223)", () => {

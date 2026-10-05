@@ -65,9 +65,13 @@ describe("quais filtros a tela nomeia", () => {
     expect(filtrosAuxiliaresAtivos({ exclude_finished: true } as ConversationsFilters)).toEqual([]);
   });
 
-  it("os quatro auxiliares entram, e só quando ligados", () => {
+  it("os auxiliares entram, e só quando ligados", () => {
     expect(filtrosAuxiliaresAtivos({} as ConversationsFilters)).toEqual([]);
     expect(filtrosAuxiliaresAtivos({ unread: true } as ConversationsFilters)).toEqual(["Não lidos"]);
+    expect(filtrosAuxiliaresAtivos({ read: true } as ConversationsFilters)).toEqual(["Lidas"]);
+    expect(filtrosAuxiliaresAtivos({ assigned_to: "me" } as ConversationsFilters)).toEqual([
+      "Atribuído",
+    ]);
     expect(
       filtrosAuxiliaresAtivos({ unread: true, tag: "urgente" } as ConversationsFilters),
     ).toEqual(["Não lidos", "Etiqueta"]);

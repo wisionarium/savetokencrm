@@ -15,6 +15,7 @@ import {
 import { ChipDeEtiqueta } from "@/components/tags/ChipDeEtiqueta";
 import { PontoDaEtiqueta } from "@/components/tags/PontoDaEtiqueta";
 import { channelLabel, useChannelSessions } from "@/hooks/channels/useChannelSessions";
+import { useAssignableMembers } from "@/hooks/inbox/useAssignableMembers";
 import { useAuth } from "@/hooks/auth/AuthProvider";
 import { useContactTagVocabulary } from "@/hooks/contacts/useContactTagVocabulary";
 import { useConversationTagVocabulary } from "@/hooks/inbox/useConversationTags";
@@ -51,12 +52,21 @@ export function visibleInboxTabs(role: Role, mode: VisibilityMode | undefined): 
   return INBOX_TABS.filter((t) => !(t.value === "all" && hideAll)).map((t) => t.value);
 }
 
+export type LeituraDoFiltro = "todas" | "nao_lidas" | "lidas";
+
 export interface InboxFiltersValue {
   tab: InboxTab;
   search: string;
-  onlyUnread: boolean;
+  leitura: LeituraDoFiltro;
   channel_session_id?: string;
   tag?: string;
+  /**
+   * Dono filtrado (`me` | `unassigned` | uuid). Só a gestão preenche — o
+   * seletor nem é renderizado para `agent`/`viewer` (ver
+   * `podeFiltrarPorAtendente` abaixo). Combina com todo o resto: aba, leitura,
+   * canal, etiqueta e busca viajam juntos para a mesma query.
+   */
+  assigned_to?: string;
 }
 
 interface Props {
@@ -120,10 +130,24 @@ export function InboxFilters({ value, onChange }: Props) {
   // manda o atendente procurar trabalho que não existe — a regra já estava escrita
   // na rota; faltava alcançar os filtros ao lado da aba.
   const { data: counts } = useConversationCounts(activeOrg?.orgId ?? null, {
-    unread: value.onlyUnread,
+    unread: value.leitura === "nao_lidas",
+    read: value.leitura === "lidas",
     tag: value.tag,
     channel_session_id: value.channel_session_id,
+    assigned_to: value.assigned_to,
   });
+
+  /**
+   * O filtro "Atribuído para" é ferramenta de GESTÃO.
+   *
+   * A vendedora (agent/viewer) vê só os filtros dela — leitura, busca, canal,
+   * etiqueta — e o escopo continua garantido pela RLS, não por este `if`. Este
+   * `if` é cosmético (mesma natureza do `visibleInboxTabs`): esconder o seletor
+   * de quem não gerencia fila. Manager entra junto com admin: gerente distribui
+   * trabalho como o dono.
+   */
+  const podeFiltrarPorAtendente = activeOrg?.role === "admin" || activeOrg?.role === "manager";
+  const { data: atendentes } = useAssignableMembers(podeFiltrarPorAtendente);
 
   const tabs = activeOrg
     ? visibleInboxTabs(activeOrg.role, activeOrg.visibility_mode)
@@ -162,6 +186,15 @@ export function InboxFilters({ value, onChange }: Props) {
     !tagVocabulary.includes(value.tag);
   const mostrarSeletorDeTag =
     (tagVocabulary?.length ?? 0) > 0 || tagForaDoVocabulario;
+  // O MESMO tratamento do canal, agora para o dono: filtro apontando para
+  // quem saiu da equipe mantém o seletor com a opção órfã ("Atendente
+  // removido") em vez de sumir com o filtro ainda aplicado. `undefined` =
+  // listagem ainda carregando — não é "zero atendentes".
+  const atendenteForaDaLista =
+    value.assigned_to != null &&
+    !["me", "unassigned"].includes(value.assigned_to) &&
+    atendentes != null &&
+    !atendentes.some((m) => m.user_id === value.assigned_to);
 
   // O timer lê o valor MAIS RECENTE, não o do render em que foi agendado.
   //
@@ -224,24 +257,78 @@ export function InboxFilters({ value, onChange }: Props) {
               aria-label={t("Buscar conversas")}
             />
           </div>
-          {/* Botão pressionável em vez de Switch: o filtro vive na mesma linha
-              da busca, e o Switch com rótulo pedia uma linha inteira só para
-              si numa coluna de 280px. */}
-          <button
-            type="button"
-            aria-pressed={value.onlyUnread}
-            onClick={() => onChange({ ...value, onlyUnread: !value.onlyUnread })}
-            className={cn(
-              "h-9 shrink-0 rounded-full border px-3 text-xs font-medium transition-colors",
-              "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-              value.onlyUnread
-                ? "border-accent bg-accent text-accent-foreground"
-                : "border-border bg-transparent text-text-muted hover:bg-surface-elevated",
-            )}
-          >
-            {t("Não lidos")}
-          </button>
         </div>
+
+        {/* Leitura em 3 estados (Todas/Não lidas/Lidas) — combina com o resto:
+            aba + atribuído + canal + etiqueta viajam juntos na mesma query
+            (`InboxLayout` monta um `ConversationsFilters` só). Antes era um
+            toggle "Não lidos": ligar o filtro escondia as lidas sem dizer, e
+            não havia como pedir SÓ as lidas. */}
+        <div
+          role="radiogroup"
+          aria-label={t("Filtrar por leitura")}
+          className="grid grid-cols-3 gap-1 rounded-full bg-surface-elevated p-1"
+        >
+          {(
+            [
+              { valor: "todas", rotulo: t("Todas") },
+              { valor: "nao_lidas", rotulo: t("Não lidas") },
+              { valor: "lidas", rotulo: t("Lidas") },
+            ] as const
+          ).map((opcao) => {
+            const ativa = value.leitura === opcao.valor;
+            return (
+              <button
+                key={opcao.valor}
+                type="button"
+                role="radio"
+                aria-checked={ativa}
+                onClick={() => onChange({ ...value, leitura: opcao.valor })}
+                className={cn(
+                  "h-7 rounded-full text-xs font-medium transition-colors",
+                  "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                  ativa
+                    ? "bg-surface text-text shadow-sm"
+                    : "text-text-muted hover:text-text",
+                )}
+              >
+                {opcao.rotulo}
+              </button>
+            );
+          })}
+        </div>
+
+        {podeFiltrarPorAtendente && (
+          <Select
+            value={value.assigned_to ?? "all"}
+            onValueChange={(v) =>
+              onChange({ ...value, assigned_to: v === "all" ? undefined : v })
+            }
+          >
+            <SelectTrigger
+              className={cn(
+                "h-8 w-full rounded-full border-transparent bg-surface-elevated px-3 text-xs shadow-none",
+                value.assigned_to != null && "border-accent bg-accent-soft text-accent",
+              )}
+              aria-label={t("Filtrar por atendente")}
+            >
+              <SelectValue placeholder={t("Todos os atendentes")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("Todos os atendentes")}</SelectItem>
+              <SelectItem value="unassigned">{t("Sem dono")}</SelectItem>
+              <SelectItem value="me">{t("Minhas")}</SelectItem>
+              {atendenteForaDaLista && value.assigned_to != null && (
+                <SelectItem value={value.assigned_to}>{t("Atendente removido")}</SelectItem>
+              )}
+              {atendentes?.map((m) => (
+                <SelectItem key={m.user_id} value={m.user_id}>
+                  {m.full_name ?? t("Sem nome")}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
 
         {(showChannelSwitch || mostrarSeletorDeTag) && (
           <div className="flex gap-2">

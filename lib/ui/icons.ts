@@ -134,6 +134,8 @@ export {
   ClockCounterClockwise,
   // inbox no celular: voltar para a lista e abrir a ficha do contato
   IdentificationCard,
+  // streak de engajamento: o lead que está respondendo ganha a chaminha.
+  Flame,
   // agenda (o barril não tinha NENHUM ícone de calendário até aqui)
   CalendarBlank,
   CalendarDots,

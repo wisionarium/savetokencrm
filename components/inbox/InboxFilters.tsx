@@ -43,6 +43,36 @@ const INBOX_TABS: { value: InboxTab; label: string }[] = [
 ];
 
 /**
+ * Abas onde filtrar por dono faz sentido — e, por consequência, as únicas onde
+ * o seletor "Atribuído para" aparece.
+ *
+ * Fila, Minhas e Automático JÁ definem o dono: a Fila e o Automático só têm
+ * conversa sem dono, Minhas só as do operador. Oferecer "atribuído para" ali
+ * seria redundância (o "Minhas" duplicado do print) ou contradição (dono X
+ * dentro de uma aba que por definição não tem dono). Exportada para ser
+ * testável: a troca de aba que não larga o filtro morto é a mesma mentira de
+ * tela que o filtro órfão de canal já conta.
+ */
+export function abaAceitaAtribuido(tab: InboxTab): boolean {
+  return tab === "all" || tab === "closed" || tab === "archived";
+}
+
+/**
+ * Troca de aba levando os refinamentos que continuam válidos — e largando os
+ * que morreram. Hoje o único que morre é o `assigned_to` nas abas que já
+ * definem o dono (ver `abaAceitaAtribuido`): sem isto, escolher uma atendente
+ * em Todas e voltar para Minhas deixaria um filtro invisível aplicado — a
+ * lista mostraria "Minhas" filtrada por outra pessoa, sem nada na tela dizendo.
+ * Função pura para ser testável sem Radix.
+ */
+export function aoTrocarDeAba(atual: InboxFiltersValue, nova: InboxTab): InboxFiltersValue {
+  if (atual.tab === nova) return atual;
+  const next: InboxFiltersValue = { ...atual, tab: nova };
+  if (!abaAceitaAtribuido(nova)) delete next.assigned_to;
+  return next;
+}
+
+/**
  * Visões visíveis por papel + escopo (G4-02, acceptance 1). 'Todas' fica oculta
  * para `agent` quando visibility_mode ≠ 'all'; viewer/manager/admin sempre veem.
  * É apenas cosmético — a RLS (G4-01) é quem garante o escopo mesmo via ?filter=all.
@@ -61,10 +91,11 @@ export interface InboxFiltersValue {
   channel_session_id?: string;
   tag?: string;
   /**
-   * Dono filtrado (`me` | `unassigned` | uuid). Só a gestão preenche — o
-   * seletor nem é renderizado para `agent`/`viewer` (ver
-   * `podeFiltrarPorAtendente` abaixo). Combina com todo o resto: aba, leitura,
-   * canal, etiqueta e busca viajam juntos para a mesma query.
+   * Dono filtrado (`unassigned` | uuid) vindo do seletor da gestão — mais o
+   * `me` que a aba Minhas põe via `tabToFilter` (o seletor não oferece "Minhas":
+   * a aba já é esse filtro). Combina com o resto: leitura, canal, etiqueta e
+   * busca viajam juntos para a mesma query. Só existe nas abas de
+   * `abaAceitaAtribuido`; ao sair delas, `aoTrocarDeAba` larga o valor.
    */
   assigned_to?: string;
 }
@@ -259,46 +290,34 @@ export function InboxFilters({ value, onChange }: Props) {
           </div>
         </div>
 
-        {/* Leitura em 3 estados (Todas/Não lidas/Lidas) — combina com o resto:
-            aba + atribuído + canal + etiqueta viajam juntos na mesma query
-            (`InboxLayout` monta um `ConversationsFilters` só). Antes era um
-            toggle "Não lidos": ligar o filtro escondia as lidas sem dizer, e
-            não havia como pedir SÓ as lidas. */}
-        <div
-          role="radiogroup"
-          aria-label={t("Filtrar por leitura")}
-          className="grid grid-cols-3 gap-1 rounded-full bg-surface-elevated p-1"
+        {/* Leitura (lidas/não lidas) — um refinamento como os outros, não uma
+            segunda fileira de abas: o bloco segmentado de 3 botões repetia os
+            nomes das abas ("Todas", "Minhas") e brigava com elas pelo mesmo
+            espaço. No select compacto ela combina com aba + atribuído + canal +
+            etiqueta na mesma query, sem prometer uma "visão" que ela não é. */}
+        <Select
+          value={value.leitura}
+          onValueChange={(v) => onChange({ ...value, leitura: v as LeituraDoFiltro })}
         >
-          {(
-            [
-              { valor: "todas", rotulo: t("Todas") },
-              { valor: "nao_lidas", rotulo: t("Não lidas") },
-              { valor: "lidas", rotulo: t("Lidas") },
-            ] as const
-          ).map((opcao) => {
-            const ativa = value.leitura === opcao.valor;
-            return (
-              <button
-                key={opcao.valor}
-                type="button"
-                role="radio"
-                aria-checked={ativa}
-                onClick={() => onChange({ ...value, leitura: opcao.valor })}
-                className={cn(
-                  "h-7 rounded-full text-xs font-medium transition-colors",
-                  "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                  ativa
-                    ? "bg-surface text-text shadow-sm"
-                    : "text-text-muted hover:text-text",
-                )}
-              >
-                {opcao.rotulo}
-              </button>
-            );
-          })}
-        </div>
+          <SelectTrigger
+            className={cn(
+              "h-8 w-full rounded-full border-transparent bg-surface-elevated px-3 text-xs shadow-none",
+              value.leitura !== "todas" && "border-accent bg-accent-soft text-accent",
+            )}
+            aria-label={t("Filtrar por leitura")}
+          >
+            <SelectValue placeholder={t("Todas")} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todas">{t("Todas")}</SelectItem>
+            <SelectItem value="nao_lidas">{t("Não lidas")}</SelectItem>
+            <SelectItem value="lidas">{t("Lidas")}</SelectItem>
+          </SelectContent>
+        </Select>
 
-        {podeFiltrarPorAtendente && (
+        {/* Atribuído para — SÓ gestão, e SÓ nas abas que não definem o dono.
+            "Minhas" não é opção: a aba Minhas já é esse filtro. */}
+        {podeFiltrarPorAtendente && abaAceitaAtribuido(value.tab) && (
           <Select
             value={value.assigned_to ?? "all"}
             onValueChange={(v) =>
@@ -317,7 +336,6 @@ export function InboxFilters({ value, onChange }: Props) {
             <SelectContent>
               <SelectItem value="all">{t("Todos os atendentes")}</SelectItem>
               <SelectItem value="unassigned">{t("Sem dono")}</SelectItem>
-              <SelectItem value="me">{t("Minhas")}</SelectItem>
               {atendenteForaDaLista && value.assigned_to != null && (
                 <SelectItem value={value.assigned_to}>{t("Atendente removido")}</SelectItem>
               )}
@@ -418,7 +436,7 @@ export function InboxFilters({ value, onChange }: Props) {
           espremiam "Fechadas" contra "Automático" até os rótulos se tocarem. */}
       <Tabs
         value={value.tab}
-        onValueChange={(v) => onChange({ ...value, tab: v as InboxTab })}
+        onValueChange={(v) => onChange(aoTrocarDeAba(value, v as InboxTab))}
         className="px-3"
       >
         <TabsList className="h-auto w-full justify-between gap-2 rounded-none bg-transparent p-0 [scrollbar-width:none]">

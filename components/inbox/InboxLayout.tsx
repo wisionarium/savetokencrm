@@ -154,9 +154,11 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
   );
 
   // Desliga só os AUXILIARES e mantém a aba: a aba é onde a pessoa está, e
-  // limpá-la junto a tiraria do lugar sem ela ter pedido.
+  // limpá-la junto a tiraria do lugar sem ela ter pedido. `assigned_to: undefined`
+  // explícito porque o campo é opcional — sem ele, limpar com um atribuído
+  // escolhido manteria o filtro (e, nas abas que escondem o seletor, invisível).
   const limparFiltrosAuxiliares = useCallback(() => {
-    setFilterValue({ tab, search: "", leitura: "todas" });
+    setFilterValue({ tab, search: "", leitura: "todas", assigned_to: undefined });
   }, [tab, setFilterValue]);
 
   const [selectedId, setSelectedId] = useState<string | null>(initialSelectedId);

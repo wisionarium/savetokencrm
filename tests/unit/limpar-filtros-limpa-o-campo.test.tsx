@@ -71,7 +71,7 @@ function Arnes() {
     <>
       <InboxFilters value={value} onChange={setValue} />
       <span data-testid="search-aplicado">{value.search}</span>
-      <button onClick={() => setValue((v) => ({ ...v, search: "", leitura: "todas" }))}>
+      <button onClick={() => setValue((v) => ({ ...v, search: "", leitura: "todas", assigned_to: undefined }))}>
         Limpar filtros
       </button>
     </>

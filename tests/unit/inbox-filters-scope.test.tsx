@@ -16,7 +16,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 
-import { InboxFilters, visibleInboxTabs, type InboxFiltersValue } from "@/components/inbox/InboxFilters";
+import { InboxFilters, abaAceitaAtribuido, aoTrocarDeAba, visibleInboxTabs, type InboxFiltersValue } from "@/components/inbox/InboxFilters";
 import type * as CanaisModule from "@/hooks/channels/useChannelSessions";
 import type { ChannelSession } from "@/hooks/channels/useChannelSessions";
 import type { ActiveOrg } from "@/lib/auth/types";
@@ -238,24 +238,25 @@ describe("InboxFilters — seletor de número e o filtro órfão", () => {
   });
 });
 
-describe("InboxFilters — leitura em 3 estados", () => {
-  it("o radiogroup existe com as 3 opções e marca a ativa", () => {
+describe("InboxFilters — leitura é refinamento, não segunda fileira de abas", () => {
+  it("o select de leitura existe e mostra o estado atual", () => {
     setOrg("agent", "own_and_unassigned");
     render(<InboxFilters value={VALUE} onChange={() => {}} />);
-    const grupo = screen.getByRole("radiogroup", { name: /Filtrar por leitura/i });
-    expect(grupo).toBeInTheDocument();
-    expect(screen.getByRole("radio", { name: "Todas" })).toHaveAttribute("aria-checked", "true");
-    expect(screen.getByRole("radio", { name: "Não lidas" })).toHaveAttribute(
-      "aria-checked",
-      "false",
-    );
-    expect(screen.getByRole("radio", { name: "Lidas" })).toHaveAttribute("aria-checked", "false");
+    expect(screen.getByLabelText(/Filtrar por leitura/i)).toHaveTextContent("Todas");
   });
 
-  it("valor lidas marca Lidas — os dois escrevem o mesmo campo, nunca divergem", () => {
+  it("valor lidas aparece no gatilho — os dois escrevem o mesmo campo, nunca divergem", () => {
     setOrg("agent", "own_and_unassigned");
     render(<InboxFilters value={{ ...VALUE, leitura: "lidas" }} onChange={() => {}} />);
-    expect(screen.getByRole("radio", { name: "Lidas" })).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByLabelText(/Filtrar por leitura/i)).toHaveTextContent("Lidas");
+  });
+
+  it("CONTROLE: não há radiogroup competindo com as abas", () => {
+    // Sem este caso, o bloco segmentado voltaria e o print ficaria redundante
+    // de novo — "Todas" duas vezes, uma em cada fileira.
+    setOrg("agent", "own_and_unassigned");
+    render(<InboxFilters value={VALUE} onChange={() => {}} />);
+    expect(screen.queryByRole("radiogroup")).not.toBeInTheDocument();
   });
 });
 
@@ -276,13 +277,67 @@ describe("InboxFilters — 'Atribuído para' é ferramenta de gestão", () => {
 
   it("manager VÊ o seletor", () => {
     setOrg("manager", "all");
-    render(<InboxFilters value={VALUE} onChange={() => {}} />);
+    render(<InboxFilters value={{ ...VALUE, tab: "all" }} onChange={() => {}} />);
     expect(screen.getByLabelText(SELETOR_ATENDENTE)).toBeInTheDocument();
   });
 
   it("admin VÊ o seletor", () => {
     setOrg("admin", "all");
-    render(<InboxFilters value={VALUE} onChange={() => {}} />);
+    render(<InboxFilters value={{ ...VALUE, tab: "all" }} onChange={() => {}} />);
     expect(screen.getByLabelText(SELETOR_ATENDENTE)).toBeInTheDocument();
+  });
+
+  it("gestão na aba Minhas NÃO vê — a aba já é esse filtro", () => {
+    // Sem este caso, o "Minhas" duplicado do print voltaria: aba + select
+    // dizendo a mesma coisa a 40px de distância.
+    setOrg("admin", "all");
+    render(<InboxFilters value={{ ...VALUE, tab: "mine" }} onChange={() => {}} />);
+    expect(screen.queryByLabelText(SELETOR_ATENDENTE)).not.toBeInTheDocument();
+  });
+
+  it("gestão na Fila e no Automático NÃO vê — aba sem dono não se filtra por dono", () => {
+    setOrg("admin", "all");
+    const { rerender } = render(<InboxFilters value={{ ...VALUE, tab: "unassigned" }} onChange={() => {}} />);
+    expect(screen.queryByLabelText(SELETOR_ATENDENTE)).not.toBeInTheDocument();
+    rerender(<InboxFilters value={{ ...VALUE, tab: "ai" }} onChange={() => {}} />);
+    expect(screen.queryByLabelText(SELETOR_ATENDENTE)).not.toBeInTheDocument();
+  });
+
+  it("gestão em Fechadas/Arquivadas VÊ — é onde mora o 'atribuídos arquivados'", () => {
+    setOrg("admin", "all");
+    const { rerender } = render(<InboxFilters value={{ ...VALUE, tab: "closed" }} onChange={() => {}} />);
+    expect(screen.getByLabelText(SELETOR_ATENDENTE)).toBeInTheDocument();
+    rerender(<InboxFilters value={{ ...VALUE, tab: "archived" }} onChange={() => {}} />);
+    expect(screen.getByLabelText(SELETOR_ATENDENTE)).toBeInTheDocument();
+  });
+});
+
+describe("abaAceitaAtribuido + aoTrocarDeAba (lógica pura)", () => {
+  it("só Todas, Fechadas e Arquivadas aceitam", () => {
+    expect(abaAceitaAtribuido("all")).toBe(true);
+    expect(abaAceitaAtribuido("closed")).toBe(true);
+    expect(abaAceitaAtribuido("archived")).toBe(true);
+    expect(abaAceitaAtribuido("unassigned")).toBe(false);
+    expect(abaAceitaAtribuido("mine")).toBe(false);
+    expect(abaAceitaAtribuido("ai")).toBe(false);
+  });
+
+  it("sair para aba com dono próprio LARGA o atribuído — filtro invisível é mentira de tela", () => {
+    const atual: InboxFiltersValue = { ...VALUE, tab: "all", assigned_to: "uuid-1" };
+    expect(aoTrocarDeAba(atual, "mine")).toEqual({ tab: "mine", search: "", leitura: "todas" });
+    expect(aoTrocarDeAba(atual, "mine")).not.toHaveProperty("assigned_to");
+    expect(aoTrocarDeAba(atual, "unassigned").assigned_to).toBeUndefined();
+    expect(aoTrocarDeAba(atual, "ai").assigned_to).toBeUndefined();
+  });
+
+  it("entre abas que aceitam, o atribuído SOBREVIVE", () => {
+    const atual: InboxFiltersValue = { ...VALUE, tab: "all", assigned_to: "uuid-1" };
+    expect(aoTrocarDeAba(atual, "archived").assigned_to).toBe("uuid-1");
+    expect(aoTrocarDeAba(atual, "closed").assigned_to).toBe("uuid-1");
+  });
+
+  it("CONTROLE: mesma aba devolve o mesmo objeto — sem churn de estado", () => {
+    const atual: InboxFiltersValue = { ...VALUE, tab: "all", assigned_to: "uuid-1" };
+    expect(aoTrocarDeAba(atual, "all")).toBe(atual);
   });
 });

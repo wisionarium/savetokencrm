@@ -187,7 +187,7 @@ const MUTA_PELO_CLIENTE_PASSADO =
   'await cliente.from("organizations").update({ settings }).eq("id", orgId);';
 
 /** O alias REAL que a issue #1157 cita como instância do item 1. */
-const MODULO_DO_ALIAS_DO_CLIENTE_ADMIN = "@/lib/waha/ingest";
+const MODULO_DO_ALIAS_DO_CLIENTE_ADMIN = "@/lib/channels/pos-entrada";
 /** Os fixtures com os MESMOS nomes: um declara o cliente admin, o outro o de sessão. */
 const FIXTURE_VERDE = "@/tests/fixtures/escrita-em-organizations/verde/cliente";
 const FIXTURE_VERMELHA = "@/tests/fixtures/escrita-em-organizations/vermelha/cliente";

@@ -27,7 +27,7 @@
  */
 import type pg from 'pg';
 
-import { parseWahaMessageId, wahaEchoExternalIds } from '@/lib/waha/message-id';
+import { parseWahaMessageId, wahaEchoExternalIds } from '@/lib/channels/message-id';
 import { lerNumerosDeTeste, numeroPodeTestar, preGoLiveAtivo } from '@/lib/ai/elegibilidade/pre-go-live';
 
 import type { Logger } from '../../obs/logger';

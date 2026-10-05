@@ -53,7 +53,8 @@ import { acelerarPipelineDeEventos } from "@/lib/dev/kick-local-pipeline";
 import { autorizarContatoParaIA } from "@/lib/ai/elegibilidade/autorizacao";
 import { casarCampanha, lerCampanhas } from "@/lib/ai/elegibilidade/campanha";
 
-type Admin = ReturnType<typeof createAdminClient>;
+/** Alias do cliente admin para os parâmetros deste módulo. */
+export type Admin = ReturnType<typeof createAdminClient>;
 
 /**
  * Quem pediu para sair, sai — mas quem só usou a palavra, não.

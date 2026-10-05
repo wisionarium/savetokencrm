@@ -44,10 +44,11 @@ const CONTACT = '33333333-3333-4333-8333-333333333333';
 const SESSION = '44444444-4444-4444-8444-444444444444';
 const USER = '55555555-5555-4555-8555-555555555555';
 
-/** O que o WAHA/NOWEB devolve no envio: o id BARE, sem o chat. */
-const BARE = '3EB0ABCDEF0123456789';
-/** O mesmo id como o webhook o entrega de volta: composto. */
-const COMPOSTO = `true_5531999998888@c.us_${BARE}`;
+/** O que a Graph API devolve no envio: o wamid. */
+const WAMID = 'wamid.ECO1ABCDEF0123456789';
+/** O eco chega pelo webhook com o MESMO id (canal simetrico; a forma
+composta `{fromMe}_{chat}_{bare}` era do engine NOWEB removido). */
+const ECO = WAMID;
 
 type Row = Record<string, unknown>;
 
@@ -60,7 +61,7 @@ function conversationRow(): Row {
     is_group: false,
     group_chat_id: null,
     contacts: { phone_number: '+5531999998888', wa_identity: null, is_blocked: false },
-    channel_sessions: { provider: 'waha', waha_session_name: 'default', status: 'WORKING' },
+    channel_sessions: { provider: 'meta_cloud', waha_session_name: null, status: 'WORKING' },
   };
 }
 
@@ -171,7 +172,7 @@ function ecoDoWebhook(over: Row = {}): Row {
     conversation_id: CONV,
     contact_id: CONTACT,
     channel_session_id: SESSION,
-    external_id: COMPOSTO,
+    external_id: ECO,
     direction: 'outbound',
     status: 'sent',
     body: 'oi',
@@ -183,13 +184,13 @@ function ecoDoWebhook(over: Row = {}): Row {
 const ctx: HandlerCtx = { organization_id: ORG, actor: { type: 'user', id: USER }, requestId: 'req-1' };
 const input = { conversation_id: CONV, type: 'text', body: 'oi' } as SendMessageInput;
 
-function wahaRespondendo(idBare: string) {
-  vi.stubEnv('WAHA_API_BASE_URL', 'http://localhost:3030');
-  vi.stubEnv('WAHA_API_KEY', 'hash123');
-  // NOWEB devolve o id interno cru — é daí que sai o `external_id` do envio.
+function metaRespondendo(idWamid: string) {
+  vi.stubEnv('META_PHONE_NUMBER_ID', '1103328999528818');
+  vi.stubEnv('META_SYSTEM_USER_TOKEN', 'tok');
+  // A Graph API devolve o wamid — é daí que sai o `external_id` do envio.
   vi.stubGlobal(
     'fetch',
-    vi.fn(async () => new Response(JSON.stringify({ id: { id: idBare } }), { status: 200 })),
+    vi.fn(async () => new Response(JSON.stringify({ messages: [{ id: idWamid }] }), { status: 200 })),
   );
 }
 
@@ -200,12 +201,12 @@ afterEach(() => {
 
 describe('eco do próprio envio na janela em que a linha ainda não tem external_id', () => {
   it('o eco que chegou primeiro não deixa a frase duplicada', async () => {
-    wahaRespondendo(BARE);
+    metaRespondendo(WAMID);
     const { supabase, messages } = makeSupabase([ecoDoWebhook()]);
 
     await sendMessageHandler(supabase, ctx, input);
 
-    const daMensagem = messages.filter((m) => m.external_id === BARE || m.external_id === COMPOSTO);
+    const daMensagem = messages.filter((m) => m.external_id === WAMID || m.external_id === ECO);
     expect(daMensagem, 'a mesma frase ficou duas vezes na conversa').toHaveLength(1);
   });
 
@@ -213,12 +214,12 @@ describe('eco do próprio envio na janela em que a linha ainda não tem external
     // Qual das duas sobrevive importa: a do envio carrega `sent_by_user_id` e
     // `sent_via`, que é o que a tela usa para dizer quem falou. Ficar com a do
     // webhook apagaria a autoria.
-    wahaRespondendo(BARE);
+    metaRespondendo(WAMID);
     const { supabase, messages } = makeSupabase([ecoDoWebhook()]);
 
     await sendMessageHandler(supabase, ctx, input);
 
-    const sobrou = messages.find((m) => m.external_id === BARE || m.external_id === COMPOSTO)!;
+    const sobrou = messages.find((m) => m.external_id === WAMID || m.external_id === ECO)!;
     expect(sobrou.sent_by_user_id).toBe(USER);
     expect(sobrou.sent_via).toBe('user');
     expect(sobrou.status).toBe('sent');
@@ -228,13 +229,13 @@ describe('eco do próprio envio na janela em que a linha ainda não tem external
     // Guarda de vacuidade: se a correção apagasse indiscriminadamente, este caso
     // ainda daria 1 linha — por isso ele também confere que a linha é a do envio
     // e que ela recebeu o id.
-    wahaRespondendo(BARE);
+    metaRespondendo(WAMID);
     const { supabase, messages } = makeSupabase();
 
     await sendMessageHandler(supabase, ctx, input);
 
     expect(messages).toHaveLength(1);
-    expect(messages[0]!.external_id).toBe(BARE);
+    expect(messages[0]!.external_id).toBe(WAMID);
     expect(messages[0]!.status).toBe('sent');
   });
 });
@@ -245,10 +246,10 @@ describe('o que a correção NÃO pode apagar', () => {
     // legítima de dispositivo externo, na mesma conversa, durante o envio — ela
     // só não é o eco porque o id é OUTRO. Casar por id preserva; casar por
     // "envio em voo" apagaria.
-    wahaRespondendo(BARE);
+    metaRespondendo(WAMID);
     const outraMensagem = ecoDoWebhook({
       id: 'celular-1',
-      external_id: 'true_5531999998888@c.us_3EB0OUTRAMENSAGEM99',
+      external_id: 'wamid.OUTRA9X8Z7',
       body: 'vou verificar e ja te falo',
     });
     const { supabase, messages } = makeSupabase([outraMensagem]);
@@ -266,7 +267,7 @@ describe('o que a correção NÃO pode apagar', () => {
     // O bare pode colidir entre mensagens diferentes (não há garantia nossa, só
     // a do WhatsApp). Restringir à conversa do envio mantém o estrago de uma
     // colisão dentro do único lugar onde ela seria mesmo a nossa mensagem.
-    wahaRespondendo(BARE);
+    metaRespondendo(WAMID);
     const deOutraConversa = ecoDoWebhook({ id: 'outro-1', conversation_id: OUTRA_CONV });
     const { supabase, messages } = makeSupabase([deOutraConversa]);
 
@@ -278,7 +279,7 @@ describe('o que a correção NÃO pode apagar', () => {
   it('linha do CRM (não-webhook) com o mesmo id não é tocada', async () => {
     // Só o eco nasce com `sent_via: external_device`. Uma linha nossa com o
     // mesmo id seria outra coisa — e apagá-la seria perder envio de verdade.
-    wahaRespondendo(BARE);
+    metaRespondendo(WAMID);
     const doCrm = ecoDoWebhook({ id: 'crm-1', sent_via: 'ai' });
     const { supabase, messages } = makeSupabase([doCrm]);
 

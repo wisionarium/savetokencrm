@@ -77,10 +77,14 @@ describe("listSelectableChannels — a capacidade de mandar texto livre", () => 
     for (const [i, provider] of PROVIDERS_DE_MENSAGEM.entries()) {
       expect(canais[i]?.aceitaMensagemLivre).toBe(capabilitiesOf(provider).freeformOutsideWindow);
     }
-    // A matriz precisa DISTINGUIR: se todos respondessem igual, o teste acima
-    // ficaria verde com a projeção cravando uma constante.
+    // A projeção lê a matriz, não crava constante: o distinto esperado sai
+    // da própria matriz (com só hetero-restrição sobrando, os dois canais
+    // respondem igual — e é a matriz que diz isso, não este teste).
     const respostas = new Set(canais.map((c) => c.aceitaMensagemLivre));
-    expect(respostas.size).toBe(2);
+    const distintos = new Set(
+      PROVIDERS_DE_MENSAGEM.map((p) => capabilitiesOf(p).freeformOutsideWindow),
+    );
+    expect(respostas.size).toBe(distintos.size);
   });
 
   it("a consulta pede a coluna do provedor — sem ela a projeção seria um chute", async () => {

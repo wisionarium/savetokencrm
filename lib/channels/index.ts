@@ -1,27 +1,26 @@
 /**
- * A porta de entrada do seam. Feature nenhuma importa `lib/waha/*` direto —
+ * A porta de entrada do seam. Feature nenhuma importa adapter direto —
  * pede o adapter do provider da conversa e o descritor de capabilities.
+ * WAHA removido: só Meta Cloud + Zernio (Vercel + Supabase Cloud).
  */
 import { metaCloudAdapter } from "./adapters/meta-cloud";
-import { wahaAdapter } from "./adapters/waha";
 import { zernioAdapter } from "./adapters/zernio";
-import type { ChannelAdapter, ChannelProvider, ProviderDeMensagem } from "./types";
+import type { ChannelAdapter, ProviderDeMensagem } from "./types";
 
 /**
  * Um adapter por provider de MENSAGEM. `wacalls` não entra: ele não endereça
  * destinatário nem envia envelope — ver `ProviderDeMensagem` em `./types`.
  */
 const ADAPTERS: Record<ProviderDeMensagem, ChannelAdapter | null> = {
-  waha: wahaAdapter,
   meta_cloud: metaCloudAdapter,
   zernio: zernioAdapter,
 };
 
 /**
- * Fail-closed: provider sem adapter (ou fora da matriz) lança em vez de cair no
- * WAHA por default. Enviar pelo canal errado é pior que não enviar.
+ * Fail-closed: provider sem adapter (ou fora da matriz) lança em vez de cair
+ * num default. Enviar pelo canal errado é pior que não enviar.
  */
-export function getAdapter(provider: ChannelProvider): ChannelAdapter {
+export function getAdapter(provider: string): ChannelAdapter {
   const adapter = ADAPTERS[provider as ProviderDeMensagem];
   if (!adapter) throw new Error(`unknown_channel_provider: ${provider}`);
   return adapter;

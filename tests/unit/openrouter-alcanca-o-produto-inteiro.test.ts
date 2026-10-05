@@ -114,19 +114,3 @@ describe("o worker de mídia obedece ao painel", () => {
     expect(fonte).toMatch(/openrouterApiKey: process\.env\.OPENROUTER_API_KEY/);
   });
 });
-
-describe("o instalador grava o provedor escolhido no banco", () => {
-  it("o install.sh atualiza settings.llm.provider quando não é anthropic", () => {
-    // `fn_seed_org_llm_defaults` semeia 'anthropic' fixo. Sem esta atualização,
-    // a pergunta "qual IA vai atender" não muda nada para o agent-engine.
-    const fonte = readFileSync("hostgator-setup-kit/install.sh", "utf8");
-    expect(fonte).toMatch(/jsonb_set\(\s*\n?\s*coalesce\(settings, '\{\}'::jsonb\), '\{llm,provider\}'/);
-    expect(fonte).toContain("${AI_PROVIDER}");
-  });
-
-  it("o bootstrap-owner faz o mesmo (é o caminho do e2e e da doc)", () => {
-    const fonte = readFileSync("scripts/bootstrap-owner.ts", "utf8");
-    expect(fonte).toContain("aplicarProvedorEscolhido");
-    expect(fonte).toMatch(/process\.env\.AI_PROVIDER/);
-  });
-});

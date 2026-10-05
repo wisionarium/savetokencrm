@@ -86,11 +86,12 @@ const VOZ: Linha = {
 const WHATSAPP: Linha = {
   id: "numero-de-verdade",
   organization_id: "org",
-  provider: "waha",
+  provider: "meta_cloud",
   display_name: "Comercial",
   phone_number: "5511999990000",
   status: "WORKING",
-  waha_session_name: "org-comercial",
+  waha_session_name: null,
+  meta_phone_number_id: "1103328999528818",
   archived_at: null,
   created_at: "2026-01-01T00:00:00Z",
 };

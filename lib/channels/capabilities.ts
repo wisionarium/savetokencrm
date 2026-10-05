@@ -1,10 +1,8 @@
 /**
  * O ÚNICO lugar do sistema que pode conhecer a diferença entre os canais.
  *
- * Feature nenhuma pergunta *com quem* falamos — pergunta *o que o canal permite*
- * (invariante 1 de `docs/doctrine/restricao-de-canal.md`). Cada capability abaixo
- * nasce de uma diferença real e medida entre WAHA e Meta Cloud; capability que
- * ninguém consome é código morto, e o teste de matriz reprova.
+ * Feature nenhuma pergunta *com quem* falamos — pergunta *o que o canal permite*.
+ * WAHA foi removido (Vercel + Supabase Cloud, só Meta Cloud + Zernio).
  */
 import type { ChannelCapabilities, ChannelProvider, ProviderDeMensagem } from "./types";
 
@@ -12,24 +10,9 @@ export type { ChannelProvider, ChannelCapabilities, ProviderDeMensagem };
 
 /**
  * A matriz descreve o que um canal de MENSAGEM permite — por isso a chave é
- * `ProviderDeMensagem`, não `ChannelProvider`. Perguntar a uma linha de voz se
- * ela manda texto fora da janela de 24h é erro de categoria, e responder
- * qualquer coisa (inclusive tudo `false`) faria a pergunta parecer legítima.
- * `capabilitiesOf` segue falhando fechado para quem não está aqui.
+ * `ProviderDeMensagem`, não `ChannelProvider`.
  */
 export const CHANNEL_CAPABILITIES: Record<ProviderDeMensagem, ChannelCapabilities> = {
-  // Auto-restrição: falo quando quiser, mas o WhatsApp me bane se eu abusar.
-  waha: {
-    freeformOutsideWindow: true,
-    requiresTemplates: false,
-    // Não há WABA por trás: não existe definição aprovada para gerir.
-    canManageTemplates: false,
-    banRisk: true,
-    minIntervalMs: null,
-    voiceNote: "server-convert",
-    groups: "full",
-    costPerMessage: false,
-  },
   // Hetero-restrição: não me banem, mas a Meta me proíbe e me cobra.
   meta_cloud: {
     freeformOutsideWindow: false,
@@ -80,21 +63,16 @@ export const CHANNEL_CAPABILITIES: Record<ProviderDeMensagem, ChannelCapabilitie
 
 /**
  * O que assumir quando o banco NÃO diz qual é o canal — só quando a linha de
- * `channel_sessions` não pôde ser lida (a coluna é `not null default 'waha'`,
- * então uma sessão que existe sempre responde).
+ * `channel_sessions` não pôde ser lida.
  *
- * Espelha o default da coluna de propósito: é o que mantém o comportamento
- * idêntico ao dos literais que as Tasks 4b/5 deixaram no código. E é o canal
- * CONSERVADOR dos dois — banRisk armado, throttle e warm-up ligados; errar para
- * o lado do meta_cloud desarmaria o anti-ban num número que pode ser banido.
+ * Default conservador para Meta Cloud (janela de 24h, template fora dela).
  */
-export const DEFAULT_CHANNEL_PROVIDER: ChannelProvider = "waha";
+export const DEFAULT_CHANNEL_PROVIDER: ChannelProvider = "meta_cloud";
 
 /**
  * Constantes nomeadas dos providers. Existem para que nenhum arquivo fora deste
  * módulo precise escrever a string — é o que o `scripts/lint-channels.ts` cobra.
  */
-export const CHANNEL_PROVIDER_WAHA: ChannelProvider = "waha";
 export const CHANNEL_PROVIDER_META: ChannelProvider = "meta_cloud";
 export const CHANNEL_PROVIDER_ZERNIO: ChannelProvider = "zernio";
 /** Chamada de voz WhatsApp (spec 18). Não transporta mensagem — ver abaixo. */
@@ -116,7 +94,6 @@ export const CHANNEL_PROVIDER_WACALLS: ChannelProvider = "wacalls";
  * precisa ser DECIDIDO aqui, não esquecido.
  */
 export const PROVIDERS_DE_MENSAGEM = [
-  "waha",
   "meta_cloud",
   "zernio",
 ] as const satisfies readonly ProviderDeMensagem[];

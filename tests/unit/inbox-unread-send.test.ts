@@ -28,8 +28,12 @@ describe("sendMessageHandler — unread zera ao responder", () => {
   });
 
   it("atualiza unread_count_for_assignee = 0 junto com last_outbound_at", async () => {
-    vi.stubEnv("WAHA_API_BASE_URL", "http://localhost:3030");
-    vi.stubEnv("WAHA_API_KEY", "hash123");
+    vi.stubEnv("META_PHONE_NUMBER_ID", "1103328999528818");
+    vi.stubEnv("META_SYSTEM_USER_TOKEN", "tok");
+    vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => new Response(JSON.stringify({ messages: [{ id: "wamid.OK" }] }), { status: 200 })),
+  );
 
     const { supabase, capturas } = criarDubleDoHandler({
       conversation: {
@@ -40,7 +44,7 @@ describe("sendMessageHandler — unread zera ao responder", () => {
         is_group: false,
         group_chat_id: null,
         contacts: { phone_number: "+5531999998888", wa_identity: null, is_blocked: false },
-        channel_sessions: { provider: "waha", waha_session_name: "default", status: "WORKING", archived_at: null },
+        channel_sessions: { provider: "meta_cloud", waha_session_name: null, status: "WORKING", archived_at: null },
       },
     });
 
@@ -67,8 +71,12 @@ describe("sendMessageHandler — unread zera ao responder", () => {
   });
 
   it("⭐ a resposta zera a ESPERA da Fila: `awaiting_since` = último inbound (issue #990)", async () => {
-    vi.stubEnv("WAHA_API_BASE_URL", "http://localhost:3030");
-    vi.stubEnv("WAHA_API_KEY", "hash123");
+    vi.stubEnv("META_PHONE_NUMBER_ID", "1103328999528818");
+    vi.stubEnv("META_SYSTEM_USER_TOKEN", "tok");
+    vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => new Response(JSON.stringify({ messages: [{ id: "wamid.OK" }] }), { status: 200 })),
+  );
     const ULTIMO_INBOUND = "2026-09-18T10:05:00.000Z";
 
     const { supabase, capturas } = criarDubleDoHandler({
@@ -81,7 +89,7 @@ describe("sendMessageHandler — unread zera ao responder", () => {
         group_chat_id: null,
         last_inbound_at: ULTIMO_INBOUND,
         contacts: { phone_number: "+553****8888", wa_identity: null, is_blocked: false },
-        channel_sessions: { provider: "waha", waha_session_name: "default", status: "WORKING", archived_at: null },
+        channel_sessions: { provider: "meta_cloud", waha_session_name: null, status: "WORKING", archived_at: null },
       },
     });
 

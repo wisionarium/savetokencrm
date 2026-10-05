@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { fontesDoAppDaMeta } from "@/lib/channels/meta/app";
 import { metaPodeReceber } from "@/lib/channels/meta/webhook";
 import { nomeCurtoDaSessao } from "@/lib/channels/nome-da-sessao";
-import { getWahaClient } from "@/lib/waha/client";
 import { ConnectWhatsappClient } from "./_client";
 import { traduzir } from "@/lib/i18n/dicionario";
 
@@ -15,7 +14,8 @@ export default async function ConnectWhatsappPage() {
   if (!activeOrg) redirect("/login");
   const idioma = user.idioma;
 
-  const wahaConfigured = getWahaClient() !== null;
+  // WAHA removido: QR sempre indisponivel. O _client mostra oficial/parceiro.
+  const wahaConfigured = false;
 
   // Receber pelo canal oficial exige DOIS segredos, não um — a regra e o porquê
   // moram em `lib/channels/meta/webhook.ts`, ao lado de quem os consome. Agora os

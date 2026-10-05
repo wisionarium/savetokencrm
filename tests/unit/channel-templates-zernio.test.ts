@@ -1,20 +1,20 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+﻿import { beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
- * Gestão das definições aprovadas — a metade que faltava.
+ * GestÃ£o das definiÃ§Ãµes aprovadas â€” a metade que faltava.
  *
- * O repo até aqui só ESPELHAVA templates: para criar um, o operador tinha que
- * sair do CRM e entrar no painel da plataforma. Este módulo escreve.
+ * O repo atÃ© aqui sÃ³ ESPELHAVA templates: para criar um, o operador tinha que
+ * sair do CRM e entrar no painel da plataforma. Este mÃ³dulo escreve.
  *
- * Os contratos abaixo foram MEDIDOS contra a API real antes de o código
- * existir, e dois deles só apareceram porque o teste foi real e não com mock:
+ * Os contratos abaixo foram MEDIDOS contra a API real antes de o cÃ³digo
+ * existir, e dois deles sÃ³ apareceram porque o teste foi real e nÃ£o com mock:
  *
- *  1. A API DEVOLVE `type` em maiúscula (`"BODY"`) e só ACEITA em minúscula:
- *     `400 Invalid discriminator value. Expected 'header' | 'body' | …`
- *     Sem normalizar, o ciclo ler → editar → gravar falha SEMPRE.
- *  2. Um template recém-criado nasce `PENDING` e a Meta recusa editá-lo:
+ *  1. A API DEVOLVE `type` em maiÃºscula (`"BODY"`) e sÃ³ ACEITA em minÃºscula:
+ *     `400 Invalid discriminator value. Expected 'header' | 'body' | â€¦`
+ *     Sem normalizar, o ciclo ler â†’ editar â†’ gravar falha SEMPRE.
+ *  2. Um template recÃ©m-criado nasce `PENDING` e a Meta recusa editÃ¡-lo:
  *     `400 Message templates can only be edited if they have been rejected.`
- *     A regra é dela; o código propaga em vez de replicar.
+ *     A regra Ã© dela; o cÃ³digo propaga em vez de replicar.
  */
 
 const fetchMock = vi.fn();
@@ -38,8 +38,8 @@ const CREDS = {
 };
 
 /**
- * A organização atravessa o seam de canal desde a issue #236: `sessionRef` é
- * identificador do PROVIDER e não identifica linha sozinho.
+ * A organizaÃ§Ã£o atravessa o seam de canal desde a issue #236: `sessionRef` Ã©
+ * identificador do PROVIDER e nÃ£o identifica linha sozinho.
  */
 const ORG = "00000000-0000-4000-8000-000000000236";
 
@@ -58,19 +58,14 @@ beforeEach(() => {
 });
 
 describe("capability", () => {
-  it("o canal declara que SABE gerir definições — é o que a tela pergunta", () => {
+  it("o canal declara que SABE gerir definiÃ§Ãµes â€” Ã© o que a tela pergunta", () => {
     expect(capabilitiesOf("zernio").canManageTemplates).toBe(true);
   });
-
-  it("o canal por QR declara que NÃO — não há WABA por trás", () => {
-    expect(capabilitiesOf("waha").canManageTemplates).toBe(false);
+  it("provider legado (waha) nao tem mais capability — falha fechado", () => {
+    expect(() => capabilitiesOf("waha" as never)).toThrow(/unknown_channel_provider/);
   });
 
-  it("é distinta de requiresTemplates: exigir template e poder criá-lo são coisas diferentes", () => {
-    const qr = capabilitiesOf("waha");
-    expect(qr.requiresTemplates).toBe(false);
-    expect(qr.canManageTemplates).toBe(false);
-    // O par que prova a independência: exige template E deixa criar.
+  it("exige template E deixa criar: o par que prova a independencia", () => {
     const bsp = capabilitiesOf("zernio");
     expect(bsp.requiresTemplates).toBe(true);
     expect(bsp.canManageTemplates).toBe(true);
@@ -78,7 +73,7 @@ describe("capability", () => {
 });
 
 describe("list", () => {
-  it("traduz para o vocabulário neutro, sem inventar campos", async () => {
+  it("traduz para o vocabulÃ¡rio neutro, sem inventar campos", async () => {
     responde({
       templates: [
         { name: "cuenta_activa", language: "es", status: "APPROVED", category: "UTILITY", components: [{ type: "BODY" }] },
@@ -89,20 +84,20 @@ describe("list", () => {
     expect(t[0]).toMatchObject({ name: "cuenta_activa", language: "es", status: "APPROVED" });
   });
 
-  it("status desconhecido NÃO explode — o vocabulário da plataforma é aberto", async () => {
+  it("status desconhecido NÃƒO explode â€” o vocabulÃ¡rio da plataforma Ã© aberto", async () => {
     responde({ templates: [{ name: "x", language: "es", status: "ALGO_NOVO", components: [] }] });
     const t = await zernioTemplateOps.list({ organizationId: ORG, sessionRef: "acc_1" });
     expect(t[0]!.status).toBe("ALGO_NOVO");
   });
 
-  it("resposta sem templates devolve lista vazia, não undefined", async () => {
+  it("resposta sem templates devolve lista vazia, nÃ£o undefined", async () => {
     responde({});
     await expect(zernioTemplateOps.list({ organizationId: ORG, sessionRef: "acc_1" })).resolves.toEqual([]);
   });
 });
 
-describe("create — a assimetria maiúscula/minúscula", () => {
-  it("normaliza o `type` dos components para minúscula na ESCRITA", async () => {
+describe("create â€” a assimetria maiÃºscula/minÃºscula", () => {
+  it("normaliza o `type` dos components para minÃºscula na ESCRITA", async () => {
     responde({ template: { name: "t", language: "es", status: "PENDING", components: [] } });
     await zernioTemplateOps.create({
       organizationId: ORG,
@@ -111,14 +106,14 @@ describe("create — a assimetria maiúscula/minúscula", () => {
         name: "t",
         language: "es",
         category: "UTILITY",
-        components: [{ type: "BODY", text: "oi" }, { type: "FOOTER", text: "rodapé" }],
+        components: [{ type: "BODY", text: "oi" }, { type: "FOOTER", text: "rodapÃ©" }],
       },
     });
     const comps = corpo().components as { type: string }[];
     expect(comps.map((c) => c.type)).toEqual(["body", "footer"]);
   });
 
-  it("preserva TODO o resto do component — só a chave `type` é tocada", async () => {
+  it("preserva TODO o resto do component â€” sÃ³ a chave `type` Ã© tocada", async () => {
     responde({ template: {} });
     await zernioTemplateOps.create({
       organizationId: ORG,
@@ -165,7 +160,7 @@ describe("create — a assimetria maiúscula/minúscula", () => {
 });
 
 describe("update e remove", () => {
-  it("update normaliza o `type` igual ao create — senão o round-trip quebra", async () => {
+  it("update normaliza o `type` igual ao create â€” senÃ£o o round-trip quebra", async () => {
     responde({ template: {} });
     await zernioTemplateOps.update({
       organizationId: ORG,
@@ -186,7 +181,7 @@ describe("update e remove", () => {
 });
 
 describe("erros da plataforma", () => {
-  it("a regra 'só edita se foi rejeitado' chega ao chamador com o texto dela", async () => {
+  it("a regra 'sÃ³ edita se foi rejeitado' chega ao chamador com o texto dela", async () => {
     responde(
       { error: "Message templates can only be edited if they have been rejected." },
       false,
@@ -197,8 +192,8 @@ describe("erros da plataforma", () => {
     ).rejects.toThrow(/can only be edited/);
   });
 
-  it("o `code` entra na mensagem — é o que diz ao operador o que corrigir", async () => {
-    responde({ error: "nome já usado", code: "TEMPLATE_EXISTS" }, false, 400);
+  it("o `code` entra na mensagem â€” Ã© o que diz ao operador o que corrigir", async () => {
+    responde({ error: "nome jÃ¡ usado", code: "TEMPLATE_EXISTS" }, false, 400);
     await expect(
       zernioTemplateOps.create({
         organizationId: ORG,

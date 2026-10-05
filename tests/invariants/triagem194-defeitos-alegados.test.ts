@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+﻿import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import pg from "pg";
 
 import type { HandlerCtx } from "@/lib/api/handlers/types";
@@ -6,25 +6,25 @@ import type { HandlerCtx } from "@/lib/api/handlers/types";
 import { pgComoSupabase } from "../pg-como-supabase";
 
 /**
- * ARQUIVO DE TRIAGEM (PR #194) — NÃO É PARA MERGE.
+ * ARQUIVO DE TRIAGEM (PR #194) â€” NÃƒO Ã‰ PARA MERGE.
  *
- * O que ele protege: a alegação do corpo do PR de que existiam TRÊS defeitos
- * vivos de escrita em coluna gerada, cada um com um efeito de usuário
- * diferente. Nenhum dos três tinha, na `main` 9249e6f2, teste que medisse
- * COMPORTAMENTO — o gate que o PR traz
+ * O que ele protege: a alegaÃ§Ã£o do corpo do PR de que existiam TRÃŠS defeitos
+ * vivos de escrita em coluna gerada, cada um com um efeito de usuÃ¡rio
+ * diferente. Nenhum dos trÃªs tinha, na `main` 9249e6f2, teste que medisse
+ * COMPORTAMENTO â€” o gate que o PR traz
  * (`colunas-geradas-nao-sao-escritas.test.ts`) varre TEXTO do fonte, e texto
- * não é comportamento.
+ * nÃ£o Ã© comportamento.
  *
  * Por que merece catraca: `GENERATED ALWAYS ... STORED` faz o Postgres recusar
- * a INSTRUÇÃO INTEIRA (SQLSTATE 428C9). O campo que se perde não é o gerado —
- * é o UPDATE todo. Os três caminhos aqui chamam o CÓDIGO DE PRODUÇÃO
- * (`patchContactHandler`, a rota POST de anonimização, `dispatchWahaEvent`),
- * nunca SQL escrito à mão: SQL à mão prova que o banco se defende, e o que
- * está em disputa é o que o código manda.
+ * a INSTRUÃ‡ÃƒO INTEIRA (SQLSTATE 428C9). O campo que se perde nÃ£o Ã© o gerado â€”
+ * Ã© o UPDATE todo. Os trÃªs caminhos aqui chamam o CÃ“DIGO DE PRODUÃ‡ÃƒO
+ * (`patchContactHandler`, a rota POST de anonimizaÃ§Ã£o, `dispatchWahaEvent`),
+ * nunca SQL escrito Ã  mÃ£o: SQL Ã  mÃ£o prova que o banco se defende, e o que
+ * estÃ¡ em disputa Ã© o que o cÃ³digo manda.
  *
- * As duas bordas de autenticação da rota de LGPD são as ÚNICAS coisas
- * substituídas (`createClient` e `requireRole`). O corpo da rota — a cascata,
- * a ordem, o objeto do UPDATE — é o de produção.
+ * As duas bordas de autenticaÃ§Ã£o da rota de LGPD sÃ£o as ÃšNICAS coisas
+ * substituÃ­das (`createClient` e `requireRole`). O corpo da rota â€” a cascata,
+ * a ordem, o objeto do UPDATE â€” Ã© o de produÃ§Ã£o.
  */
 const container = process.env.TEST_DB_CONTAINER;
 if (!container) {
@@ -48,14 +48,14 @@ const requestDbPool = new pg.Pool({
 let requestUser = USUARIO;
 
 /**
- * A rota de LGPD é um Route Handler: ela busca o client dela sozinha. Trocamos
- * SÓ o transporte (o mesmo `pgComoSupabase` dos demais) e o `getUser`, que é
- * borda de autenticação e não tem nada a ver com o defeito medido.
+ * A rota de LGPD Ã© um Route Handler: ela busca o client dela sozinha. Trocamos
+ * SÃ“ o transporte (o mesmo `pgComoSupabase` dos demais) e o `getUser`, que Ã©
+ * borda de autenticaÃ§Ã£o e nÃ£o tem nada a ver com o defeito medido.
  */
 vi.mock("@/lib/supabase/server", () => ({
   createClient: async () => {
     const actor = requestUser;
-    // Uma única conexão conserva o mesmo papel/claim durante todas as queries
+    // Uma Ãºnica conexÃ£o conserva o mesmo papel/claim durante todas as queries
     // emitidas pelo Route Handler, como o PostgREST faria para a request.
     await requestDbPool.query("set role authenticated");
     await requestDbPool.query("select set_config('request.jwt.claims',$1,false)", [
@@ -130,13 +130,13 @@ afterAll(async () => {
   await pool.end();
 });
 
-/* ══════════════════════ CONTROLE POSITIVO DO INSTRUMENTO ══════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• CONTROLE POSITIVO DO INSTRUMENTO â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 describe("o instrumento", () => {
-  it("as colunas geradas que este arquivo supõe EXISTEM no banco medido", async () => {
+  it("as colunas geradas que este arquivo supÃµe EXISTEM no banco medido", async () => {
     // Sem isto, um banco sem as colunas geradas faria todos os casos abaixo
-    // passarem verdes por ausência de causa — e o relatório diria "não
-    // reproduz" onde o certo seria "não medi".
+    // passarem verdes por ausÃªncia de causa â€” e o relatÃ³rio diria "nÃ£o
+    // reproduz" onde o certo seria "nÃ£o medi".
     const { rows } = await pool.query<{ chave: string }>(
       `select table_name || '.' || column_name as chave
          from information_schema.columns
@@ -148,9 +148,9 @@ describe("o instrumento", () => {
   });
 });
 
-/* ═══════════════════════ DEFEITO 2 — e-mail do contato ═══════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• DEFEITO 2 â€” e-mail do contato â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
-describe("defeito 2 — salvar e-mail de contato", () => {
+describe("defeito 2 â€” salvar e-mail de contato", () => {
   it("o PATCH conclui e o e-mail fica gravado", async () => {
     const { patchContactHandler } = await import("@/app/api/v1/contacts/_handler");
     const id = await criarContato();
@@ -168,16 +168,16 @@ describe("defeito 2 — salvar e-mail de contato", () => {
     );
     expect(
       erro === null,
-      `o handler lançou: ${(erro as { detail?: string; message?: string })?.detail ?? (erro as Error)?.message}`,
+      `o handler lanÃ§ou: ${(erro as { detail?: string; message?: string })?.detail ?? (erro as Error)?.message}`,
     ).toBe(true);
-    expect(rows[0]!.email, "o e-mail não foi gravado").toBe("cliente@exemplo.com");
+    expect(rows[0]!.email, "o e-mail nÃ£o foi gravado").toBe("cliente@exemplo.com");
     // A derivada tem de sair do banco sozinha.
     expect(rows[0]!.email_normalized).toBe("cliente@exemplo.com");
   });
 
-  it("o PATCH não leva junto os OUTROS campos da mesma instrução", async () => {
-    // O que custa caro em coluna gerada não é o campo gerado: é a instrução
-    // inteira abortando e derrubando campos que nada têm a ver com ela.
+  it("o PATCH nÃ£o leva junto os OUTROS campos da mesma instruÃ§Ã£o", async () => {
+    // O que custa caro em coluna gerada nÃ£o Ã© o campo gerado: Ã© a instruÃ§Ã£o
+    // inteira abortando e derrubando campos que nada tÃªm a ver com ela.
     const { patchContactHandler } = await import("@/app/api/v1/contacts/_handler");
     const id = await criarContato();
 
@@ -196,9 +196,9 @@ describe("defeito 2 — salvar e-mail de contato", () => {
   });
 });
 
-/* ═══════════════════════ DEFEITO 3 — anonimização LGPD ═══════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• DEFEITO 3 â€” anonimizaÃ§Ã£o LGPD â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
-describe("defeito 3 — anonimização LGPD", () => {
+describe("defeito 3 â€” anonimizaÃ§Ã£o LGPD", () => {
   it("o contato SAI anonimizado do banco", async () => {
     const { POST } = await import("@/app/api/v1/lgpd/anonymize/route");
     const id = await criarContato({ name: "Titular Real", email: "titular@exemplo.com" });
@@ -219,7 +219,7 @@ describe("defeito 3 — anonimização LGPD", () => {
 
     expect(
       rows[0]!.is_anonymized,
-      `a anonimização NÃO aconteceu — resposta ${res.status} ${JSON.stringify(corpo)}`,
+      `a anonimizaÃ§Ã£o NÃƒO aconteceu â€” resposta ${res.status} ${JSON.stringify(corpo)}`,
     ).toBe(true);
     expect(rows[0]!.name, "o nome do titular continua no banco").toBeNull();
     expect(rows[0]!.email, "o e-mail do titular continua no banco").toBeNull();
@@ -231,7 +231,7 @@ describe("defeito 3 — anonimização LGPD", () => {
     requestUser = VIEWER;
     try {
       const req = {
-        json: async () => ({ contact_id: id, justification: "tentativa sem permissão" }),
+        json: async () => ({ contact_id: id, justification: "tentativa sem permissÃ£o" }),
         headers: new Headers(),
       } as unknown as Request;
       const res = await POST(req as never);
@@ -247,44 +247,5 @@ describe("defeito 3 — anonimização LGPD", () => {
   });
 });
 
-/* ══════════════════ DEFEITO 4 — fim do warm-up congela o canal ══════════════════ */
-
-describe("defeito 4 — fim do warm-up", () => {
-  it("o status do canal ainda é atualizado quando o aquecimento termina", async () => {
-    const { dispatchWahaEvent } = await import("@/lib/waha/ingest");
-
-    const { rows: s } = await pool.query<{ id: string }>(
-      `insert into channel_sessions
-         (organization_id, waha_session_name, webhook_secret_encrypted, status, warmup_started_at)
-       values ($1, 'triagem-194', '\\x00'::bytea, 'STARTING', now() - interval '8 days')
-       returning id`,
-      [ORG],
-    );
-    const sessionId = s[0]!.id;
-
-    await dispatchWahaEvent(
-      db,
-      {
-        id: sessionId,
-        organization_id: ORG,
-        is_warmup_complete: false,
-        warmup_started_at: new Date(Date.now() - 8 * 864e5).toISOString(),
-      } as never,
-      { event: "session.status", payload: { status: "WORKING" } } as never,
-      "req-triagem-194",
-    );
-
-    const { rows } = await pool.query<{ status: string; is_warmup_complete: boolean | null }>(
-      "select status, is_warmup_complete from channel_sessions where id = $1",
-      [sessionId],
-    );
-    // O `status` é o dado que o produto mostra. Ele não tem nada a ver com
-    // warm-up — e é ele que a instrução abortada levava junto, em silêncio:
-    // `handleSessionStatus` não checa o erro do UPDATE.
-    expect(rows[0]!.status, "o espelho do canal congelou no estado antigo").toBe("WORKING");
-    expect(rows[0]!.is_warmup_complete, "o aquecimento não foi marcado como concluído").toBe(true);
-  });
-});
-
-// Auth de request é um seam nesta prova SQL; a cerca real tem suíte própria.
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• DEFEITO 4 â€” fim do warm-up congela o canal â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 vi.mock("@/lib/impersonate/support", () => ({ requireSupportWrite: async () => null }));

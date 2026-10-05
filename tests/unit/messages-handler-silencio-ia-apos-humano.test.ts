@@ -12,7 +12,6 @@
  * setado (nem o 'infinity' do handoff permanente, que `isLeadInHandoff` também
  * lê — ver `lib/ai/handoff/orchestrator.ts` e `human-handoff.ts:performHumanHandoff`).
  */
-import { createServer } from 'node:http';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -57,7 +56,7 @@ function conversationRow(botSilencedUntil: string | null): Row {
     group_chat_id: null,
     bot_silenced_until: botSilencedUntil,
     contacts: { phone_number: '+5531999998888', wa_identity: null, is_blocked: false },
-    channel_sessions: { provider: 'waha', waha_session_name: 'default', status: 'WORKING' },
+    channel_sessions: { provider: 'meta_cloud', waha_session_name: null, status: 'WORKING' },
   };
 }
 
@@ -128,10 +127,10 @@ function makeSupabase(botSilencedUntil: string | null, snapshot?: () => Record<s
 
 const input = { conversation_id: CONV, type: 'text', body: 'oi' } as SendMessageInput;
 
-function wahaConfigured() {
-  vi.stubEnv('WAHA_API_BASE_URL', 'http://localhost:3030');
-  vi.stubEnv('WAHA_API_KEY', 'hash123');
-  vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ id: { id: 'BARE1' } }), { status: 200 })));
+function metaConfigured() {
+  vi.stubEnv('META_PHONE_NUMBER_ID', '1103328999528818');
+  vi.stubEnv('META_SYSTEM_USER_TOKEN', 'tok');
+  vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ messages: [{ id: 'wamid.SILENCIO1' }] }), { status: 200 })));
 }
 
 afterEach(() => {
@@ -142,7 +141,7 @@ afterEach(() => {
 
 describe('sendMessageHandler — silêncio da IA de 5min após resposta manual humana', () => {
   it('humano manda mensagem numa conversa sem silêncio → bot_silenced_until vira ~agora+5min', async () => {
-    wahaConfigured();
+    metaConfigured();
     const ctx: HandlerCtx = { organization_id: ORG, actor: { type: 'user', id: USER }, requestId: 'req-1' };
     const { supabase, patches } = makeSupabase(null);
 
@@ -158,7 +157,7 @@ describe('sendMessageHandler — silêncio da IA de 5min após resposta manual h
   });
 
   it('IA envia mensagem (ai_agent) → NÃO mexe em bot_silenced_until', async () => {
-    wahaConfigured();
+    metaConfigured();
     const ctx: HandlerCtx = { organization_id: ORG, actor: { type: 'ai_agent', id: AGENT_RUN, role: 'agent' }, requestId: 'req-2', serviceBoundary: { organization_id: ORG, contact_id: CONTACT, conversation_id: CONV, service_revision: 1, demanda_id: null, demanda_revision: null } };
     const { supabase, patches } = makeSupabase(null);
 
@@ -169,7 +168,7 @@ describe('sendMessageHandler — silêncio da IA de 5min após resposta manual h
   });
 
   it('handoff permanente (infinity) já ativo → resposta manual NÃO encurta para 5min', async () => {
-    wahaConfigured();
+    metaConfigured();
     const ctx: HandlerCtx = { organization_id: ORG, actor: { type: 'user', id: USER }, requestId: 'req-3' };
     const { supabase, patches } = makeSupabase('infinity');
 
@@ -180,7 +179,7 @@ describe('sendMessageHandler — silêncio da IA de 5min após resposta manual h
   });
 
   it('silêncio finito já maior que 5min (ex.: 30min) → resposta manual não encurta', async () => {
-    wahaConfigured();
+    metaConfigured();
     const ctx: HandlerCtx = { organization_id: ORG, actor: { type: 'user', id: USER }, requestId: 'req-4' };
     const trintaMin = new Date(Date.now() + 30 * 60 * 1000).toISOString();
     const { supabase, patches } = makeSupabase(trintaMin);
@@ -192,7 +191,7 @@ describe('sendMessageHandler — silêncio da IA de 5min após resposta manual h
   });
 
   it('silêncio finito menor que 5min (ex.: 1min) → resposta manual estende (sliding window)', async () => {
-    wahaConfigured();
+    metaConfigured();
     const ctx: HandlerCtx = { organization_id: ORG, actor: { type: 'user', id: USER }, requestId: 'req-5' };
     const umMin = new Date(Date.now() + 60 * 1000).toISOString();
     const { supabase, patches } = makeSupabase(umMin);
@@ -207,15 +206,17 @@ describe('sendMessageHandler — silêncio da IA de 5min após resposta manual h
   });
 });
 
-// A guarda do sink é exercitada além da guarda inicial; fetch/WAHA são reais.
-it('sink recusa close/reopen ocorrido depois da primeira leitura e receiver recebe zero', async () => {
-  const received: string[] = [];
-  const receiver = createServer((req, res) => { received.push(req.url ?? ""); res.writeHead(200, { 'content-type': 'application/json' }); res.end(JSON.stringify({ id: { id: 'REAL1' } })); });
-  await new Promise<void>((resolve) => receiver.listen(0, '127.0.0.1', resolve));
-  try {
-    const address = receiver.address(); if (!address || typeof address === 'string') throw new Error('receiver');
-    vi.stubEnv('WAHA_API_BASE_URL', `http://127.0.0.1:${address.port}`);
-    vi.stubEnv('WAHA_API_KEY', 'local-test');
+// A guarda do sink é exercitada além da guarda inicial; o transporte é duble
+// (o canal oficial fala HTTPS com a Graph API, inalcançável por receiver local).
+it('sink recusa close/reopen ocorrido depois da primeira leitura e nada sai pela rede', async () => {
+  const chamadas: string[] = [];
+  vi.stubEnv('META_PHONE_NUMBER_ID', '1103328999528818');
+  vi.stubEnv('META_SYSTEM_USER_TOKEN', 'tok');
+  vi.stubGlobal('fetch', vi.fn(async (url: unknown) => {
+    chamadas.push(String(url));
+    return Response.json({ messages: [{ id: 'wamid.REAL1' }] });
+  }));
+  {
     const boundary = { organization_id: ORG, contact_id: CONTACT, conversation_id: CONV, service_revision: 1, demanda_id: null, demanda_revision: null };
     const ctx: HandlerCtx = { organization_id: ORG, actor: { type: 'ai_agent', id: AGENT_RUN, role: 'agent' }, requestId: 'sink-test', serviceBoundary: boundary };
     for (const changed of [{ status: 'closed', service_revision: 2 }, { status: 'open', service_revision: 3 }]) {
@@ -223,7 +224,7 @@ it('sink recusa close/reopen ocorrido depois da primeira leitura e receiver rece
       const { supabase } = makeSupabase(null, () => ({ ...boundary, status: 'open', demanda_fechada_em: null, ...(reads++ === 0 ? {} : changed) }));
       await expect(sendMessageHandler(supabase, ctx, input)).rejects.toThrow('service_boundary_stale');
       expect(reads).toBe(2);
-      expect(received).toHaveLength(0);
+      expect(chamadas).toHaveLength(0);
     }
     // Close/reopen durante resolução assíncrona do destinatário no adapter:
     // leituras do provider podem ocorrer, mas nenhum envio é aceito.
@@ -231,22 +232,23 @@ it('sink recusa close/reopen ocorrido depois da primeira leitura e receiver rece
     const late = makeSupabase(null, () => ({ ...boundary, status: 'open', demanda_fechada_em: null, service_revision: reads++ < 2 ? 1 : 3 }));
     await expect(sendMessageHandler(late.supabase, ctx, input)).rejects.toThrow('service_boundary_stale');
     expect(reads).toBe(3);
-    expect(received.filter((url) => url.endsWith('/sendText'))).toHaveLength(0);
-    // Controle positivo: o mesmo handler e transporte chegam ao receiver quando vigente.
+    expect(chamadas.filter((url) => url.includes('/messages'))).toHaveLength(0);
+    // Controle positivo: o mesmo handler e transporte enviam quando vigente.
     await sendMessageHandler(makeSupabase(null).supabase, ctx, input);
-    expect(received.filter((url) => url.endsWith("/sendText"))).toHaveLength(1);
-  } finally { await new Promise<void>((resolve) => receiver.close(() => resolve())); }
+    expect(chamadas.filter((url) => url.includes('/messages'))).toHaveLength(1);
+  }
 });
 
 
-it("ação de automação conserva origem durante pacing e dois envios vigentes chegam ao receiver", async () => {
-  const hits: string[] = [];
-  const receiver = createServer((req, res) => { hits.push(req.url ?? ""); res.writeHead(200, { "content-type": "application/json" }); res.end(JSON.stringify({ id: { id: "ACTION" } })); });
-  await new Promise<void>((resolve) => receiver.listen(0, "127.0.0.1", resolve));
-  try {
-    const address = receiver.address(); if (!address || typeof address === "string") throw new Error("receiver");
-    vi.stubEnv("WAHA_API_BASE_URL", `http://127.0.0.1:${address.port}`);
-    vi.stubEnv("WAHA_API_KEY", "local-test");
+it("ação de automação conserva origem durante pacing e dois envios vigentes saem pela rede", async () => {
+  const chamadas: string[] = [];
+  vi.stubEnv("META_PHONE_NUMBER_ID", "1103328999528818");
+  vi.stubEnv("META_SYSTEM_USER_TOKEN", "tok");
+  vi.stubGlobal("fetch", vi.fn(async (url: unknown) => {
+    chamadas.push(String(url));
+    return Response.json({ messages: [{ id: "wamid.ACTION" }] });
+  }));
+  {
     const boundary = { organization_id: ORG, contact_id: CONTACT, conversation_id: CONV, service_revision: 1, demanda_id: null, demanda_revision: null };
     let revision = 1;
     const { supabase } = makeSupabase(null, () => ({ ...boundary, service_revision: revision, status: "open", demanda_fechada_em: null }));
@@ -257,14 +259,14 @@ it("ação de automação conserva origem durante pacing e dois envios vigentes 
     const config = { channel_session_id: SESSION, template: "Olá" };
     pacing.run = async () => { revision = 3; };
     expect((await action.execute(ctx, config)).status).toBe("failed");
-    expect(hits).toHaveLength(0);
+    expect(chamadas).toHaveLength(0);
     revision = 1; pacing.run = async () => {};
     expect((await action.execute(ctx, config)).status).toBe("success");
     expect((await action.execute(ctx, config)).status).toBe("success");
-    expect(hits.filter((url) => url.endsWith("/sendText"))).toHaveLength(2);
+    expect(chamadas.filter((url) => url.includes("/messages"))).toHaveLength(2);
     revision = 3;
     expect((await action.execute(ctx, config)).status).toBe("failed");
-    expect(hits.filter((url) => url.endsWith("/sendText"))).toHaveLength(2);
+    expect(chamadas.filter((url) => url.includes("/messages"))).toHaveLength(2);
     // A outra action conserva origem durante a espera pelo modelo.
     revision = 1;
     generation.authorize.mockClear();
@@ -273,18 +275,18 @@ it("ação de automação conserva origem durante pacing e dois envios vigentes 
     const aiConfig = { channel_session_id: SESSION, agent_id: AGENT_RUN, instruction: "Responda" };
     expect((await ai.execute(ctx, aiConfig)).status).toBe("failed");
     expect(generation.authorize).not.toHaveBeenCalled();
-    expect(hits.filter((url) => url.endsWith("/sendText"))).toHaveLength(2);
+    expect(chamadas.filter((url) => url.includes("/messages"))).toHaveLength(2);
     revision = 1; generation.run = async () => ({ ok: true, texto: "Resposta gerada" });
     expect((await ai.execute(ctx, aiConfig)).status).toBe("success");
     expect(generation.authorize).toHaveBeenCalledTimes(1);
-    expect(hits.filter((url) => url.endsWith("/sendText"))).toHaveLength(3);
+    expect(chamadas.filter((url) => url.includes("/messages"))).toHaveLength(3);
     revision = 3;
     // Aviso humano independente conserva autoria de sistema sem exigir job.
     const aviso = await avisarLeadDoCrm(supabase, { organizationId: ORG, contactId: CONTACT, conversationId: CONV, reason: "requested_human" });
     expect(aviso.avisado).toBe(true);
-    expect(hits.filter((url) => url.endsWith("/sendText"))).toHaveLength(4);
+    expect(chamadas.filter((url) => url.includes("/messages"))).toHaveLength(4);
     const antigo = await avisarLeadDoCrm(supabase, { organizationId: ORG, contactId: CONTACT, conversationId: CONV, reason: "Caso antigo", serviceBoundary: boundary });
     expect(antigo.avisado).toBe(false);
-    expect(hits.filter((url) => url.endsWith("/sendText"))).toHaveLength(4);
-  } finally { await new Promise<void>((resolve) => receiver.close(() => resolve())); }
+    expect(chamadas.filter((url) => url.includes("/messages"))).toHaveLength(4);
+  }
 });

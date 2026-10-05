@@ -70,12 +70,11 @@ const yml = readFileSync(WORKFLOW, "utf8");
 const parte1 = listaDoWorkflow(yml, "SPECS_PARTE_1");
 const parte2 = listaDoWorkflow(yml, "SPECS_PARTE_2");
 const parte3 = listaDoWorkflow(yml, "SPECS_PARTE_3");
-// PARTE_4 — a parte que depende de serviço externo (WAHA + Redis + dublês de
-// Resend/Nuvemshop, issue #179). Listada aqui como as outras: sem isto, a spec
-// que roda SÓ ali apareceria como "sem lista" e o gate acusaria o contrário do
-// que aconteceu.
-const parte4 = listaDoWorkflow(yml, "SPECS_PARTE_4");
-// PARTE_5 — a quarta parte COMUM (a 4 é a da instalação fresca). Nasceu em
+// PARTE_4 — REMOVIDA com o transporte QR (era a da instalação fresca com
+// WAHA; a única spec dela morreu junto). Lista vazia para os spreads
+// abaixo não mudarem de forma.
+const parte4: string[] = [];
+// PARTE_5 — parte comum. Nasceu em
 // 19/09 porque três partes comuns já não cabiam no teto: dois cortes por
 // relógio no mesmo dia, ambos sem caso vermelho.
 const parte5 = listaDoWorkflow(yml, "SPECS_PARTE_5");
@@ -95,7 +94,6 @@ describe("cobertura do e2e no CI", () => {
     expect(parte1.length, "SPECS_PARTE_1 não foi lida do workflow").toBeGreaterThan(10);
     expect(parte2.length, "SPECS_PARTE_2 não foi lida do workflow").toBeGreaterThan(10);
     expect(parte3.length, "SPECS_PARTE_3 não foi lida do workflow").toBeGreaterThan(10);
-    expect(parte4.length, "SPECS_PARTE_4 não foi lida do workflow").toBeGreaterThan(0);
     expect(parte5.length, "SPECS_PARTE_5 não foi lida do workflow").toBeGreaterThan(0);
     expect(foraDoCi.length, "FORA_DO_CI não foi lida do workflow").toBeGreaterThan(0);
   });
@@ -119,18 +117,13 @@ describe("cobertura do e2e no CI", () => {
   // instalação fresca exatamente os dados que a vizinha afirma não existirem.
   // Verde por ordem de execução é verde que morre num retry — e leva junto a
   // única prova da jornada de instalação. Nada impedia isso de entrar.
-  it("a parte 4 só aceita spec de instalação fresca (lista fechada)", () => {
-    const PERMITIDAS = ["vps-fresh-onboarding.spec.ts"];
-    expect(
-      parte4.filter((f) => !PERMITIDAS.includes(f)),
-      "spec que não é de instalação fresca entrou em SPECS_PARTE_4. O ambiente dela não " +
-        "semeia credenciais nem fixtures, e qualquer dado criado ali quebra a premissa que a " +
-        "`vps-fresh-onboarding` prova. Ponha em SPECS_PARTE_1/2/3/5. Se a spec nova for MESMO " +
-        "de instalação fresca, acrescente-a a PERMITIDAS aqui, com a razão escrita.\n",
-    ).toEqual([]);
-    // Controle positivo: a lista não pode estar vazia por engano de parser —
-    // vazia, a asserção acima passaria sem vigiar nada.
-    expect(parte4.length, "SPECS_PARTE_4 veio vazia — parser morto").toBeGreaterThan(0);
+  it("a parte 4 nao existe mais (removida com o transporte QR)", () => {
+    // A parte da instalacao fresca (WAHA + Redis + dono via install.sh) morreu
+    // com o transporte que ela provava. Se um dia voltar uma parte com
+    // ambiente proprio, ela volta com lista + matrix + consumo, cobrados pelos
+    // casos vizinhos.
+    expect(yml).not.toMatch(/^\s*SPECS_PARTE_4:/m);
+    expect(parte4).toEqual([]);
   });
 
   it("toda lista declarada é invocada pela matrix (e vice-versa)", () => {
@@ -156,8 +149,7 @@ describe("cobertura do e2e no CI", () => {
     expect(
       semLista,
       "Spec no disco que não roda no CI nem está declarada como fora. Ponha em " +
-        "SPECS_PARTE_1/2/3/5 (se rodar sem WAHA/Redis/Resend), em SPECS_PARTE_4 (com " +
-        "os serviços do job) ou em FORA_DO_CI com o " +
+        "SPECS_PARTE_1/2/3/5 ou em FORA_DO_CI com o " +
         "motivo escrito. Cobertura parcial silenciosa se lê como cobertura total.\n",
     ).toEqual([]);
 

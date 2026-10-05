@@ -29,7 +29,7 @@ function baseCtx(overrides: Partial<GateContext> = {}): GateContext {
     now: new Date("2026-08-04T12:00:00Z"),
     body: "",
     optedOut: false,
-    provider: "waha",
+    provider: "meta_cloud",
     pacing: {
       knobs: PACING_DEFAULTS,
       state: { lastSentAt: null, sentToday: 0, numberActivatedAt: null },
@@ -133,7 +133,17 @@ function chamaCadeiaReal(args: { body: string; armado: boolean }): {
   run: ReturnType<typeof runBeforeSend>;
   inserts: ReturnType<typeof vi.fn>;
 } {
-  const client = { query: vi.fn().mockResolvedValue({ rows: [] }), release: vi.fn() };
+  // Janela de 24h ABERTA: sem inbound recente o messaging_window (meta_cloud
+  // exige janela, ao contrario do legado waha que pulava o gate) vetaria antes
+  // do internal_vocabulary e o teste mediria o gate errado.
+  const client = {
+    query: vi.fn(async (sql: string) => {
+      if (String(sql).includes("select last_inbound_at from conversations"))
+        return { rows: [{ last_inbound_at: new Date("2026-08-04T11:00:00Z") }] };
+      return { rows: [] };
+    }),
+    release: vi.fn(),
+  };
   const inserts = vi.fn().mockResolvedValue({ rows: [{ id: "trace-1" }] });
   const pool = { connect: vi.fn().mockResolvedValue(client), query: inserts } as unknown as pg.Pool;
   const log: Logger = { info: vi.fn(), warn: vi.fn(), error: vi.fn() };

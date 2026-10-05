@@ -51,8 +51,8 @@ const CONTACT = "33333333-3333-4333-8333-333333333333";
 const SESSION = "44444444-4444-4444-8444-444444444444";
 const USER = "55555555-5555-4555-8555-555555555555";
 
-/** O que o WAHA devolve no envio: o id BARE, sem o chat. */
-const BARE = "3EB0ABCDEF0123456789";
+/** O que a Graph API devolve no envio: o wamid. */
+const WAMID = "wamid.AUTO1ABCDEF";
 
 const input = {
   conversation_id: CONV,
@@ -64,12 +64,12 @@ function ctxComAtor(actor: HandlerCtx["actor"]): HandlerCtx {
   return { organization_id: ORG, actor, requestId: "req-652" };
 }
 
-function wahaRespondendo() {
-  vi.stubEnv("WAHA_API_BASE_URL", "http://localhost:3030");
-  vi.stubEnv("WAHA_API_KEY", "test-key");
+function metaRespondendo() {
+  vi.stubEnv("META_PHONE_NUMBER_ID", "1103328999528818");
+  vi.stubEnv("META_SYSTEM_USER_TOKEN", "tok");
   vi.stubGlobal(
     "fetch",
-    vi.fn(async () => new Response(JSON.stringify({ id: { id: BARE } }), { status: 200 })),
+    vi.fn(async () => new Response(JSON.stringify({ messages: [{ id: WAMID }] }), { status: 200 })),
   );
 }
 
@@ -90,8 +90,8 @@ function duble() {
       group_chat_id: null,
       contacts: { phone_number: "+553****8888", wa_identity: null, wa_lid: null, is_blocked: false },
       channel_sessions: {
-        provider: "waha",
-        waha_session_name: "default",
+        provider: "meta_cloud",
+        waha_session_name: null,
         status: "WORKING",
         archived_at: null,
         metadata: {},
@@ -109,7 +109,7 @@ describe("o carimbo de origem da linha enviada", () => {
   it("⭐ a REGRA DE AUTOMAÇÃO (webhook_source) grava 'automation', nunca 'ai'", async () => {
     // O template fixo de uma regra não passa por IA nenhuma. Com o carimbo
     // 'ai', o balão mostrado ao dono atribuía à IA um texto que a regra montou.
-    wahaRespondendo();
+    metaRespondendo();
     const { supabase, capturas } = duble();
 
     await sendMessageHandler(supabase, ctxComAtor({ type: "webhook_source", id: "regra-1" }), input);
@@ -126,7 +126,7 @@ describe("o carimbo de origem da linha enviada", () => {
   });
 
   it("CONTROLE: a pessoa pelo CRM continua 'user' — e com autoria", async () => {
-    wahaRespondendo();
+    metaRespondendo();
     const { supabase, capturas } = duble();
 
     await sendMessageHandler(supabase, ctxComAtor({ type: "user", id: USER }), input);
@@ -139,7 +139,7 @@ describe("o carimbo de origem da linha enviada", () => {
   it("CONTROLE: o agente de IA continua 'ai' — a categoria nova não engoliu a dele", async () => {
     // Sem este caso, carimbar TUDO que não é pessoa 'automation' ficaria verde —
     // e a IA deixaria de ter rótulo próprio, que é o defeito na direção oposta.
-    wahaRespondendo();
+    metaRespondendo();
     const { supabase, capturas } = duble();
 
     await sendMessageHandler(

@@ -39,10 +39,15 @@ vi.mock("@/lib/env", () => ({
   env: { INTERNAL_CRON_SECRET: SEGREDO, INTERNAL_SECRET: "" },
 }));
 
-// Sem transporte configurado, `wahaAdapter.checkHealth` responde
-// `{reachable:false}` na hora e sem rede — determinismo sem mockar o seam de
-// canais, que é justamente o que está sob teste.
-vi.mock("@/lib/waha/client", () => ({ getWahaClient: () => null }));
+// Transporte duble: credencial oficial pelo env (a sessao falsa nao tem
+// token gravado) e Graph mockada — determinismo sem rede, sem tocar no
+// seam de canais, que e justamente o que esta sob teste.
+vi.stubEnv("META_PHONE_NUMBER_ID", "100000000000000");
+vi.stubEnv("META_SYSTEM_USER_TOKEN", "tok");
+vi.stubGlobal(
+  "fetch",
+  vi.fn(async () => Response.json({ display_phone_number: "+5511999990000", quality_rating: "GREEN" })),
+);
 
 const sincronizou = vi.fn();
 vi.mock("@/lib/channels/health", () => ({
@@ -65,6 +70,10 @@ vi.mock("@/lib/supabase/admin", () => ({
     from: () => {
       const cadeia: Record<string, unknown> = {};
       for (const m of ["select", "is", "eq"]) cadeia[m] = () => cadeia;
+      // Sem token gravado na sessao falsa: a busca de credencial devolve
+      // null e o adapter cai no env (comportamento documentado em
+      // `lib/channels/meta/credentials.ts`).
+      cadeia["maybeSingle"] = async () => ({ data: null, error: null });
       cadeia.update = (patch: unknown) => {
         atualizou(patch);
         return cadeia;
@@ -83,9 +92,9 @@ function sessao(over: Record<string, unknown>): Record<string, unknown> {
     display_name: null,
     phone_number: null,
     archived_at: null,
-    provider: "waha",
-    waha_session_name: "numero-de-verdade",
-    meta_phone_number_id: null,
+    provider: "meta_cloud",
+    waha_session_name: null,
+    meta_phone_number_id: "100000000000000",
     zernio_account_id: null,
     ...over,
   };
@@ -106,7 +115,7 @@ beforeEach(() => {
 describe("o vigia de conexão sobrevive a um provider que ele não sabe consultar", () => {
   it("controle positivo: a rodada verifica um canal de mensagem", async () => {
     // Sem isto, "a rodada não quebrou" seria verdade por não ter medido nada.
-    linhas = [sessao({ id: "waha-1" })];
+    linhas = [sessao({ id: "meta-1" })];
     const { status, body } = await rodar();
     expect(status).toBe(200);
     expect(body.verificadas).toBe(1);
@@ -116,7 +125,7 @@ describe("o vigia de conexão sobrevive a um provider que ele não sabe consulta
   it("uma linha de chamada de voz é ignorada, e a seguinte segue vigiada", async () => {
     linhas = [
       sessao({ id: "voz", provider: "wacalls", waha_session_name: null }),
-      sessao({ id: "waha-2" }),
+      sessao({ id: "meta-2" }),
     ];
     const { status, body } = await rodar();
     expect(status).toBe(200);
@@ -132,7 +141,7 @@ describe("o vigia de conexão sobrevive a um provider que ele não sabe consulta
   it("provider que o banco aceita e esta imagem não conhece não aborta a rodada", async () => {
     linhas = [
       sessao({ id: "futuro", provider: "provider-do-futuro", waha_session_name: null }),
-      sessao({ id: "waha-3" }),
+      sessao({ id: "meta-3" }),
     ];
     const { status, body } = await rodar();
     expect(status).toBe(200);

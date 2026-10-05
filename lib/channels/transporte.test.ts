@@ -1,32 +1,33 @@
 /**
- * O transporte de WhatsApp da instalação, lido do ambiente.
- *
- * Este arquivo pode nomear o provedor — é o lado de dentro da fronteira que
- * `scripts/lint-channels.ts` guarda. Os casos vieram de
- * `lib/instalacao/ambiente.test.ts`, que nomeava as variáveis do lado de fora.
+ * O transporte de WhatsApp da instalacao, lido do ambiente.
+ * Meta Cloud/Zernio (WAHA removido; legado WAHA ainda conta como apontado).
  */
 import { describe, expect, it } from "vitest";
 
 import { lerTransporteDeWhatsapp } from "@/lib/channels/transporte";
 
-describe("o transporte de WhatsApp da instalação", () => {
-  it("ambiente vazio não inventa nada", () => {
+describe("o transporte de WhatsApp da instalacao", () => {
+  it("ambiente vazio nao inventa nada", () => {
     expect(lerTransporteDeWhatsapp({})).toEqual({ apontado: false, comChave: false });
   });
 
-  it("o valor de exemplo do repo NÃO conta como chave configurada", () => {
-    // É o estado "ninguém trocou ainda". Contar como chave faria o diagnóstico
-    // do passo 1 dizer que o WhatsApp está pronto num servidor onde ele nunca
-    // subiu — e a pessoa iria parear um número contra um serviço que não existe.
+  it("oficial (Meta) conta como transporte", () => {
     expect(
       lerTransporteDeWhatsapp({
-        WAHA_API_BASE_URL: "http://waha:3000",
-        WAHA_API_KEY: "dev_plaintext_change_me",
+        META_PHONE_NUMBER_ID: "123",
+        META_SYSTEM_USER_TOKEN: "tok",
       }),
-    ).toEqual({ apontado: true, comChave: false });
+    ).toEqual({ apontado: true, comChave: true });
   });
 
-  it("apontado e com chave de verdade", () => {
+  it("parceiro (Zernio) conta como transporte", () => {
+    expect(lerTransporteDeWhatsapp({ ZERNIO_API_KEY: "k" })).toEqual({
+      apontado: true,
+      comChave: true,
+    });
+  });
+
+  it("legado WAHA ainda conta como apontado (compat)", () => {
     expect(
       lerTransporteDeWhatsapp({
         WAHA_API_BASE_URL: "http://waha:3000",
@@ -35,14 +36,10 @@ describe("o transporte de WhatsApp da instalação", () => {
     ).toEqual({ apontado: true, comChave: true });
   });
 
-  it("chave sem endereço não basta — e vice-versa", () => {
-    expect(lerTransporteDeWhatsapp({ WAHA_API_KEY: "x" }).apontado).toBe(false);
-    expect(lerTransporteDeWhatsapp({ WAHA_API_BASE_URL: "http://waha:3000" }).comChave).toBe(false);
-  });
-
-  it("espaço em branco não é configuração", () => {
-    expect(
-      lerTransporteDeWhatsapp({ WAHA_API_BASE_URL: "   ", WAHA_API_KEY: "  " }),
-    ).toEqual({ apontado: false, comChave: false });
+  it("espaco em branco nao e configuracao", () => {
+    expect(lerTransporteDeWhatsapp({ META_SYSTEM_USER_TOKEN: "   " })).toEqual({
+      apontado: false,
+      comChave: false,
+    });
   });
 });

@@ -134,11 +134,13 @@ describe("o que cada canal faz com a URL", () => {
     expect(z).toMatch(/res\.headers\.get\("content-type"\)/);
   });
 
-  it("o canal por QR delega no que já existia — comportamento idêntico", () => {
-    // O risco desta mudança é mexer no canal que funciona bem. Ele chama a
-    // MESMA função, com os mesmos argumentos; só mudou quem a escolhe.
-    const w = readFileSync("lib/channels/adapters/waha.ts", "utf8");
-    expect(w).toMatch(/return fetchWahaMedia\(input\.url, input\.hintMime \?\? null\)/);
+  it("o canal oficial resolve o media_id pela Graph \u2014 nunca baixa a URL do webhook direto", () => {
+    // A URL do webhook da Meta expira e n\u00e3o \u00e9 p\u00fablica: o adapter troca o
+    // `meta-media:<id>` pela URL assinada via lookup autenticado, com allowlist
+    // de host fail-closed no download.
+    const m = readFileSync("lib/channels/adapters/meta-cloud.ts", "utf8");
+    expect(m).toMatch(/meta_media_invalid_ref/);
+    expect(m).toMatch(/graph\.facebook\.com/);
   });
 
   it("os dois devolvem o MESMO tipo, reusado e não redefinido", () => {

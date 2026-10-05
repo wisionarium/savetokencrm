@@ -32061,6 +32061,62 @@ end $$;
 revoke execute on function public.fn_reaplicar_modulos_instalados() from public, anon, authenticated, service_role;
 revoke execute on function public.fn_conferir_modulos_instalados() from public, anon, authenticated, service_role;
 
+-- ---- Registro sem o evento morto do QR (migration 0345) ----
+--
+-- Apêndice idempotente: `create or replace` do corpo de
+-- `fn_event_log_e_registro` sem `whatsapp.chat_id_not_recognized`.
+create or replace function public.fn_event_log_e_registro(p_event_type text)
+returns boolean
+language sql
+immutable
+set search_path to 'public', 'pg_temp'
+as $$
+  select p_event_type = any (array[
+    -- IA e agente
+    'ai.responded',
+    'ai_agent.created',
+    'ai_agent.published',
+    'ai_agent.run_completed',
+    'ai_agent.run_failed',
+    'ai_agent.run_started',
+    -- agente (harness) — o motor registra quando não há negócio para pendurar
+    'agent.activity_unrouted',
+    -- canal e conversa
+    'channel_session.status_changed',
+    'conversation.claimed',
+    'conversation.transferred',
+    'whatsapp.conversation_mark_failed',
+    -- contato, lead, organização e plataforma
+    'contact.anonymized',
+    'contact.created',
+    'contact.deleted',
+    'contact.updated',
+    'crm.activity_write_failed',
+    'incident.resolved',
+    'lead.bulk_assigned',
+    'lead.bulk_deleted',
+    'lead.bulk_tagged',
+    'lead.reopened',
+    'lead.risk_backlog_seeded',
+    'lead.updated',
+    'org.updated',
+    'tenant.onboarded',
+    'tenant.reactivated',
+    'tenant.suspended',
+    'user.profile_updated',
+    -- mensagem
+    'message.failed',
+    'message.outbound',
+    'message.sending',
+    'message.sent',
+    -- LGPD
+    'lgpd.export_delivered',
+    'lgpd.export_generated',
+    'lgpd.redact_applied',
+    'lgpd.redact_failed'
+  ]::text[]);
+$$;
+
 -- ---- VARREDURA anon: função nova nasce exposta em quem ATUALIZA (migration 0116) ----
 --
 -- ⚠️ DE PROPÓSITO, NENHUMA FUNÇÃO É CRIADA DEPOIS DESTE BLOCO. Apêndice que cria

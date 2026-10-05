@@ -215,12 +215,9 @@ describe("o encanamento", () => {
     expect(fonte).toContain("resolveSessionRef");
   });
 
-  it("está agendado — cron que ninguém chama é código morto", () => {
-    // O crontab mora no entrypoint da imagem do scheduler desde que ele deixou
-    // de rodar `apk add` a cada start (docs/doctrine/packaging.md, invariante 1).
-    const compose = readFileSync("docker/scheduler/entrypoint.sh", "utf8");
-    expect(compose).toMatch(/cron\/contact-phones/);
-  });
+  // Sem scheduler no repo (Vercel + Supabase Cloud): o agendamento vive no
+  // painel da Vercel, fora do versionamento. O caso que lia o crontab do
+  // entrypoint morreu com o scheduler.
 
   it("a migration do carimbo existe, com apêndice e MANIFEST", () => {
     expect(

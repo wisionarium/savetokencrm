@@ -18,10 +18,9 @@ export default async function ConnectionsPage() {
   }
   const idioma = user.idioma;
 
-  const key = process.env.WAHA_API_KEY;
-  const wahaConfigured = Boolean(
-    process.env.WAHA_API_BASE_URL && key && key !== "dev_plaintext_change_me",
-  );
+  // WAHA removido (Vercel + Supabase Cloud): QR sempre indisponivel.
+  // O shell mostra oficial (Meta) + parceiro (Zernio) + voz.
+  const wahaConfigured = false;
   const wacallsConfigured = Boolean(process.env.WACALLS_API_BASE_URL);
 
   return (

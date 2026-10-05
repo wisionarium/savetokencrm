@@ -53,7 +53,7 @@ function ctx(over: {
     now: new Date("2026-09-14T12:00:00Z"),
     body,
     optedOut: false,
-    provider: "waha",
+    provider: "meta_cloud",
     pacing: {
       knobs: PACING_DEFAULTS,
       state: { lastSentAt: null, sentToday: 0, numberActivatedAt: null },

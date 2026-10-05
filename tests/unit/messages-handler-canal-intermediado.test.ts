@@ -209,7 +209,7 @@ function conversaCompleta(forma: Forma = {}): Row {
     contacts: { phone_number: "+595991733685", wa_identity: null, wa_lid: "999888", is_blocked: false },
     channel_sessions: {
       provider,
-      waha_session_name: provider === "waha" ? "default" : null,
+      waha_session_name: null,
       meta_phone_number_id: provider === "meta_cloud" ? "1103328999528818" : null,
       zernio_account_id: provider === "zernio" ? CONTA : null,
       status: "WORKING",
@@ -479,19 +479,19 @@ describe("a thread do provider atravessa os três elos até o transporte", () =>
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("o canal por QR não é afetado pelo campo novo — ele deriva o destino do contato", async () => {
-    vi.stubEnv("WAHA_API_BASE_URL", "http://localhost:3030");
-    vi.stubEnv("WAHA_API_KEY", "hash123");
-    const fetchMock = vi.fn(async () => Response.json({ key: { id: "TEXT1" } }));
+  it("o canal oficial não é afetado pelo campo novo — ele deriva o destino do contato", async () => {
+    vi.stubEnv("META_PHONE_NUMBER_ID", "1103328999528818");
+    vi.stubEnv("META_SYSTEM_USER_TOKEN", "tok");
+    const fetchMock = vi.fn(async () => Response.json({ messages: [{ id: "wamid.DIRETO" }] }));
     vi.stubGlobal("fetch", fetchMock);
 
     const { supabase } = makeSupabase(
-      conversaCompleta({ provider: "waha", providerConversationId: null }),
+      conversaCompleta({ provider: "meta_cloud", providerConversationId: null }),
     );
     const msg = await sendMessageHandler(supabase, ctx, texto());
 
     expect(msg.status).toBe("sent");
-    expect(msg.external_id).toBe("TEXT1");
+    expect(msg.external_id).toBe("wamid.DIRETO");
   });
 });
 

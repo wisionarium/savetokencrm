@@ -131,36 +131,11 @@ describe("as colunas da rodada existem nos três lugares", () => {
   });
 });
 
-describe("o fio entre o kit e a rota fala a MESMA língua", () => {
-  // O defeito que este bloco tranca: o `agent.sh` mandava um objeto aninhado
-  // (`rodada_do_banco: { disputa, retentativas, passada }`) e a rota lê três
-  // campos PLANOS com outros nomes. O `z.object` descarta chave desconhecida em
-  // silêncio, então o parse passava, os três chegavam `undefined` e as colunas
-  // eram gravadas nulas em toda rodada — a tela calada para sempre, que é o
-  // silêncio que o PR veio eliminar. Nenhum gate pegava porque o fio não tinha
-  // teste em lugar nenhum: ele mora entre o shell e o Zod.
+describe("o contrato da rota de update (lado app; o agente do host foi removido)", () => {
+  // O fio shell<->rota morreu com o kit; o que resta vivo é o lado app:
+  // a rota do agente lia três campos planos do corpo do run_result.
   const raiz = process.cwd();
   const nomesDaRota = ["disputa_de_banco", "retentativas_do_banco", "passada_do_banco"];
-
-  it("o kit imprime as três chaves com os nomes da rota, planas", () => {
-    const comum = readFileSync(join(raiz, "hostgator-setup-kit", "_common.sh"), "utf8");
-
-    for (const nome of nomesDaRota) expect(comum).toContain(nome);
-    // O objeto aninhado era exatamente o que a rota descartava.
-    expect(comum).not.toContain('{"disputa":');
-  });
-
-  it("o agent.sh manda o corpo PLANO — nenhum `rodada_do_banco` aninhado", () => {
-    const agente = readFileSync(join(raiz, "hostgator-setup-kit", "agent.sh"), "utf8");
-
-    expect(agente).toContain("${RODADA_DO_BANCO}");
-    // A chave ANINHADA antiga (`"rodada_do_banco":`) saiu do corpo do run_result —
-    // é ela que o `z.object` da rota descartava em silêncio. A linha do corpo é
-    // localizada pelo próprio `run_result` para o teste não depender do nome da
-    // função que lê o arquivo (`ler_rodada_do_banco`).
-    const corpoDoRunResult = agente.split("\n").find((l) => l.includes("run_result")) ?? "";
-    expect(corpoDoRunResult).not.toContain("rodada_do_banco");
-  });
 
   it("a rota lê exatamente esses três nomes", () => {
     const rota = readFileSync(

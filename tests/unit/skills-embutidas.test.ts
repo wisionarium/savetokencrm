@@ -216,14 +216,3 @@ describe("skills embutidas — as portas de acionamento conhecem todas as skills
     expect(JSON.stringify(json)).toContain("deskcomm-contribuir/scripts/hooks/sessao.sh");
   });
 });
-
-describe("skills embutidas — fora da imagem Docker", () => {
-  it(".dockerignore exclui as pastas de harness", () => {
-    const linhas = readFileSync(join(RAIZ, ".dockerignore"), "utf8")
-      .split("\n")
-      .map((l) => l.trim());
-    for (const pasta of [".claude", ".agents", ".codex", ".cursor", ".opencode"]) {
-      expect(linhas, `${pasta} entra no contexto de build`).toContain(pasta);
-    }
-  });
-});

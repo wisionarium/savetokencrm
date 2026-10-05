@@ -14,7 +14,6 @@ const FONTE_INBOUND = fs.readFileSync(
   path.join(process.cwd(), "lib/agent-engine/agent/inbound-turn.ts"),
   "utf8",
 );
-const FONTE_INGEST = fs.readFileSync(path.join(process.cwd(), "lib/waha/ingest.ts"), "utf8");
 
 describe("fiação — casePromiseGate recebe o nome do gerente do tenant", () => {
   it("send_message passa humanPromiseExtraTargets a partir de agentConfig.handoffKeywords", () => {
@@ -63,42 +62,5 @@ describe("fiação — lead urgente represado pelo cap de warm-up gera alerta cr
     expect(janela).toContain("inboundsPendentes.some((texto) => detectUrgencySignal(texto))");
     expect(janela).toMatch(/kind:\s*'handoff'/);
     expect(janela).toMatch(/severity:\s*'critical'/);
-  });
-});
-
-describe("fiação — resposta manual pelo WhatsApp silencia o bot temporariamente", () => {
-  // O helper mudou de casa e de nome (era `silenciarBotPorRetomadaHumana`, local
-  // deste arquivo; virou `pausarIaPorAtendimentoManual`, compartilhado com os
-  // outros canais). O que esta guarda protege é o mesmo de sempre: o caminho da
-  // mensagem vinda do celular do operador CALA o bot, e não só grava histórico.
-  it("handleOutboundFromUserPhone chama pausarIaPorAtendimentoManual depois de registrar a mensagem", () => {
-    const i = FONTE_INGEST.indexOf("async function handleOutboundFromUserPhone(");
-    expect(i).toBeGreaterThan(-1);
-    const j = FONTE_INGEST.indexOf("async function handleAck(", i);
-    expect(j).toBeGreaterThan(i);
-    const corpo = FONTE_INGEST.slice(i, j);
-    expect(corpo).toContain('sent_via: "external_device"');
-    expect(corpo).toContain("pausarIaPorAtendimentoManual(admin, {");
-    expect(corpo).toMatch(/pausarIaPorAtendimentoManual\(admin, \{[\s\S]{0,200}organizationId: session\.organization_id/);
-  });
-
-  /**
-   * A ORDEM, e não só a presença. O eco do próprio envio do CRM chega por este
-   * mesmo caminho com `fromMe: true`, e na janela em que a linha do envio ainda
-   * não tem `external_id` o dedup NÃO o pega (issue #519). Sem a guarda, a IA se
-   * cala porque ela mesma falou.
-   *
-   * `eco-do-envio-nao-silencia-o-bot.test.ts` mede o COMPORTAMENTO; esta guarda
-   * mede a FIAÇÃO — que a pausa está DENTRO do `if`, e não ao lado dele. Um
-   * refactor que desaninhasse as duas manteria os dois símbolos no arquivo e
-   * passaria pela asserção de presença acima.
-   */
-  it("a pausa acontece DENTRO da guarda de eco, nunca ao lado dela", () => {
-    const i = FONTE_INGEST.indexOf("async function handleOutboundFromUserPhone(");
-    const j = FONTE_INGEST.indexOf("async function handleAck(", i);
-    const corpo = FONTE_INGEST.slice(i, j);
-    expect(corpo).toMatch(
-      /if \(!\(await ehEcoDeEnvioNosso\([^)]*\)\)\) \{[\s\S]{0,300}?pausarIaPorAtendimentoManual\(/,
-    );
   });
 });

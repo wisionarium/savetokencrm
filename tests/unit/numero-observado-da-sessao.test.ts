@@ -71,12 +71,12 @@ describe("qual número o transporte está mesmo atendendo", () => {
   });
 });
 
-describe("o call site — guardar a função não basta se a rota não a usa", () => {
-  it("a rota de saúde da conexão chama a função, e não grava o jid na mão", async () => {
+describe("o call site — sem transporte não há observação ao vivo", () => {
+  it("a rota devolve o estado do banco e não consulta transporte nenhum", async () => {
     const { readFileSync } = await import("node:fs");
     const fonte = readFileSync("app/api/v1/channel-sessions/[id]/route.ts", "utf-8");
-    expect(fonte).toContain("numeroObservadoDaSessao({");
-    // A forma antiga, que é o defeito: preencher só quando está vazio.
-    expect(fonte).not.toMatch(/if\s*\(jid\s*&&\s*!phoneNumber\)/);
+    expect(fonte).not.toMatch(/getVerifiedSession/);
+    expect(fonte).not.toMatch(/lib\/waha\//);
+    expect(fonte).toContain("deletion_impact");
   });
 });

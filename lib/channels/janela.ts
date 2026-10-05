@@ -60,7 +60,15 @@ export function estadoDaJanela(
 ): EstadoDaJanela {
   if (!provider) return { tipo: "sem_restricao" };
 
-  const caps = capabilitiesOf(provider as ChannelProvider);
+  let caps;
+  try {
+    caps = capabilitiesOf(provider as ChannelProvider);
+  } catch {
+    // Provider legado/removido (ex. `waha`): a TELA não trava — o envio falha
+    // fechado no handler (`unknown_channel_provider`). Derrubar o inbox por
+    // causa do selo seria trocar um canal morto por uma tela morta.
+    return { tipo: "sem_restricao" };
+  }
   // `freeformOutsideWindow: true` = o canal aceita texto livre a qualquer hora.
   // Mostrar um relógio nele seria inventar uma urgência que não existe.
   if (caps.freeformOutsideWindow) return { tipo: "sem_restricao" };

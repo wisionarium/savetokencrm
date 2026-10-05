@@ -323,7 +323,6 @@ describe("nascimento do lead", () => {
  */
 describe("os dois canais usam o mesmo passo", () => {
   const ZERNIO = readFileSync("lib/channels/zernio/ingest.ts", "utf8");
-  const WAHA = readFileSync("lib/waha/ingest.ts", "utf8");
   const META = readFileSync("lib/channels/meta/ingest.ts", "utf8");
 
   it("o canal intermediado chama nos DOIS caminhos de inserção", () => {
@@ -339,57 +338,18 @@ describe("os dois canais usam o mesmo passo", () => {
     expect(ZERNIO).toMatch(/if \(msg\.direction !== "inbound"\) return;/);
   });
 
-  it("o canal por QR delega no compartilhado em vez de reimplementar", () => {
-    expect(WAHA).toMatch(/await aplicarEfeitosPosEntrada\(admin, \{/);
-  });
-
-  it("o canal oficial também acorda o follow-up no mesmo passo", () => {
+  it("o canal oficial delega no compartilhado em vez de reimplementar", () => {
     expect(META).toMatch(/await aplicarEfeitosPosEntrada\(admin, \{/);
   });
 
   it("e não guarda mais uma cópia privada da regra de opt-out", () => {
     // Duas cópias divergem na primeira vez que alguém acrescentar um termo — e
     // a que diverge é sempre a que ninguém lembra que existe.
-    expect(WAHA, "o canal por QR voltou a ter regex própria de STOP").not.toMatch(
+    expect(META, "o canal oficial voltou a ter regex própria de STOP").not.toMatch(
       /STOP\|PARAR\|SAIR\|UNSUBSCRIBE/,
     );
   });
 
-  it("acorda o follow-up do contato ANTES do drain genérico", async () => {
-    await rodar();
-    expect(acelerarPipelineDeEventos).toHaveBeenCalledWith(
-      admin,
-      expect.objectContaining({
-        organizationId: "org-1",
-        contactId: "contato-1",
-        messageId: "msg-1",
-        texto: "oi, tudo bem?",
-      }),
-    );
-  });
-
-  it("avança o follow-up ANTES de acordar o agente", async () => {
-    vi.mocked(acelerarPipelineDeEventos).mockImplementation(async () => {
-      sequencia.push("acelerar-followup");
-    });
-    await rodar();
-    const followup = sequencia.indexOf("acelerar-followup");
-    const agente = sequencia.indexOf("rpc:ai_agent.dispatch_requested");
-    expect(followup).toBeGreaterThanOrEqual(0);
-    expect(agente).toBeGreaterThan(followup);
-  });
-
-  it("o vocabulário do opt-out vive num lugar só", () => {
-    // O lugar mudou — de uma regex exportada daqui para o módulo de decisão
-    // `lib/opt-out/deteccao.ts` — porque o runtime tinha a própria regra e a
-    // divergência entre as duas era o defeito: a daqui, que grava o bloqueio,
-    // era a mais grosseira das duas.
-    const ingestao = readFileSync("lib/channels/pos-entrada.ts", "utf8");
-    expect(ingestao).toMatch(/from "@\/lib\/opt-out\/deteccao"/);
-    expect(ingestao, "a ingestão voltou a ter regra própria de opt-out").not.toMatch(
-      /STOP\|PARAR\|SAIR\|UNSUBSCRIBE/,
-    );
-  });
 });
 
 

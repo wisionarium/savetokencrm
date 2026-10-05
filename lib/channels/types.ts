@@ -1,15 +1,12 @@
-// `OutboundMedia` é reusado, não redefinido: um segundo tipo com os mesmos 4
-// campos diverge em silêncio na primeira vez que um lado ganhar um campo. Só o
-// TIPO atravessa (`import type` some na compilação) — o seam não carrega código
-// do provider. Quando a Fase 3 absorver `lib/waha/`, este é o único ponteiro a
-// mudar de casa.
+// `OutboundMedia` é neutro de provider (ver ./media). Só o TIPO atravessa
+// (`import type` some na compilação) — o seam não carrega código do provider.
 import type { SendMessageInput } from "@/lib/schemas";
 import type { FetchedMedia } from "@/lib/messaging/media/types";
-import type { OutboundMedia } from "@/lib/waha/media-send";
+import type { OutboundMedia } from "./media";
 
 export type { OutboundMedia };
 
-export type ChannelProvider = "waha" | "meta_cloud" | "zernio" | "wacalls";
+export type ChannelProvider = "meta_cloud" | "zernio" | "wacalls";
 
 /**
  * Os providers que transportam MENSAGEM — o subconjunto sobre o qual a matriz

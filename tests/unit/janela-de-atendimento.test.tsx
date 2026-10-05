@@ -30,7 +30,8 @@ const hMenos = (h: number) => new Date(AGORA.getTime() - h * 3_600_000).toISOStr
 
 describe("o estado da janela", () => {
   it("canal SEM restrição não tem relógio — inventá-lo ensina a ignorá-lo", () => {
-    // O número por QR aceita texto livre a qualquer hora.
+    // Provider legado/removido: a TELA não trava (sem_restricao); o envio
+    // falha fechado no handler. É o par da regra em `lib/channels/janela.ts`.
     expect(estadoDaJanela("waha", hMenos(48), AGORA)).toEqual({ tipo: "sem_restricao" });
   });
 

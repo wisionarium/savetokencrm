@@ -191,40 +191,21 @@ async function checkRedis(): Promise<Check> {
   }
 }
 
-async function checkWaha(): Promise<Check> {
+async function checkWhatsapp(): Promise<Check> {
   const t0 = Date.now();
-  const base = env.WAHA_API_BASE_URL;
-  if (!base) {
+  // Sem transporte proprio na Vercel: Meta Cloud/Zernio sao SaaS externos com
+  // credencial por organizacao (banco), nao por `.env` da instalacao.
+  // Health aqui = "ha canal de mensagem configuravel", sem ida a rede para
+  // nao derrubar o status por credencial de um tenant.
+  const oficial = Boolean(
+    process.env.META_PHONE_NUMBER_ID ?? process.env.META_WABA_ID ?? process.env.META_SYSTEM_USER_TOKEN,
+  );
+  const parceiro = Boolean(process.env.ZERNIO_API_KEY ?? process.env.ZERNIO_API_BASE_URL);
+  const legado = Boolean(process.env.WAHA_API_BASE_URL);
+  if (!oficial && !parceiro && !legado) {
     return { status: "degraded", latency_ms: 0, error: "not_configured", reason: "nao_configurado" };
   }
-  try {
-    // /api/sessions valida conectividade E autenticação num tiro só. O WAHA Core não
-    // expõe /api/health (daria 404 mesmo autenticado).
-    const res = await withTimeout(
-      fetch(`${base.replace(/\/$/, "")}/api/sessions`, {
-        headers: env.WAHA_API_KEY ? { "X-Api-Key": env.WAHA_API_KEY } : {},
-        cache: "no-store",
-      }),
-    );
-    if (!res.ok) {
-      return {
-        status: "down",
-        latency_ms: Date.now() - t0,
-        error: `http_${res.status}`,
-        reason: motivoDoStatusHttp(res.status),
-        target: alvoDe(base),
-      };
-    }
-    return { status: "ok", latency_ms: Date.now() - t0, target: alvoDe(base) };
-  } catch (e) {
-    return {
-      status: "down",
-      latency_ms: Date.now() - t0,
-      error: e instanceof Error ? e.message : String(e),
-      reason: classificarFalhaDeAlcance(e),
-      target: alvoDe(base),
-    };
-  }
+  return { status: "ok", latency_ms: Date.now() - t0 };
 }
 
 /**
@@ -285,15 +266,15 @@ function semAlvo(check: Check): Check {
 }
 
 export async function GET(req: NextRequest) {
-  const [supabase, redis, waha] = await Promise.all([
+  const [supabase, redis, whatsapp] = await Promise.all([
     checkSupabase(),
     checkRedis(),
-    checkWaha(),
+    checkWhatsapp(),
   ]);
 
   const verboso = req.nextUrl.searchParams.get("verbose") === "1" && segredoInternoConfere(req);
   const filtrar = verboso ? (c: Check) => c : semAlvo;
-  const checks = { supabase: filtrar(supabase), redis: filtrar(redis), waha: filtrar(waha) };
+  const checks = { supabase: filtrar(supabase), redis: filtrar(redis), whatsapp: filtrar(whatsapp) };
 
   const anyDown = Object.values(checks).some((c) => c.status === "down");
   const anyDegraded = Object.values(checks).some((c) => c.status === "degraded");

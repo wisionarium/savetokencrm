@@ -94,7 +94,6 @@ import { runEventLogDrainLoop, prontidaoDoLacoDeEventLog } from "@/lib/event-log
 import { crmEdgeConfigFromEnv } from "@/lib/agent-engine/edge/crm/mcp-client";
 import { enforceHolds, sessionHealthMetrics } from "@/lib/agent-engine/edge/crm/session-watchdog";
 import { runVoiceCallsBridgeLoop } from "@/lib/wacalls/events-bridge";
-import { runSessionWatchdogLoop } from "@/lib/agent-engine/edge/crm/session-reconciler";
 import { runHealthLoop } from "@/lib/agent-engine/health/circuit";
 import { runFlywheelLoop } from "@/lib/agent-engine/flywheel/live";
 import { llmEdgeConfigFromEnv } from "@/lib/agent-engine/edge/llm/run-model-call";
@@ -366,25 +365,13 @@ export async function startWorker(
     loopsAbort.signal,
   );
 
-  // Watchdog de sessão (4A-2): reconcilia channel_sessions×WAHA + redrive de
-  // queued. Liga só com as credenciais do WAHA no env (sem elas: warn + off).
-  const sessionWatchdogLoop =
-    env.WAHA_API_BASE_URL !== undefined && env.WAHA_API_KEY !== undefined
-      ? runSessionWatchdogLoop(
-          pool,
-          {
-            wahaBaseUrl: env.WAHA_API_BASE_URL,
-            wahaApiKey: env.WAHA_API_KEY,
-            intervalMs: env.WATCHDOG_INTERVAL_MS,
-            redriveMinAgeMs: env.WATCHDOG_REDRIVE_MIN_AGE_MS,
-            redriveBatchSize: env.WATCHDOG_REDRIVE_BATCH_SIZE,
-            redriveSpacingMs: env.WATCHDOG_REDRIVE_SPACING_MS,
-          },
-          log,
-          loopsAbort.signal,
-        )
-      : (log.warn("watchdog de sessão OFF — WAHA_API_BASE_URL/WAHA_API_KEY ausentes no env", {}),
-        Promise.resolve());
+  // Watchdog de sessao REMOVIDO com o transporte WAHA (Vercel + Supabase
+  // Cloud): reconcileSessions/redriveQueued falam HTTP direto com o WAHA
+  // (`lib/agent-engine/edge/crm/session-reconciler.ts`). Sem transporte nao ha
+  // o que reconciliar; redrive pelos adapters oficiais e trabalho futuro.
+  // Mensagem presa nao some em silencio: o cron `recover-stuck-messages`
+  // marca `failed` + abre aviso na Central.
+  const sessionWatchdogLoop = (log.warn("watchdog de sessao OFF - transporte WAHA removido", {}), Promise.resolve());
 
   // Ponte de eventos WaCalls (spec 18, §4.2) — chamada de voz, opt-in por
   // org. Sem a env, fica OFF: instalação que não usa a feature não paga o

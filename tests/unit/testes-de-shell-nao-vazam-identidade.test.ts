@@ -28,7 +28,6 @@ const SCRIPTS = [
   ...readdirSync(join(RAIZ, "tests", "shell"))
     .filter((f) => f.endsWith(".sh"))
     .map((f) => join("tests", "shell", f)),
-  join("hostgator-setup-kit", "test-validators.sh"),
 ];
 
 /** Linhas de código, sem comentário de linha inteira. */
@@ -49,9 +48,9 @@ describe("testes de shell não vazam para o repositório de quem roda", () => {
   it("a varredura alcança os scripts (controle de vivacidade)", () => {
     // Sem isto, um caminho errado devolveria lista vazia e as duas regras
     // abaixo passariam sobre nada.
-    expect(SCRIPTS.length).toBeGreaterThanOrEqual(10);
+    expect(SCRIPTS.length).toBeGreaterThanOrEqual(5);
     expect(SCRIPTS.filter((s) => codigo(s).some(([, l]) => ESCREVE_NO_GIT.test(l))).length)
-      .toBeGreaterThanOrEqual(5);
+      .toBeGreaterThanOrEqual(4);
   });
 
   it("nenhum `git config user.*` que resolva repositório", () => {

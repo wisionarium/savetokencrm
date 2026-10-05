@@ -6,7 +6,7 @@
  * secret, path token) — NUNCA do request body.
  *
  * Uso permitido:
- *  - Webhook handlers (WAHA, Nuvemshop)
+ *  - Webhook handlers (Meta, Nuvemshop)
  *  - Cron / workers
  *  - Onboarding / admin operations explícitas
  *  - Health check (read-only)
@@ -20,6 +20,9 @@ import { createClient as createSupabaseClient, type SupabaseClient } from "@supa
 import { env } from "@/lib/env";
 
 let _admin: SupabaseClient | null = null;
+
+/** Alias canônico do cliente admin — evita `ReturnType<typeof createAdminClient>` espalhado. */
+export type Admin = SupabaseClient;
 
 export function createAdminClient(): SupabaseClient {
   if (_admin) return _admin;

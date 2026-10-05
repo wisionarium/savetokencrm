@@ -13,9 +13,9 @@
  * lista de dívida teria feito a cerca aceitar mais um vazamento em vez de
  * menos um.
  */
-import { env } from "@/lib/env";
+
 
 /** O `.env` desta instalação exige assinatura em todo webhook de entrada? */
 export function pisoDeExigenciaDeAssinaturaNoWebhook(): boolean {
-  return env.WAHA_WEBHOOK_REQUIRE_SIGNATURE === "true";
+  return process.env.WAHA_WEBHOOK_REQUIRE_SIGNATURE === "true";
 }

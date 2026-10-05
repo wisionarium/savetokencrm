@@ -52,8 +52,6 @@ const ALLOWED = [
   // ela pede ao registro pelo slug da plataforma. Ver o cabeçalho de
   // `lib/plataformas-de-anuncio/types.ts`.
   /^lib\/plataformas-de-anuncio\//,
-  // O transporte que o adapter embrulha; some quando a Fase 3 o absorver.
-  /^lib\/waha\//,
   // Saída de `supabase gen types`: os nomes são COLUNAS. Editar à mão é o defeito.
   /^lib\/database\.types\.ts$/,
 ];
@@ -84,15 +82,12 @@ const KNOWN_DEBT: { reason: string; files: string[] }[] = [
     files: [
       "app/api/v1/channel-sessions/[id]/qr/route.ts",
       "app/api/v1/channel-sessions/[id]/reconnect/route.ts",
-      "app/api/v1/channel-sessions/[id]/route.test.ts",
       "app/api/v1/channel-sessions/[id]/route.ts",
       "app/api/v1/channel-sessions/route.ts",
       "app/api/v1/health/route.ts",
       "app/api/v1/messages/[id]/media/route.ts",
       "app/api/v1/onboarding/whatsapp/qr/route.ts",
       "app/api/v1/onboarding/whatsapp/session/route.ts",
-      "app/api/v1/webhooks/waha/[token]/route.ts",
-      "app/api/v1/webhooks/waha/route.ts",
       // (#118) Lê `process.env.WAHA_API_BASE_URL`/`WAHA_API_KEY` só para
       // decidir se o transporte está configurado — o nome está no ENV, não
       // numa pergunta de identidade. Sai quando o env virar config de canal.
@@ -159,7 +154,7 @@ const KNOWN_DEBT: { reason: string; files: string[] }[] = [
       "`WahaChannelAdapter` — o ChannelAdapter PRÉ-seam do agent-engine (F2-25), " +
       "abstração paralela à de `lib/channels/`. Unificar as duas é decisão de " +
       "arquitetura com superfície própria, não passo de um lint.",
-    files: ["lib/agent-engine/agent/followup-turn.ts", "lib/agent-engine/agent/inbound-turn.ts"],
+    files: ["lib/agent-engine/agent/inbound-turn.ts"],
   },
   {
     reason:
@@ -178,7 +173,6 @@ const KNOWN_DEBT: { reason: string; files: string[] }[] = [
       "components/inbox/media/media-utils.ts",
       "lib/agent-engine/channel-adapter.ts",
       "lib/agent-engine/cron/scheduler.ts",
-      "lib/agent-engine/edge/channel/waha-adapter.ts",
       "lib/agent-engine/edge/crm/mcp-client.ts",
       "lib/agent-engine/edge/crm/send-message.ts",
       "lib/agent-engine/edge/crm/session-watchdog.ts",
@@ -192,9 +186,7 @@ const KNOWN_DEBT: { reason: string; files: string[] }[] = [
       "lib/env.ts",
       "lib/followup/reactivity.ts",
       "lib/messaging/media/types.ts",
-      "lib/messaging/media/waha-source.ts",
       "lib/schemas/channels.ts",
-      "lib/supabase/admin.ts",
       "lib/types/messaging.ts",
       "lib/webhooks/secrets.ts",
       "workers/agent-worker/main.ts",

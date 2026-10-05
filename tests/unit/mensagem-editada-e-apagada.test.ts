@@ -158,29 +158,10 @@ describe("os elos que somem sem barulho", () => {
     expect(fonte.indexOf("parseZernioEdicao")).toBeLessThan(fonte.indexOf("ingestZernioInbound(admin"));
   });
 
-  it("WAHA casa pela mensagem ORIGINAL, não pelo id do evento", () => {
-    // `editedMessageId`/`revokedMessageId` apontam para a mensagem que mudou; o
-    // `id` do payload é o do próprio evento. Casar pelo `id` não acharia nada —
-    // e o silêncio pareceria "funcionou".
-    const fonte = readFileSync("lib/waha/ingest.ts", "utf8");
-    expect(fonte).toMatch(/p\.editedMessageId/);
-    expect(fonte).toMatch(/p\.revokedMessageId/);
-    expect(fonte).toMatch(/eventType === "message\.edited"/);
-    expect(fonte).toMatch(/eventType === "message\.revoked"/);
-  });
+  // (Os casos do transporte QR — casamento pelo id original e assinatura
+  // dos eventos no compose — morreram com ele. O Zernio cobre edicao/apagamento
+  // pelo `aplicarEdicaoZernio`, cobrado acima.)
 
-  it("o canal por QR ASSINA os dois eventos — sem isso nada chega", () => {
-    // Este é o elo mais silencioso de todos: o código trata os eventos
-    // perfeitamente e o transporte nunca os envia. Medido antes desta mudança —
-    // `WHATSAPP_HOOK_EVENTS` não tinha nenhum dos dois, e a mensagem editada
-    // pelo dono simplesmente nunca chegou ao CRM.
-    for (const arquivo of ["docker-compose.prod.yml", "docker-compose.yml"]) {
-      const compose = readFileSync(arquivo, "utf8");
-      const linha = compose.split("\n").find((l) => l.includes("WHATSAPP_HOOK_EVENTS")) ?? "";
-      expect(linha, `${arquivo} não assina message.edited`).toContain("message.edited");
-      expect(linha, `${arquivo} não assina message.revoked`).toContain("message.revoked");
-    }
-  });
 
   it("as colunas novas chegam à tela — sem elas a bolha nunca sabe", () => {
     // O `select` do handler é a única porta: coluna fora dele não chega, e

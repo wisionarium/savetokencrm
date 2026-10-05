@@ -243,11 +243,23 @@ function tiposConsumidos(): Set<string> {
 
 /** A lista que o banco usa para fechar o registro no nascimento. */
 function tiposDeRegistro(): Set<string> {
-  const achados = new Set<string>();
+  // Última definição vence: `create or replace` encadeado (baseline com
+  // apêndices, depois as migrations em ordem) — é o estado efetivo no banco.
+  // União de todas as definições tornaria qualquer REMOÇÃO impossível sem
+  // reescrever migration aplicada (proibido): o tipo morto continuaria
+  // aparecendo pela definição antiga (ex. `whatsapp.chat_id_not_recognized`,
+  // removido na 0345 com o transporte QR).
+  const definicoes: string[] = [];
   for (const f of arquivosSql()) {
-    const m = DEF_REGISTRO.exec(semComentarios(readFileSync(f, "utf8")));
-    if (m) for (const x of m[1]!.matchAll(/'([a-z0-9_.]+)'/g)) achados.add(x[1]!);
+    // Dentro do arquivo também vale o último: o baseline carrega o corpo
+    // original mais os apêndices idempotentes (`create or replace`).
+    const ms = [...semComentarios(readFileSync(f, "utf8")).matchAll(new RegExp(DEF_REGISTRO, "g"))];
+    const m = ms[ms.length - 1];
+    if (m) definicoes.push(m[1]!);
   }
+  const achados = new Set<string>();
+  const ultima = definicoes[definicoes.length - 1];
+  if (ultima) for (const x of ultima.matchAll(/'([a-z0-9_.]+)'/g)) achados.add(x[1]!);
   return achados;
 }
 

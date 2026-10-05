@@ -432,14 +432,18 @@ export function InboxFilters({ value, onChange }: Props) {
         )}
       </div>
 
-      {/* Faixa sublinhada, não caixa cinza: cinco abas num grid de 280px
-          espremiam "Fechadas" contra "Automático" até os rótulos se tocarem. */}
+      {/* Faixa sublinhada em DUAS LINHAS quando precisa, nunca cortada: seis
+          abas num grid de 280px não cabem lado a lado — antes elas estouravam
+          num scroll horizontal sem barra visível (`[scrollbar-width:none]`) e o
+          "Automático" morria no cantinho sem ninguém perceber que dava para
+          rolar. `flex-wrap` mostra tudo; `justify-start` em vez de
+          `justify-between` para a segunda linha não espalhar. */}
       <Tabs
         value={value.tab}
         onValueChange={(v) => onChange(aoTrocarDeAba(value, v as InboxTab))}
         className="px-3"
       >
-        <TabsList className="h-auto w-full justify-between gap-2 rounded-none bg-transparent p-0 [scrollbar-width:none]">
+        <TabsList className="h-auto w-full flex-wrap justify-start gap-2 overflow-x-visible rounded-none bg-transparent p-0 [scrollbar-width:none]">
           {tabs.map((tab) => {
             const meta = INBOX_TABS.find((t) => t.value === tab)!;
             const count = countFor[tab];

@@ -23,7 +23,7 @@ export function ChamaDeEngajamento({ motivo }: { motivo: string }) {
       aria-label={`Lead quente: ${motivo}`}
       title={motivo}
       className={cn(
-        "inline-flex h-4 items-center gap-0.5 rounded-full bg-warning-bg px-1.5",
+        "inline-flex min-h-4 items-center gap-0.5 rounded-full bg-warning-bg px-1.5",
         "text-[10px] font-semibold text-warning-fg",
       )}
     >

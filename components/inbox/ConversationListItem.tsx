@@ -254,8 +254,10 @@ export function ConversationListItem({
       <div className="min-w-0 flex-1">
         {naFila && (
           <div className="mb-1 flex items-center gap-1.5">
+            {/* `min-h` e não `h`: com a escala +5px o número cresceu e altura
+                fixa cortaria o descendente — piso de 16px, cresce junto. */}
             <span
-              className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-accent-soft px-1 text-[10px] font-medium tabular-nums text-accent"
+              className="inline-flex min-h-4 min-w-4 items-center justify-center rounded-full bg-accent-soft px-1 text-[10px] font-medium tabular-nums text-accent"
               aria-label={`${t("Posição")} ${queuePosition} ${t("na fila")}`}
             >
               {queuePosition}º
@@ -300,7 +302,7 @@ export function ConversationListItem({
             {truncated}
           </p>
           {unread > 0 && (
-            <span className="inline-flex h-[18px] min-w-[18px] shrink-0 items-center justify-center rounded-full bg-accent px-1.5 text-[10px] font-semibold tabular-nums text-accent-foreground">
+            <span className="inline-flex min-h-[18px] min-w-[18px] shrink-0 items-center justify-center rounded-full bg-accent px-1.5 text-[10px] font-semibold tabular-nums text-accent-foreground">
               {unread}
             </span>
           )}
@@ -309,7 +311,7 @@ export function ConversationListItem({
         {(temSelos || engajamento.nivel === "quente") && (
           <div className="mt-1.5 flex flex-wrap items-center gap-1">
             {visibleTags.map((t) => (
-              <ChipDeEtiqueta key={t} tag={t} className="h-4 px-1.5 text-[10px]" />
+              <ChipDeEtiqueta key={t} tag={t} className="min-h-4 px-1.5 text-[10px]" />
             ))}
             {overflow > 0 && (
               <span className="text-[10px] text-text-muted">+{overflow}</span>

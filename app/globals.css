@@ -593,6 +593,49 @@
   transition-duration: var(--duration-slow);
 }
 
+/* ─────────────────────────────────────────────────────────────────────────
+   Escala tipográfica +5px em cada degrau (pedido do dono: texto miúdo no uso
+   diário, 2026-10-05).
+   É `@theme` PLANO (não `inline`): aqui nascem valores literais, não pontes
+   para `:root` — e por isso o teste `tailwind-tokens` (que só audita o bloco
+   `inline` e as cores) não muda de comportamento. Degraus acima de `2xl`
+   ficam: título já grande não pedia lupa.
+   line-height acompanha para não cortar descendente em caixa de altura fixa
+   (h-7/h-8/h-9 dos botões e selects continuam cabendo: 19px em 32px, 17px em
+   28px — medido, não estimado). */
+@theme {
+  --text-xs: 17px;
+  --text-xs--line-height: 1.5rem;
+  --text-sm: 19px;
+  --text-sm--line-height: 1.75rem;
+  --text-base: 21px;
+  --text-base--line-height: 2rem;
+  --text-lg: 23px;
+  --text-lg--line-height: 2rem;
+  --text-xl: 25px;
+  --text-xl--line-height: 2.25rem;
+  --text-2xl: 29px;
+  --text-2xl--line-height: 2.5rem;
+}
+
+/* Texto miúdo com tamanho CHAPADO (`text-[10px]` e irmãs, ~170 usos em
+   pílulas, contadores e selos) acompanha os mesmos +5px. Classe a classe seria
+   um diff gigante pelo mesmo efeito — e o próximo `text-[10px]` que alguém
+   escrever já nasce no padrão novo, em vez de reintroduzir o miúdo.
+   `text-[8px]` FICA: são as iniciais dentro de discos de 16px (`OwnerBadge`
+   compacto), onde o tamanho É a geometria — e o nome completo está ao lado.
+   Sem layer de propósito: sem layer vence qualquer utilitário em `@layer
+   utilities`, independente da ordem no arquivo. */
+.text-\[10px\] {
+  font-size: 15px;
+}
+.text-\[11px\] {
+  font-size: 16px;
+}
+.text-\[13px\] {
+  font-size: 18px;
+}
+
 
 @layer base {
   /* O preflight do v4 não pinta mais borda por padrão (`border: 0 solid`, cor
@@ -698,6 +741,9 @@
     overflow-x: clip;
     background-color: var(--color-bg);
     color: var(--color-text);
+    /* Acompanha a escala +5px: texto sem classe de tamanho (corpo, parágrafos)
+       usa o degrau base, como todo `text-base` explícito. */
+    font-size: var(--text-base);
     font-family: var(--font-atkinson), ui-sans-serif, system-ui, -apple-system,
       "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     font-feature-settings: "rlig" 1, "calt" 1, "ss01" 1;

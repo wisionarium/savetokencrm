@@ -32,7 +32,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { comandosDaFila } from "@/lib/inbox/comando-da-conversa";
-import { buscaValeConsulta } from "@/lib/inbox/termo-de-busca";
+import { montarFiltrosDaLista } from "@/lib/inbox/montar-filtros";
 import { useAutomaticoAtivo } from "@/hooks/ai/useAutomaticoAtivo";
 
 /**
@@ -187,31 +187,18 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
   const { data: automaticoDaOrg } = useAutomaticoAtivo();
   const composerRef = useRef<ComposerHandle | null>(null);
 
+  // Aba + auxiliares num filtro só — a montagem mora em
+  // `lib/inbox/montar-filtros.ts` (testada pela matriz de congruência), não
+  // aqui: duas montagens divergem, e foi assim que "Não lidos" virou ilha.
   const filters: ConversationsFilters = useMemo(
-    () => {
-      const daAba = tabToFilter(filterValue.tab, automaticoDaOrg);
-      return {
-        ...daAba,
-        // O "Atribuído para" da gestão VENCE o dono que a aba pediu: sem isso,
-        // escolher uma atendente com a aba "Minhas" aberta faria AND
-        // (`assigned_to=me` E `assigned_to=<uuid>`) — lista sempre vazia sem
-        // nada dizendo por quê. Nas abas de status (Fechadas/Arquivadas) não há
-        // dono vindo da aba, então o filtro soma (AND verdadeiro: atribuídas a
-        // X E arquivadas — que é o que o pedido quer dizer).
-        assigned_to: filterValue.assigned_to ?? daAba.assigned_to,
-        // A tela NÃO pede o que a rota recusa: o hook trata falha com
-        // `showApiError`, então digitar a primeira letra de qualquer busca faria
-        // piscar um erro na cara de quem digita. A regra é a MESMA que o schema
-        // usa (`lib/inbox/termo-de-busca.ts`) — nunca repetida aqui.
-        search: buscaValeConsulta(filterValue.search)
-          ? filterValue.search
-          : undefined,
+    () =>
+      montarFiltrosDaLista(tabToFilter(filterValue.tab, automaticoDaOrg), {
+        search: filterValue.search,
+        leitura: filterValue.leitura,
         channel_session_id: filterValue.channel_session_id,
         tag: filterValue.tag,
-        unread: filterValue.leitura === "nao_lidas" || undefined,
-        read: filterValue.leitura === "lidas" || undefined,
-      };
-    },
+        assigned_to: filterValue.assigned_to,
+      }),
     [
       filterValue.tab,
       automaticoDaOrg,

@@ -9,6 +9,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, render, screen, within } from "@testing-library/react";
 
 import { NavHub } from "@/components/shell/NavHub";
+import { InstalledGuidesCards } from "@/components/extensions/InstalledGuidesCards";
 import { DICIONARIO } from "@/lib/i18n/dicionario";
 import type { ExtensionGuideView } from "@/lib/extensions/view";
 import { hubSections } from "@/lib/navigation/registry";
@@ -134,18 +135,8 @@ describe("NavHub", () => {
     expect(textos.filter((texto) => !DICIONARIO[texto]?.es)).toEqual([]);
   });
 
-  it("integra contribuições tipadas no CRM sem aceitar destino vindo do pacote", () => {
-    render(
-      <NavHub
-        group="crm"
-        isPlatformAdmin={false}
-        role="viewer"
-        title="CRM"
-        subtitle=""
-        locale="es"
-        extensionGuides={[extensionGuide]}
-      />,
-    );
+  it("integra contribuições tipadas sem aceitar destino vindo do pacote", () => {
+    render(<InstalledGuidesCards guides={[extensionGuide]} locale="es" />);
 
     const contribution = screen.getByRole("link", { name: /Empieza aquí/ });
     expect(contribution).toHaveAttribute(
@@ -156,24 +147,16 @@ describe("NavHub", () => {
     expect(screen.getByText("Abre Tareas; no lee tus datos.")).toBeInTheDocument();
   });
 
-  it("expõe falha de leitura das contribuições sem derrubar o hub do CRM", () => {
-    render(
-      <NavHub
-        group="crm"
-        isPlatformAdmin={false}
-        role="viewer"
-        title="CRM"
-        subtitle=""
-        extensionsUnavailable
-      />,
-    );
+  it("expõe falha de leitura das contribuições sem derrubar a página", () => {
+    render(<InstalledGuidesCards guides={[]} unavailable />);
 
     expect(
       screen.getByRole("heading", { name: "Não foi possível conferir as orientações instaladas" }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Gerenciar extensões" })).toHaveAttribute(
-      "href",
-      "/app/extensions",
-    );
+  });
+
+  it("sem guias e sem falha não renderiza nada", () => {
+    const { container } = render(<InstalledGuidesCards guides={[]} />);
+    expect(container).toBeEmptyDOMElement();
   });
 });

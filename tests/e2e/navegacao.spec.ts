@@ -115,35 +115,24 @@ test.describe("navegação agrupada", () => {
     // abaixo é específica (`settings/tenant/pipelines`) e não o antigo
     // /pipelines/, que casa com as duas.
     //
-    // ⚠️ E O CAMINHO MUDOU: com Tarefas (PR #546), o CRM chegou a cinco telas e
-    // o menu passou a rolar em 900px. A resposta foi o hub do grupo, como o
-    // comentário de densidade do `Sidebar.tsx` já mandava — então esta tela
-    // agora mora atrás de "Ver tudo em CRM". Este teste percorre o caminho
-    // INTEIRO em vez de checar um link: hub → tela. Que a porta existe no grupo
+    // ⚠️ E O CAMINHO MUDOU: sem hubs no meio, a tela mora no próprio bloco do
+    // CRM — que nasce recolhido. Este teste percorre o caminho INTEIRO em vez
+    // de checar um link: expandir o bloco → tela. Que a porta existe no grupo
     // certo do sidebar é o unitário `sidebar-grupos` que prende.
-    await sidebar(page).getByRole("link", { name: "Ver tudo em CRM" }).click();
-    await page.waitForURL(/\/app\/crm$/);
-    await expect(page.getByRole("heading", { name: "O dia a dia da venda" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Preparar a venda" })).toBeVisible();
-
-    await page.screenshot({ path: path.join(EVIDENCE, "nav-hub-crm.png"), fullPage: true });
-
-    await page.getByRole("link", { name: /Etapas do funil/ }).click();
+    await sidebar(page).getByRole("button", { name: "CRM" }).click();
+    await sidebar(page).getByRole("link", { name: /Etapas do funil/ }).click();
     await page.waitForURL(/settings\/tenant\/pipelines/);
     await expect(page.getByRole("heading", { name: "Etapas do funil", level: 1 })).toBeVisible();
   });
 
-  test("e Produtos, que saiu do menu, continua alcançável pelo mesmo hub", async ({ page }) => {
-    // Tirar do sidebar não pode virar tela órfã: DoD 14 cobra porta, e a porta
-    // passou a ser o hub. Sem este caso, o item "some do menu" ficaria provado
-    // e o "continua alcançável" ficaria só escrito no comentário.
+  test("e Produtos está no mesmo bloco, sem hub no meio", async ({ page }) => {
+    // Sem "Ver tudo em CRM": o bloco É o caminho, e a porta continua existindo.
     await loginAdmin(page);
 
     await expect(sidebar(page).getByRole("link", { name: "Produtos" })).toHaveCount(0);
 
-    await sidebar(page).getByRole("link", { name: "Ver tudo em CRM" }).click();
-    await page.waitForURL(/\/app\/crm$/);
-    await page.getByRole("link", { name: /Produtos/ }).click();
+    await sidebar(page).getByRole("button", { name: "CRM" }).click();
+    await sidebar(page).getByRole("link", { name: /Produtos/ }).click();
     await page.waitForURL(/\/app\/products/);
   });
 
@@ -154,20 +143,11 @@ test.describe("navegação agrupada", () => {
     await expect(page.getByRole("heading", { name: "Funis", level: 1 })).toBeVisible();
   });
 
-  test("chega em Conhecimento, que só existia atrás das abas de IA", async ({ page }) => {
+  test("chega em Conhecimento, no bloco de IA", async ({ page }) => {
     await loginAdmin(page);
 
-    await sidebar(page).getByRole("link", { name: "Ver tudo em IA" }).click();
-    await page.waitForURL(/\/app\/ai$/);
-
-    // O hub organiza por jornada, não numa grade solta.
-    await expect(page.getByRole("heading", { name: "Montar o agente" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Ensinar o agente" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Acompanhar o agente" })).toBeVisible();
-
-    await page.screenshot({ path: path.join(EVIDENCE, "nav-hub-ia.png"), fullPage: true });
-
-    await page.getByRole("link", { name: /Conhecimento/ }).click();
+    await sidebar(page).getByRole("button", { name: "Agente de IA" }).click();
+    await sidebar(page).getByRole("link", { name: /Conhecimento/ }).click();
     await page.waitForURL(/knowledge\/sources/);
   });
 

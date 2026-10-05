@@ -83,41 +83,36 @@ describe("sidebarGroups", () => {
 
   it("só inclui destino marcado como sidebar", () => {
     const hrefs = sidebarGroups(true, null).flatMap((g) => g.items.map((i) => i.href));
-    // Conhecimento existe no registro, mas é do hub — não do sidebar.
-    expect(hrefs).not.toContain("/app/ai/knowledge/sources");
+    // Sem hubs no meio, todo destino do grupo aparece clicando no bloco —
+    // inclusive os que moravam atrás de "Ver tudo".
+    expect(hrefs).toContain("/app/ai/knowledge/sources");
     expect(hrefs).toContain("/app/ai/agents");
+    // Nuvemshop segue fora por escolha do dono do produto (ver catalogo.ts).
+    expect(hrefs).not.toContain("/app/integrations/nuvemshop");
   });
 
   it("Etapas do funil é CRM, não Configurações — o achado que originou esta mudança", () => {
-    // ⚠️ ESTA ASSERÇÃO MUDOU DE SUPERFÍCIE, e a propriedade guardada é a mesma.
-    // Ela cobrava presença no SIDEBAR, que era só o jeito de a tela deixar de
-    // ser "um card perdido em Configurações". Com o hub do CRM (`/app/crm`),
-    // ela mora atrás de "Ver tudo em CRM" — continua sendo CRM, continua fora
-    // de Configurações, e o caminho tem um clique a mais porque desenhar as
-    // colunas do funil é trabalho de montagem, não de todo dia.
+    // A porta agora é o próprio bloco do CRM no sidebar (sem hub no meio).
     //
     // O que NÃO pode voltar é o destino trocar de grupo: é isso que a primeira
     // asserção prende, e ela não depende de onde o item é desenhado.
     expect(dest("/app/settings/tenant/pipelines").group).toBe("crm");
-    const hub = hubSections("crm", true, null).flatMap((s) => s.items.map((i) => i.href));
-    expect(hub).toContain("/app/settings/tenant/pipelines");
+    const sidebar = sidebarGroups(true, null)
+      .find((g) => g.group.id === "crm")
+      ?.items.map((i) => i.href);
+    expect(sidebar).toContain("/app/settings/tenant/pipelines");
   });
 
-  it("o CRM tem hub, e o sidebar dele fica só com o uso diário", () => {
-    // A decisão que devolveu a dobra em 900px (e2e `navegacao.spec.ts`): quando
-    // Tarefas virou o quinto destino de CRM, o menu passou a rolar por 13px.
-    // O conserto foi o hub — o desenho que o grupo IA já usava —, não mais
-    // densidade raspada do `Sidebar.tsx`.
-    //
-    // A lista é EXATA de propósito. `toContain` deixaria um sexto item entrar
-    // calado no sidebar e reabrir a mesma corrida por pixel.
+  it("o CRM não tem hub: o sidebar traz as cinco telas do grupo", () => {
     const crm = sidebarGroups(true, null).find((g) => g.group.id === "crm");
     expect(crm?.items.map((i) => i.href)).toEqual([
       "/app/kanban",
       "/app/contacts",
       "/app/tasks",
+      "/app/products",
+      "/app/settings/tenant/pipelines",
     ]);
-    expect(NAV_GROUPS.find((g) => g.id === "crm")?.hub?.href).toBe("/app/crm");
+    expect(NAV_GROUPS.find((g) => g.id === "crm")?.hub).toBeUndefined();
   });
 
   it("omite o grupo inteiro quando o papel não vê nenhum item dele", () => {
@@ -127,17 +122,28 @@ describe("sidebarGroups", () => {
     expect(ids).toContain("atendimento");
   });
 
-  it("a ordem dentro do grupo de IA é a do uso real: agentes, follow-ups, roteadores", () => {
-    // Provedores e Execuções NÃO entram aqui, e a razão é medida: pô-las na
-    // sidebar estourou a dobra em 900px (e2e `navegacao.spec.ts`). Elas seguem
-    // o padrão das outras nove telas do grupo — alcançáveis pelo hub "Ver tudo
-    // em IA", que é o desenho existente para tela de configuração.
+  it("a ordem dentro do grupo de IA é a do registro, sem hub no meio", () => {
+    // Todas as telas do grupo aparecem clicando no bloco — a lista é EXATA de
+    // propósito: item novo entra com decisão explícita de posição.
     const ia = sidebarGroups(true, null).find((g) => g.group.id === "ia");
     expect(ia?.items.map((i) => i.href)).toEqual([
       "/app/ai/agents",
       "/app/ai/followups",
+      "/app/ai/followups/novo-disparo",
       "/app/ai/routers",
+      "/app/ai/credentials",
+      "/app/ai/providers",
+      "/app/ai/knowledge/sources",
+      "/app/ai/memory",
+      "/app/ai/skills",
+      "/app/ai/cases",
+      "/app/ai/inbox",
+      "/app/ai/cases/avisos",
+      "/app/ai/proposals",
+      "/app/ai/runs",
+      "/app/ai/usage",
     ]);
+    expect(NAV_GROUPS.find((g) => g.id === "ia")?.hub).toBeUndefined();
   });
 });
 

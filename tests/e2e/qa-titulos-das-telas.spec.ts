@@ -35,7 +35,6 @@ const FRASE_DA_LANDING = "atendimento e vendas por WhatsApp com agentes de IA";
 
 const TELAS: ReadonlyArray<readonly [string, string]> = [
   ["/app/inbox", "Inbox"],
-  ["/app/crm", "CRM"],
   ["/app/contacts", "Contatos"],
   ["/app/kanban", "Funis"],
   ["/app/team", "Equipe"],
@@ -47,8 +46,6 @@ const TELAS: ReadonlyArray<readonly [string, string]> = [
   ["/app/metrics", "Desempenho"],
   ["/app/radar", "Radar"],
   ["/app/audit", "Audit Log"],
-  ["/app/ai", "Agente de IA"],
-  ["/app/analise", "Análise"],
   ["/app/products", "Produtos"],
   ["/app/connections", "Conexões"],
   // A tela do aviso de caso (onda 8). Entra aqui porque a lista é FIXA: rota

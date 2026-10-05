@@ -725,7 +725,7 @@ test("pacote pós-build atravessa catálogo, tenants, guia e Tarefas com recuper
       "admin B",
       observacoes,
     );
-    await adminB.goto("/app/crm");
+    await adminB.goto("/app/extensions");
     await expect(
       adminB.getByTestId(`extension-contribution-${installationId}-${catalogo!.pacote.cardId}`),
     ).toHaveCount(0);
@@ -803,7 +803,7 @@ test("pacote pós-build atravessa catálogo, tenants, guia e Tarefas com recuper
       }),
     ).rejects.toThrow();
 
-    await page.goto("/app/crm");
+    await page.goto("/app/extensions");
     const contribution = page.getByTestId(
       `extension-contribution-${installationId}-${catalogo!.pacote.cardId}`,
     );
@@ -813,7 +813,7 @@ test("pacote pós-build atravessa catálogo, tenants, guia e Tarefas com recuper
       contribution.getByText(catalogo!.pacote.cardDescription, { exact: true }),
     ).toHaveCount(0);
     // O Card deste repositório não carrega `data-slot` (components/ui/card.tsx): o card é o
-    // filho direto do link da contribuição (components/shell/NavHub.tsx). O seletor antigo
+    // filho direto do link da contribuição (components/extensions/InstalledGuidesCards.tsx). O seletor antigo
     // nunca casava e a medição esperava até estourar o prazo do teste inteiro.
     const padding = await contribution
       .locator(":scope > div")
@@ -951,7 +951,7 @@ test("pacote pós-build atravessa catálogo, tenants, guia e Tarefas com recuper
     expect(managerPage).toBeTruthy();
     await managerPage!.bringToFront();
     await trocarOrganizacao(managerPage!, atores!.organizacaoB);
-    await managerPage!.goto("/app/crm");
+    await managerPage!.goto("/app/extensions");
     await expect(
       managerPage!.getByTestId(
         `extension-contribution-${installationId}-${catalogo!.pacote.cardId}`,
@@ -966,7 +966,7 @@ test("pacote pós-build atravessa catálogo, tenants, guia e Tarefas com recuper
     ).toBe(404);
 
     await trocarOrganizacao(managerPage!, atores!.organizacaoA);
-    await managerPage!.goto("/app/crm");
+    await managerPage!.goto("/app/extensions");
     await expect(
       managerPage!.getByTestId(
         `extension-contribution-${installationId}-${catalogo!.pacote.cardId}`,

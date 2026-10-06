@@ -62,14 +62,18 @@ describe("NavHub", () => {
     expect(secoes).toEqual(["Montar o agente", "Acompanhar o agente"]);
   });
 
-  it("desenterra Provedores, que só existia atrás das abas", () => {
-    render(<NavHub group="ia" isPlatformAdmin role={null} title="Agente de IA" subtitle="" />);
+  it("desenterra Provedores no hub Configurações", () => {
+    render(
+      <NavHub group="organizacao" isPlatformAdmin role={null} title="Configurações" subtitle="" />,
+    );
     const link = screen.getByRole("link", { name: /Provedores/ });
     expect(link).toHaveAttribute("href", "/app/ai/providers");
   });
 
   it("cada card explica para que serve — é o que o sidebar não cabe dizer", () => {
-    render(<NavHub group="ia" isPlatformAdmin role={null} title="Agente de IA" subtitle="" />);
+    render(
+      <NavHub group="organizacao" isPlatformAdmin role={null} title="Configurações" subtitle="" />,
+    );
     const link = screen.getByRole("link", { name: /Provedores/ });
     expect(link.textContent).toMatch(/o que acontece se ela falhar/i);
   });

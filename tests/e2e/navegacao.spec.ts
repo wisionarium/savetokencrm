@@ -84,16 +84,20 @@ async function expectSemOverflowHorizontal(page: Page, contexto: string): Promis
 test.describe.configure({ timeout: 120_000 });
 
 test.describe("navegação agrupada", () => {
-  test("o sidebar tem hierarquia: só o Inbox no menu, por decisão do dono", async ({ page }) => {
+  test("o sidebar tem hierarquia: grupos na ordem de uso (Canais saiu do menu)", async ({ page }) => {
     await loginAdmin(page);
 
-    // Decisão do dono (2026-10-06): o sidebar mostra SÓ o Inbox. Todo o resto
-    // segue no registro — e portanto no ⌘K, nos hubs e por URL direta — mas
-    // não ocupa linha no menu. Organização segue com hub (Configurações) no
-    // rodapé fixo — ver o teste de dobra abaixo.
+    // Canais saiu do menu em 2026-10-06 (decisão do dono: Conexões e Webhooks
+    // foram para o hub Configurações). Organização não aparece como título
+    // aqui: seu hub (Configurações) vive no rodapé fixo — ver o teste de dobra
+    // abaixo.
     const titulos = sidebar(page).getByRole("heading");
-    await expect(titulos).toHaveText(["Atendimento"]);
-    await expect(sidebar(page).getByRole("link", { name: "Inbox", exact: true })).toBeVisible();
+    await expect(titulos).toHaveText([
+      "Atendimento",
+      "CRM",
+      "Agente de IA",
+      "Análise",
+    ]);
 
     await page.screenshot({
       path: path.join(EVIDENCE, "nav-sidebar-agrupado.png"),
@@ -101,7 +105,7 @@ test.describe("navegação agrupada", () => {
     });
   });
 
-  test("chega nas Etapas do funil pelo ⌘K, sem passar por Configurações", async ({ page }) => {
+  test("chega nas Etapas do funil pelo CRM, sem passar por Configurações", async ({ page }) => {
     await loginAdmin(page);
 
     // O caso que originou tudo: o usuário não sabia que esta tela existia.
@@ -112,59 +116,54 @@ test.describe("navegação agrupada", () => {
     // abaixo é específica (`settings/tenant/pipelines`) e não o antigo
     // /pipelines/, que casa com as duas.
     //
-    // ⚠️ E A PORTA MUDOU (2026-10-06, decisão do dono: só o Inbox no sidebar):
-    // sem blocos no menu, a tela mora no ⌘K — que é a porta navegável dela
-    // (ver `searchable()` em lib/navigation/registry.ts). Este teste percorre
-    // o caminho INTEIRO em vez de checar um link: abrir o ⌘K → filtrar → tela.
-    await page.keyboard.press("ControlOrMeta+k");
-    await page.getByRole("combobox").fill("Etapas do funil");
-    await page.getByRole("option", { name: /Etapas do funil/ }).click();
+    // ⚠️ E O CAMINHO: sem hubs no meio, a tela mora no próprio bloco do CRM —
+    // que nasce recolhido (bandeja). Este teste percorre o caminho INTEIRO em
+    // vez de checar um link: expandir o bloco → tela.
+    await sidebar(page).getByRole("button", { name: "CRM" }).click();
+    await sidebar(page).getByRole("link", { name: /Etapas do funil/ }).click();
     await page.waitForURL(/settings\/tenant\/pipelines/);
     await expect(page.getByRole("heading", { name: "Etapas do funil", level: 1 })).toBeVisible();
   });
 
-  test("e Produtos se acha no ⌘K, sem hub no meio", async ({ page }) => {
-    // Sem "Ver tudo em CRM": a busca É o caminho, e a porta continua existindo.
+  test("e Produtos está no mesmo bloco, sem hub no meio", async ({ page }) => {
+    // Sem "Ver tudo em CRM": o bloco É o caminho, e a porta continua existindo.
     await loginAdmin(page);
 
     await expect(sidebar(page).getByRole("link", { name: "Produtos" })).toHaveCount(0);
 
-    await page.keyboard.press("ControlOrMeta+k");
-    await page.getByRole("combobox").fill("Produtos");
-    await page.getByRole("option", { name: /Produtos/ }).click();
+    await sidebar(page).getByRole("button", { name: "CRM" }).click();
+    await sidebar(page).getByRole("link", { name: /Produtos/ }).click();
     await page.waitForURL(/\/app\/products/);
   });
 
-  test("e a lista de funis tem nome próprio e porta no ⌘K", async ({ page }) => {
+  test("e a lista de funis é o item vizinho, com nome próprio", async ({ page }) => {
     await loginAdmin(page);
-    await expect(sidebar(page).getByRole("link", { name: "Funis", exact: true })).toHaveCount(0);
-    await page.keyboard.press("ControlOrMeta+k");
-    await page.getByRole("combobox").fill("Funis");
-    await page.getByRole("option", { name: "Funis", exact: true }).click();
+    await sidebar(page).getByRole("button", { name: "CRM" }).click();
+    await sidebar(page).getByRole("link", { name: "Funis", exact: true }).click();
     await page.waitForURL(/\/app\/kanban/);
     await expect(page.getByRole("heading", { name: "Funis", level: 1 })).toBeVisible();
   });
 
-  test("chega em Provedores pelo ⌘K, no grupo de IA", async ({ page }) => {
+  test("chega em Fluxos pelo bloco de IA, fora de Agentes", async ({ page }) => {
     await loginAdmin(page);
 
-    await page.keyboard.press("ControlOrMeta+k");
-    await page.getByRole("combobox").fill("Provedores");
-    await page.getByRole("option", { name: /Provedores/ }).click();
-    await page.waitForURL(/ai\/providers/);
+    await sidebar(page).getByRole("button", { name: "Agente de IA" }).click();
+    await sidebar(page).getByRole("link", { name: "Fluxos", exact: true }).click();
+    await page.waitForURL(/\/app\/ai\/fluxos/);
+    await expect(page.getByRole("heading", { name: "Fluxos", level: 1 })).toBeVisible();
   });
 
   /**
-   * O canal oficial saiu de Configurações no PR #105 e virou aba de Conexões.
-   * A porta, portanto, é Conexões — que agora vive no grupo CANAIS do sidebar,
-   * e não mais como um card perdido em Configurações.
+   * Conexões saiu do sidebar em 2026-10-06 (decisão do dono) e mora no hub
+   * Configurações — onde se configura o canal oficial da Meta. A porta,
+   * portanto, é o card em Configurações (e o ⌘K), não mais o grupo Canais.
    */
-  test("chega ao canal oficial pelo ⌘K, não por Configurações", async ({ page }) => {
+  test("chega ao canal oficial por Configurações, não pelo sidebar", async ({ page }) => {
     await loginAdmin(page);
 
-    await page.keyboard.press("ControlOrMeta+k");
-    await page.getByRole("combobox").fill("Conexões");
-    await page.getByRole("option", { name: /Conexões/ }).click();
+    await page.getByRole("link", { name: "Configurações" }).click();
+    await page.waitForURL(/\/app\/settings/);
+    await page.getByRole("link", { name: /Conexões/ }).click();
     await page.waitForURL(/\/app\/connections/);
     await expect(page.getByRole("tab", { name: /oficial/i })).toBeVisible();
   });
@@ -240,6 +239,7 @@ test.describe("navegação agrupada", () => {
         fullPage: true,
       });
 
+      await sidebar(page).getByRole("button", { name: "Atendimento" }).click();
       await sidebar(page).getByRole("link", { name: "Inbox", exact: true }).click();
       await page.waitForURL(/\/app\/inbox/);
       await expect(page.getByRole("dialog")).toHaveCount(0);
@@ -269,12 +269,11 @@ test.describe("navegação agrupada", () => {
     expect(dentroDaNav, "Configurações não pode depender de scroll para aparecer").toBe(false);
   });
 
-  test("um agent vê o Atendimento e não vê grupo que a permissão esvaziou", async ({ page }) => {
+  test("um agent não vê o cabeçalho de um grupo que a permissão esvaziou", async ({ page }) => {
     await login(page, creds.users.agent!.email);
 
-    // CANAIS é todo manager+/admin: o título não pode sobrar sozinho — e desde
-    // 2026-10-06 só o Inbox ocupa linha no menu, então o Atendimento é o
-    // único bloco visível para o agent.
+    // CANAIS saiu do menu em 2026-10-06 e é todo manager+/admin de todo jeito:
+    // o título não pode sobrar sozinho em nenhum papel.
     await expect(sidebar(page).getByRole("heading", { name: "Canais" })).toHaveCount(0);
     await expect(sidebar(page).getByRole("heading", { name: "Atendimento" })).toBeVisible();
   });

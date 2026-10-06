@@ -424,7 +424,7 @@ export function ConnectWhatsappClient({
           <p className="font-medium">{t("O WhatsApp desta instalação ainda não subiu.")}</p>
           <p className="mt-1">
             {t("Ele roda no seu próprio servidor. Dá para seguir sem ele agora e conectar o número depois, em")}{" "}
-            <strong>{t("Canais › Conexões")}</strong> —{" "}
+            <strong>{t("Configurações › Conexões")}</strong> —{" "}
             {t("seu funcionário fica pronto de qualquer jeito, só não terá por onde atender ainda.")}
           </p>
         </div>

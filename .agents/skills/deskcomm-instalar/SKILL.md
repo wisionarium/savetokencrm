@@ -66,7 +66,7 @@ O instalador pergunta isso **antes** das chaves, porque a resposta decide qual c
 
 Se a escolha não for OpenAI, o instalador pede a chave da OpenAI **à parte e opcional**: ela serve
 para ouvir áudios e indexar a base de conhecimento. Dá para cadastrar depois em IA › Credenciais.
-Dá para trocar de provedor depois pela tela, em Agente de IA › Provedores.
+Dá para trocar de provedor depois pela tela, em Configurações › Provedores.
 
 ### 3. O banco (Supabase) — prefira o token
 

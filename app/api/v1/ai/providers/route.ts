@@ -213,7 +213,7 @@ const corpoDoPut = z.object({
     .min(1)
     .refine(ehProvedorSuportado, {
       message:
-        "provedor não suportado por esta instalação — escolha um da lista em Agente de IA → Provedores",
+        "provedor não suportado por esta instalação — escolha um da lista em Configurações → Provedores",
     }),
   model_id: z.string().min(1),
   credential_id: z.string().uuid().nullable().optional(),
@@ -350,7 +350,7 @@ const corpoDoPatch = z.object({
     .min(1)
     .refine(ehProvedorSuportado, {
       message:
-        "provedor não suportado por esta instalação — escolha um da lista em Agente de IA → Provedores",
+        "provedor não suportado por esta instalação — escolha um da lista em Configurações → Provedores",
     }),
   default_model: z.string().min(1),
 });

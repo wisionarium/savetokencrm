@@ -95,10 +95,13 @@ export const GRUPO_NO_RODAPE: NavGroupId = "organizacao";
 export const NAV_CATALOG = [
   // ---- Atendimento — onde o operador passa o dia ----
   //
-  // Decisão do dono (2026-10-06): o sidebar mostra SÓ o Inbox. Todo o resto
-  // segue existindo no registro — e portanto no ⌘K (`searchable()`), nos hubs
-  // e por URL direta — mas não ocupa linha no menu. Para devolver um destino
-  // ao menu, basta devolver `sidebar: true` nele.
+  // Decisão do dono (2026-10-06, revista no mesmo dia): o sidebar volta a
+  // mostrar o uso diário. Só os FLUXOS saíram do menu (moram na página
+  // "Fluxos", /app/ai/fluxos) e 4 itens de configuração foram para o hub
+  // Configurações (Conexões, Provedores, Roteadores, Webhooks). Todo o resto
+  // segue no menu em bandeja recolhida; o que não está no menu continua no
+  // registro — e portanto no ⌘K, nos hubs e por URL direta. Para devolver um
+  // destino ao menu, basta devolver `sidebar: true` nele.
   {
     href: "/app/inbox",
     label: "Inbox",
@@ -113,6 +116,7 @@ export const NAV_CATALOG = [
     description: "Quem esfriou e ainda está aberto — o que corre risco de morrer sem resposta.",
     icon: "ClockCountdown",
     group: "atendimento",
+    sidebar: true,
   },
   {
     // Entra em "atendimento", e não em "organizacao", porque a Agenda é onde o
@@ -132,6 +136,7 @@ export const NAV_CATALOG = [
     description: "O que está marcado, com quem, e quem atende — seu e da equipe.",
     icon: "CalendarBlank",
     group: "atendimento",
+    sidebar: true,
   },
   {
     // Renomeado de "Templates": estes são scripts do atendente, consumidos pelo
@@ -142,6 +147,7 @@ export const NAV_CATALOG = [
     description: "Scripts salvos para responder mais rápido, seus ou da equipe.",
     icon: "FileText",
     group: "atendimento",
+    sidebar: true,
   },
   {
     // Biblioteca do time: tudo que foi subido no chat, nos fluxos e direto
@@ -151,6 +157,7 @@ export const NAV_CATALOG = [
     description: "As imagens do time: do chat, dos fluxos e as suas pastas.",
     icon: "ImageSquare",
     group: "atendimento",
+    sidebar: true,
   },
 
   // ---- CRM — o funil ----
@@ -171,6 +178,7 @@ export const NAV_CATALOG = [
     icon: "Kanban",
     group: "crm",
     section: "O dia a dia da venda",
+    sidebar: true,
   },
   {
     href: "/app/contacts",
@@ -179,20 +187,21 @@ export const NAV_CATALOG = [
     icon: "Users",
     group: "crm",
     section: "O dia a dia da venda",
+    sidebar: true,
   },
   {
-    // Extraída do PR #418 (@clinicacentrodosorrisosc-code). Fica no CRM porque
-    // é tela de USO DIÁRIO — quem atende abre para ver o que vence hoje, do
-    // mesmo jeito que abre o Inbox. Fora do sidebar desde 2026-10-06 por
-    // decisão do dono (só o Inbox no menu; o resto via ⌘K/hub/URL). Sem
-    // `minRole`: `viewer` VÊ o que o time combinou (é informação de operação),
-    // e a criação é cobrada pela rota, com `requireRole("agent")`.
+    // Extraída do PR #418 (@clinicacentrodosorrisosc-code). Fica no CRM e no
+    // sidebar porque é tela de USO DIÁRIO — quem atende abre para ver o que
+    // vence hoje, do mesmo jeito que abre o Inbox. Sem `minRole`: `viewer` VÊ
+    // o que o time combinou (é informação de operação), e a criação é cobrada
+    // pela rota, com `requireRole("agent")`.
     href: "/app/tasks",
     label: "Tarefas",
     description: "O que ficou combinado, com prazo — e o que já venceu sem ninguém fazer.",
     icon: "ListChecks",
     group: "crm",
     section: "O dia a dia da venda",
+    sidebar: true,
   },
   {
     // ⚠️ Esta tela nasceu porque a FERRAMENTA já existia sem ela. O agente de IA
@@ -214,6 +223,7 @@ export const NAV_CATALOG = [
     icon: "Storefront",
     group: "crm",
     section: "Preparar a venda",
+    sidebar: true,
   },
   {
     // A promessa que o comentário da Agenda fazia desde que ela nasceu. Aqui se
@@ -254,6 +264,7 @@ export const NAV_CATALOG = [
     group: "crm",
     section: "Preparar a venda",
     minRole: "manager",
+    sidebar: true,
   },
 
   // ---- Agente de IA — montar, ensinar, acompanhar ----
@@ -265,8 +276,24 @@ export const NAV_CATALOG = [
     group: "ia",
     section: "Montar o agente",
     minRole: "manager",
+    sidebar: true,
   },
   {
+    // Os 3 fluxos moram aqui, FORA de Agentes (decisão do dono, 2026-10-06):
+    // follow-up, disparo e automação. As rotas antigas seguem no registro
+    // (porta via ⌘K/URL), mas a porta navegável é esta página.
+    href: "/app/ai/fluxos",
+    label: "Fluxos",
+    description: "Os fluxos do agente num lugar só: follow-up, disparo e automação.",
+    icon: "FlowArrow",
+    group: "ia",
+    section: "Montar o agente",
+    minRole: "manager",
+    sidebar: true,
+  },
+  {
+    // Sem `sidebar`: a porta é a aba "Fluxo de follow-up" de /app/ai/fluxos.
+    // Segue no registro (e no ⌘K) como rota interna.
     href: "/app/ai/followups",
     label: "Follow-ups",
     description: "Como o agente retoma uma conversa que esfriou, para nenhuma morrer no silêncio.",
@@ -276,8 +303,8 @@ export const NAV_CATALOG = [
     minRole: "manager",
   },
   {
-    // Sem `sidebar`: chega-se pelo botão "Novo fluxo de disparo" (aba
-    // Disparo) e pelo breadcrumb do editor.
+    // Sem `sidebar`: chega-se pela aba "Fluxos de disparo" de /app/ai/fluxos
+    // (botão "Novo fluxo de disparo") e pelo breadcrumb do editor.
     href: "/app/ai/followups/novo-disparo",
     label: "Novo fluxo de disparo",
     description: "Criar imagem + texto para os atendentes dispararem no chat.",
@@ -287,12 +314,15 @@ export const NAV_CATALOG = [
     minRole: "manager",
   },
   {
+    // Em Configurações desde 2026-10-06 (decisão do dono): roteador é
+    // configuração sensível — qual agente pega qual conversa — e mora no hub
+    // da empresa, ao lado de Distribuição de atendimento.
     href: "/app/ai/routers",
     label: "Roteadores",
     description: "Qual agente pega qual conversa, e quando o humano assume.",
     icon: "Signpost",
-    group: "ia",
-    section: "Montar o agente",
+    group: "organizacao",
+    section: "Sua empresa",
     minRole: "manager",
   },
   {
@@ -308,12 +338,14 @@ export const NAV_CATALOG = [
     // O sistema chama modelo em 23 lugares e, até esta tela, a escolha vivia
     // espalhada por três pilhas de código e sete variáveis de ambiente — não
     // havia onde responder "quem usa IA aqui, e com qual chave?".
+    // Em Configurações desde 2026-10-06 (decisão do dono): a chave do provedor
+    // é credencial sensível e mora no hub da empresa, junto de Credenciais.
     href: "/app/ai/providers",
     label: "Provedores",
     description: "Qual inteligência atende cada parte do sistema — e o que acontece se ela falhar.",
     icon: "Plugs",
-    group: "ia",
-    section: "Montar o agente",
+    group: "organizacao",
+    section: "Sua empresa",
     minRole: "manager",
   },
   {
@@ -323,6 +355,7 @@ export const NAV_CATALOG = [
     icon: "Flag",
     group: "ia",
     section: "Acompanhar o agente",
+    sidebar: true,
   },
   {
     // "Aviso no WhatsApp", NUNCA "Avisos": a vizinha de cima chama-se "Alertas"
@@ -339,6 +372,7 @@ export const NAV_CATALOG = [
     // `admin` porque escolhe um número conectado e manda dado de cliente para um
     // celular — o mesmo gate da rota e da RLS de `config_aviso_de_caso`.
     minRole: "admin",
+    sidebar: true,
   },
   {
     // Órfã: nenhum lugar do app linkava para cá. O flywheel gerava propostas de
@@ -349,6 +383,7 @@ export const NAV_CATALOG = [
     icon: "Lightbulb",
     group: "ia",
     section: "Acompanhar o agente",
+    sidebar: true,
   },
   {
     // A tela de Uso responde "quanto gastei". Esta responde a pergunta que não
@@ -362,6 +397,7 @@ export const NAV_CATALOG = [
     group: "ia",
     section: "Acompanhar o agente",
     minRole: "manager",
+    sidebar: true,
   },
   {
     href: "/app/ai/usage",
@@ -371,10 +407,20 @@ export const NAV_CATALOG = [
     group: "ia",
     section: "Acompanhar o agente",
     minRole: "manager",
+    sidebar: true,
   },
 
   // ---- Canais — por onde as mensagens entram e saem ----
+  //
+  // Desde 2026-10-06 (decisão do dono) este grupo não ocupa linha no menu: as
+  // conexões (QR + canal oficial da Meta) e os webhooks moram no hub
+  // Configurações, e a Nuvemshop segue só no ⌘K. O grupo continua declarado
+  // porque a Nuvemshop aponta para ele.
   {
+    // Em Configurações desde 2026-10-06 (decisão do dono): é onde se conecta o
+    // número (QR) e o canal oficial da Meta — configuração da empresa, ao lado
+    // de Provedores e Roteadores. O `healthDot` segue declarado (a casca usa
+    // onde houver porta com saúde).
     href: "/app/connections",
     label: "Conexões",
     // Cobre os DOIS caminhos desde o PR #105: número por QR e canal oficial da
@@ -384,7 +430,8 @@ export const NAV_CATALOG = [
     description:
       "Seus números de WhatsApp: por QR ou canal oficial da Meta, com saúde, reconexão e templates.",
     icon: "PlugsConnected",
-    group: "canais",
+    group: "organizacao",
+    section: "Sua empresa",
     minRole: "admin",
     healthDot: true,
   },
@@ -413,11 +460,15 @@ export const NAV_CATALOG = [
     // navegável. Para voltar a mostrá-la, basta devolver `sidebar: true`.
   },
   {
+    // Em Configurações desde 2026-10-06 (decisão do dono): captação e
+    // automações se configuram uma vez, ao lado de API Tokens — é a mesma
+    // superfície sistema-a-sistema ("Dados e acesso").
     href: "/app/webhooks",
     label: "Webhooks",
     description: "Avise outros sistemas quando algo acontecer aqui dentro.",
     icon: "WebhooksLogo",
-    group: "canais",
+    group: "organizacao",
+    section: "Dados e acesso",
     minRole: "manager",
   },
 
@@ -432,6 +483,7 @@ export const NAV_CATALOG = [
     icon: "ChartBar",
     group: "analise",
     section: "Os números do período",
+    sidebar: true,
   },
   {
     // Logo abaixo de Desempenho porque responde a metade da MESMA pergunta: lá
@@ -447,6 +499,7 @@ export const NAV_CATALOG = [
     // pessoa — orçamento e criativo são da empresa inteira. Mesmo grau dos
     // outros dois vizinhos do grupo.
     minRole: "manager",
+    sidebar: true,
   },
   {
     // Irmã de "Desempenho", não a mesma coisa: lá é DESFECHO (funil agora,
@@ -461,6 +514,7 @@ export const NAV_CATALOG = [
     icon: "ClockCounterClockwise",
     group: "analise",
     section: "Os números do período",
+    sidebar: true,
   },
   {
     // Observabilidade, não configuração: por isso não fica junto dos agentes.
@@ -471,6 +525,7 @@ export const NAV_CATALOG = [
     group: "analise",
     section: "O histórico que se consulta",
     minRole: "manager",
+    sidebar: true,
   },
   {
     href: "/app/audit",
@@ -480,6 +535,7 @@ export const NAV_CATALOG = [
     group: "analise",
     section: "O histórico que se consulta",
     minRole: "manager",
+    sidebar: true,
   },
 
   // ---- Organização — conta, empresa, acesso ----

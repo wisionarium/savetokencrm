@@ -173,19 +173,19 @@ test("F2 — a tela de execuções abre e responde 'está tudo bem?'", async ({ 
   await page.screenshot({ path: "evidence/provedores/07-execucoes.png", fullPage: true });
 });
 
-test("as duas telas têm porta na navegação — pelo ⌘K", async ({ page }) => {
+test("as duas telas têm porta na navegação — no hub Configurações", async ({ page }) => {
   // Tela alcançável só por URL digitada é tela que não existe para o operador.
   //
-  // A porta é o ⌘K (`searchable()` em lib/navigation/registry.ts): desde
-  // 2026-10-06 só o Inbox ocupa linha no sidebar (decisão do dono).
+  // A porta é o hub Configurações (decisão do dono, 2026-10-06): Provedores e
+  // Roteadores são configuração sensível e moram nos cards da empresa — fora
+  // do sidebar, que mostra o uso diário em bandeja recolhida.
   await page.goto("/app/inbox");
-  await page.keyboard.press("ControlOrMeta+k");
-  await page.getByRole("combobox").fill("Provedores");
-  await expect(page.getByRole("option", { name: /Provedores/ })).toBeVisible();
-  await page.keyboard.press("Escape");
-  await page.keyboard.press("ControlOrMeta+k");
-  await page.getByRole("combobox").fill("Execuções");
-  await expect(page.getByRole("option", { name: /Execuções/ })).toBeVisible();
+  const sidebar = page.getByRole("navigation", { name: "Navegação principal" });
+  await expect(sidebar.getByRole("link", { name: /Provedores/ })).toHaveCount(0);
+  await page.getByRole("link", { name: "Configurações" }).click();
+  await page.waitForURL(/\/app\/settings/);
+  await page.getByRole("link", { name: /Provedores/ }).click();
+  await page.waitForURL(/\/app\/ai\/providers/);
 });
 
 test("instalação sem agente publicado: os dois pontos principais são EDITÁVEIS", async ({ page }) => {

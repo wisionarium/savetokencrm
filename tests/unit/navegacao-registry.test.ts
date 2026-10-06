@@ -81,53 +81,60 @@ describe("sidebarGroups", () => {
     expect(ordem).toEqual(esperada);
   });
 
-  it("só inclui destino marcado como sidebar — desde 2026-10-06, só o Inbox", () => {
+  it("só inclui destino marcado como sidebar", () => {
     const hrefs = sidebarGroups(true, null).flatMap((g) => g.items.map((i) => i.href));
-    expect(hrefs).toEqual(["/app/inbox"]);
-    // Todo o resto segue no registro (porta via ⌘K/hub/URL direta), mas fora
-    // do menu lateral por decisão do dono (ver catalogo.ts).
+    expect(hrefs).toContain("/app/inbox");
+    expect(hrefs).toContain("/app/ai/agents");
+    expect(hrefs).toContain("/app/ai/fluxos");
+    // Os fluxos saíram de Agentes para a página Fluxos (decisão do dono,
+    // 2026-10-06): seguem no registro e no ⌘K, fora do menu.
+    for (const fora of ["/app/ai/followups", "/app/ai/followups/novo-disparo"])
+      expect(hrefs).not.toContain(fora);
+    // Configuração sensível mora no hub Configurações (decisão do dono,
+    // 2026-10-06) — ver o teste do hub abaixo.
     for (const fora of [
-      "/app/radar",
-      "/app/kanban",
-      "/app/ai/agents",
       "/app/connections",
+      "/app/ai/providers",
+      "/app/ai/routers",
+      "/app/webhooks",
+    ])
+      expect(hrefs).not.toContain(fora);
+    // Conhecimento, Memória, Skills e Casos saíram da navegação; Credenciais
+    // mora em Configurações (grupo organizacao, fora do menu lateral).
+    for (const fora of [
       "/app/ai/knowledge/sources",
       "/app/ai/memory",
       "/app/ai/skills",
       "/app/ai/cases",
       "/app/ai/credentials",
-      "/app/integrations/nuvemshop",
     ])
       expect(hrefs).not.toContain(fora);
+    // Nuvemshop segue fora por escolha do dono do produto (ver catalogo.ts).
+    expect(hrefs).not.toContain("/app/integrations/nuvemshop");
   });
 
   it("Etapas do funil é CRM, não Configurações — o achado que originou esta mudança", () => {
+    // A porta agora é o próprio bloco do CRM no sidebar (sem hub no meio).
+    //
     // O que NÃO pode voltar é o destino trocar de grupo: é isso que a primeira
     // asserção prende, e ela não depende de onde o item é desenhado.
     expect(dest("/app/settings/tenant/pipelines").group).toBe("crm");
-    // Desde 2026-10-06 o sidebar mostra só o Inbox: a porta é o ⌘K/hub/URL,
-    // não mais o bloco do CRM.
     const sidebar = sidebarGroups(true, null)
       .find((g) => g.group.id === "crm")
       ?.items.map((i) => i.href);
-    expect(sidebar ?? []).not.toContain("/app/settings/tenant/pipelines");
-    expect(searchable(true, null).map((d) => d.href)).toContain(
-      "/app/settings/tenant/pipelines",
-    );
+    expect(sidebar).toContain("/app/settings/tenant/pipelines");
   });
 
-  it("o CRM não tem hub: o sidebar não traz nenhuma tela do grupo (só Inbox no menu)", () => {
+  it("o CRM não tem hub: o sidebar traz as cinco telas do grupo", () => {
     const crm = sidebarGroups(true, null).find((g) => g.group.id === "crm");
-    expect(crm).toBeUndefined();
-    expect(NAV_GROUPS.find((g) => g.id === "crm")?.hub).toBeUndefined();
-    // O inventário continua no hub/⌘K: as cinco telas do grupo seguem no registro.
-    expect(hubSections("crm", true, null).flatMap((s) => s.items.map((i) => i.href))).toEqual([
+    expect(crm?.items.map((i) => i.href)).toEqual([
       "/app/kanban",
       "/app/contacts",
       "/app/tasks",
       "/app/products",
       "/app/settings/tenant/pipelines",
     ]);
+    expect(NAV_GROUPS.find((g) => g.id === "crm")?.hub).toBeUndefined();
   });
 
   it("omite o grupo inteiro quando o papel não vê nenhum item dele", () => {
@@ -137,13 +144,35 @@ describe("sidebarGroups", () => {
     expect(ids).toContain("atendimento");
   });
 
-  it("o grupo de IA não ocupa linha no sidebar (só Inbox no menu) — o inventário segue no hub/⌘K", () => {
-    // Desde 2026-10-06 o sidebar mostra só o Inbox. Grupo sem item no menu é
-    // omitido por `sidebarGroups`; o que NÃO pode sumir é o inventário.
+  it("o bloco de IA traz Agentes e Fluxos, sem os fluxos antigos nem o que foi para Config", () => {
+    // Todas as telas do bloco aparecem clicando nele — a lista é EXATA de
+    // propósito: item novo entra com decisão explícita de posição.
+    // Follow-ups e Novo disparo moram na página Fluxos; Roteadores e
+    // Provedores moram no hub Configurações (decisão do dono, 2026-10-06).
     const ia = sidebarGroups(true, null).find((g) => g.group.id === "ia");
-    expect(ia).toBeUndefined();
+    expect(ia?.items.map((i) => i.href)).toEqual([
+      "/app/ai/agents",
+      "/app/ai/fluxos",
+      "/app/ai/inbox",
+      "/app/ai/cases/avisos",
+      "/app/ai/proposals",
+      "/app/ai/runs",
+      "/app/ai/usage",
+    ]);
     expect(NAV_GROUPS.find((g) => g.id === "ia")?.hub).toBeUndefined();
-    expect(searchable(true, null).map((d) => d.href)).toContain("/app/ai/agents");
+  });
+
+  it("Conexões, Provedores, Roteadores e Webhooks moram no hub Configurações", () => {
+    for (const [href, grupo] of [
+      ["/app/connections", "organizacao"],
+      ["/app/ai/providers", "organizacao"],
+      ["/app/ai/routers", "organizacao"],
+      ["/app/webhooks", "organizacao"],
+    ] as const)
+      expect(dest(href).group).toBe(grupo);
+    const hub = hubSections("organizacao", true, null).flatMap((s) => s.items.map((i) => i.href));
+    for (const href of ["/app/connections", "/app/ai/providers", "/app/ai/routers", "/app/webhooks"])
+      expect(hub).toContain(href);
   });
 });
 
@@ -171,7 +200,13 @@ describe("hubSections", () => {
   it("o hub mostra também o que já está no sidebar — é inventário, não sobra", () => {
     const hrefs = hubSections("ia", true, null).flatMap((s) => s.items.map((i) => i.href));
     expect(hrefs).toContain("/app/ai/agents");
-    expect(hrefs).toContain("/app/ai/providers");
+    expect(hrefs).toContain("/app/ai/fluxos");
+    // Provedores saiu do grupo IA para o hub Configurações (decisão do dono,
+    // 2026-10-06) — o inventário de cada hub cobre o próprio grupo.
+    expect(hrefs).not.toContain("/app/ai/providers");
+    expect(
+      hubSections("organizacao", true, null).flatMap((s) => s.items.map((i) => i.href)),
+    ).toContain("/app/ai/providers");
   });
 
   it("não vaza destino acima do papel", () => {

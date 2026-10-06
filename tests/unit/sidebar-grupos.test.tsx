@@ -2,9 +2,8 @@
  * Sidebar agrupado por objetivo. O que estes testes protegem:
  *
  *  - a hierarquia existe (o usuário reclamou de 17 itens no mesmo peso visual);
- *  - desde 2026-10-06, só o Inbox ocupa linha no menu (decisão do dono): o
- *    resto segue no registro e se alcança pelo ⌘K/hub/URL — ver
- *    `navegacao-registry.test.ts` para as portas;
+ *  - os fluxos moram na página Fluxos, fora de Agentes (decisão do dono,
+ *    2026-10-06) — o achado antigo do Funis fora de Configurações segue valendo;
  *  - agrupar não criou cabeçalho órfão (grupo cujos filhos a permissão filtrou);
  *  - colapsado não renderiza título nenhum: 6 rótulos em 64px seria ilegível;
  *  - os grupos nascem todos recolhidos e sem botões "Ver tudo".
@@ -54,7 +53,7 @@ function expandirGrupo(nome: string) {
 }
 
 describe("Sidebar agrupado", () => {
-  it("renderiza só o título de Atendimento — o resto saiu do menu em 2026-10-06", () => {
+  it("renderiza os títulos de grupo na ordem de uso (Canais saiu do menu)", () => {
     comoPapel("admin");
     render(<Sidebar collapsed={false} />);
     const titulos = screen
@@ -63,9 +62,10 @@ describe("Sidebar agrupado", () => {
       .filter(Boolean);
     // Organização não tem título aqui: seu hub (Configurações) vive no rodapé
     // fixo, fora da área que rola — medido, ele caía fora da dobra até em 1080px.
-    // CRM, Agente de IA, Canais e Análise saíram do menu por decisão do dono
-    // (só o Inbox no sidebar; o resto via ⌘K/hub/URL).
-    expect(titulos).toEqual(["Atendimento"]);
+    // Canais não tem título desde 2026-10-06: Conexões e Webhooks foram para o
+    // hub Configurações e a Nuvemshop segue só no ⌘K — grupo sem item no menu
+    // é omitido, não órfão.
+    expect(titulos).toEqual(["Atendimento", "CRM", "Agente de IA", "Análise"]);
   });
 
   it("tudo nasce recolhido ao abrir — um bloco por vez, sem exceção", () => {
@@ -78,43 +78,67 @@ describe("Sidebar agrupado", () => {
     expect(screen.queryByRole("link", { name: /Audit Log/ })).toBeNull();
   });
 
-  it("clicar no bloco mostra só o Inbox — os outros grupos saíram do menu", () => {
+  it("clicar no bloco mostra o grupo — e Fluxos mora no bloco de IA, fora de Agentes", () => {
     comoPapel("admin");
     render(<Sidebar collapsed={false} />);
     expandirGrupo("Atendimento");
     expect(screen.getByRole("link", { name: /Inbox/ })).toHaveAttribute("href", "/app/inbox");
-    // Desde 2026-10-06 não há bloco de IA/CRM/Canais/Análise no menu: o grupo
-    // sem item é omitido por `sidebarGroups`, e a porta é o ⌘K/hub/URL.
-    for (const grupo of ["Agente de IA", "CRM", "Canais", "Análise"])
-      expect(screen.queryByRole("button", { name: grupo })).toBeNull();
-    expect(screen.queryByRole("link", { name: "Agentes" })).toBeNull();
+    expandirGrupo("Agente de IA");
+    expect(screen.getByRole("link", { name: "Agentes" })).toHaveAttribute(
+      "href",
+      "/app/ai/agents",
+    );
+    expect(screen.getByRole("link", { name: "Fluxos" })).toHaveAttribute(
+      "href",
+      "/app/ai/fluxos",
+    );
+    expect(screen.getByRole("link", { name: "Uso e orçamento" })).toHaveAttribute(
+      "href",
+      "/app/ai/usage",
+    );
+    // Os fluxos antigos saíram do menu (moram nas abas de /app/ai/fluxos);
+    // Roteadores e Provedores foram para o hub Configurações.
     expect(screen.queryByRole("link", { name: "Conhecimento" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Follow-ups" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Roteadores" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Provedores" })).toBeNull();
   });
 
-  it("Etapas do funil não mora mais no sidebar — a porta é o ⌘K/hub/URL", () => {
+  it("leva às Etapas do funil pelo CRM, e não por Configurações", () => {
     comoPapel("admin");
     render(<Sidebar collapsed={false} />);
-    // Nem o bloco do CRM existe no menu; que o destino segue no grupo CRM é o
-    // unitário `navegacao-registry` que prende (grupo, não desenho).
-    expect(screen.queryByRole("button", { name: "CRM" })).toBeNull();
+    // O CRM nasce recolhido: a porta existe no grupo certo, a um clique.
     expect(screen.queryByRole("link", { name: "Etapas do funil" })).toBeNull();
+    expandirGrupo("CRM");
+    expect(screen.getByRole("link", { name: "Etapas do funil" })).toHaveAttribute(
+      "href",
+      "/app/settings/tenant/pipelines",
+    );
   });
 
-  it("Funis também saiu do menu — o nome próprio segue no registro", () => {
+  it("e os dois itens de funil não disputam o mesmo nome", () => {
     comoPapel("admin");
     render(<Sidebar collapsed={false} />);
-    expect(screen.queryByRole("button", { name: "CRM" })).toBeNull();
-    expect(screen.queryByRole("link", { name: "Funis" })).toBeNull();
+    expandirGrupo("CRM");
+    expect(screen.getByRole("link", { name: "Funis" })).toHaveAttribute("href", "/app/kanban");
   });
 
-  it("Audit Log e Nuvemshop fora do menu — a rota segue de pé", () => {
+  it("Análise traz Audit Log — e Canais saiu do menu, com Nuvemshop só no ⌘K", () => {
     comoPapel("admin");
     render(<Sidebar collapsed={false} />);
-    // Desde 2026-10-06 só o Inbox ocupa linha no menu (decisão do dono).
-    // Some do MENU, não do produto: a rota e a página seguem de pé e o ⌘K
-    // continua achando (`searchable()` filtra por papel, nunca por `sidebar`).
-    expect(screen.queryByRole("link", { name: /Audit Log/ })).toBeNull();
+    // O que esta linha sempre prendeu é que Audit Log não mora em
+    // Configurações. A porta é o próprio bloco de Análise expandido.
+    expandirGrupo("Análise");
+    expect(screen.getByRole("link", { name: /Audit Log/ })).toHaveAttribute("href", "/app/audit");
+
+    // CANAIS SAIU do menu em 2026-10-06 (decisão do dono): Conexões e Webhooks
+    // foram para o hub Configurações, e a Nuvemshop segue só no ⌘K.
+    // Some do MENU, não do produto: as rotas seguem de pé e o ⌘K continua
+    // achando (`searchable()` filtra por papel, nunca por `sidebar`).
+    expect(screen.queryByRole("button", { name: "Canais" })).toBeNull();
     expect(screen.queryByRole("link", { name: /Nuvemshop/ })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Conexões" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Webhooks" })).toBeNull();
   });
 
   it("Configurações fica no rodapé, nunca dependendo de scroll", () => {
@@ -136,13 +160,30 @@ describe("Sidebar agrupado", () => {
     expect(titulos).toContain("Atendimento");
   });
 
-  it("sem botões Ver tudo: o bloco de Atendimento é o caminho do Inbox", () => {
+  it("sem botões Ver tudo: todo destino do menu se alcança expandindo o bloco", () => {
     comoPapel("admin");
     render(<Sidebar collapsed={false} />);
     // Nenhum grupo oferece atalho cumulativo — o bloco É o caminho.
     expect(screen.queryByRole("link", { name: /Ver tudo/ })).toBeNull();
-    expandirGrupo("Atendimento");
-    expect(screen.getByRole("link", { name: /Inbox/ })).toHaveAttribute("href", "/app/inbox");
+    for (const grupo of ["CRM", "Agente de IA", "Análise"]) expandirGrupo(grupo);
+    expect(screen.getByRole("link", { name: "Produtos" })).toHaveAttribute(
+      "href",
+      "/app/products",
+    );
+    expect(screen.getByRole("link", { name: "Evolução da IA" })).toHaveAttribute(
+      "href",
+      "/app/ai/evolution",
+    );
+    expect(screen.getByRole("link", { name: "Fluxos" })).toHaveAttribute(
+      "href",
+      "/app/ai/fluxos",
+    );
+    // Conhecimento, Memória, Skills e Casos saíram da navegação; Follow-ups
+    // mora nas abas de Fluxos; Credenciais, Provedores, Roteadores, Conexões
+    // e Webhooks moram em Configurações (fora do menu lateral).
+    expect(screen.queryByRole("link", { name: "Conhecimento" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Credenciais" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Follow-ups" })).toBeNull();
   });
 
   it("colapsado esconde os títulos mas mantém os links", () => {
@@ -157,7 +198,8 @@ describe("Sidebar agrupado", () => {
     render(<Sidebar collapsed={false} />);
     expandirGrupo("Atendimento");
     expect(screen.getByRole("link", { name: /Inbox/ })).toHaveAttribute("aria-current", "page");
-    // Funis saiu do menu em 2026-10-06 — não há segundo item para disputar.
-    expect(screen.queryByRole("link", { name: "Funis" })).toBeNull();
+    // "Kanban" saiu da interface; o item da mesma URL agora se chama "Funis".
+    expandirGrupo("CRM");
+    expect(screen.getByRole("link", { name: "Funis" })).not.toHaveAttribute("aria-current");
   });
 });

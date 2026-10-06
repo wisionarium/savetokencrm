@@ -807,6 +807,13 @@ export const DICIONARIO: Traducoes = {
   // gate i18n-espanhol-cobre-a-tela quitada junto).
   "Fluxos de IA": { es: "Flujos de IA" },
   "Fluxos de disparo": { es: "Flujos de disparo" },
+  "Os fluxos do agente num lugar só: follow-up, disparo e automação.": {
+    es: "Los flujos del agente en un solo lugar: follow-up, disparo y automatización.",
+  },
+  "Fluxo de automação": { es: "Flujo de automatización" },
+  "Follow-up, disparo e automação num lugar só — fora da configuração dos agentes.": {
+    es: "Follow-up, disparo y automatización en un solo lugar — fuera de la configuración de los agentes.",
+  },
   "Imagem do produto (opcional)": { es: "Imagen del producto (opcional)" },
   "Cole a URL da imagem ou dê Ctrl+V...": {
     es: "Pega la URL de la imagen o pulsa Ctrl+V...",
@@ -3024,8 +3031,8 @@ export const DICIONARIO: Traducoes = {
   "A IA parou porque o gasto do mês atingiu o limite que você definiu. Ajuste o limite (ou desligue a parada) em Uso de IA › Orçamento.": {
     es: "La IA se detuvo porque el gasto del mes llegó al límite que definiste. Ajusta el límite (o apaga la parada) en Uso de IA › Presupuesto.",
   },
-  "A chamada foi recusada porque este ponto usa um endereço próprio e a empresa não tem chave cadastrada para ele — a chave da instalação não vai para endereço escolhido pela empresa. Cadastre a chave da empresa em Agente de IA › Provedores, ou tire o endereço próprio do ponto.": {
-    es: "La llamada fue rechazada porque este punto usa una dirección propia y la empresa no tiene clave registrada para él — la clave de la instalación no va a una dirección elegida por la empresa. Registra la clave de la empresa en Agente de IA › Proveedores, o quita la dirección propia del punto.",
+  "A chamada foi recusada porque este ponto usa um endereço próprio e a empresa não tem chave cadastrada para ele — a chave da instalação não vai para endereço escolhido pela empresa. Cadastre a chave da empresa em Configurações › Provedores, ou tire o endereço próprio do ponto.": {
+    es: "La llamada fue rechazada porque este punto usa una dirección propia y la empresa no tiene clave registrada para él — la clave de la instalación no va a una dirección elegida por la empresa. Registra la clave de la empresa en Configuración › Proveedores, o quita la dirección propia del punto.",
   },
   "Não conseguimos classificar esta falha. A mensagem original do provedor está abaixo.": {
     es: "No pudimos clasificar esta falla. El mensaje original del proveedor está abajo.",
@@ -5422,7 +5429,7 @@ export const DICIONARIO: Traducoes = {
   "Ele roda no seu próprio servidor. Dá para seguir sem ele agora e conectar o número depois, em": {
     es: "Corre en tu propio servidor. Se puede seguir sin él ahora y conectar el número después, en",
   },
-  "Canais › Conexões": { es: "Canales › Conexiones" },
+  "Configurações › Conexões": { es: "Configuración › Conexiones" },
   "seu funcionário fica pronto de qualquer jeito, só não terá por onde atender ainda.": {
     es: "tu empleado queda listo de todas formas, solo que aún no tendrá por dónde atender.",
   },
@@ -7230,7 +7237,7 @@ export const DICIONARIO: Traducoes = {
   "Só gerentes e administradores editam os horários de atendimento da equipe. Para publicar os seus, peça a um gerente que abra esta aba e use o botão &ldquo;Editar horário&rdquo; ao lado do seu nome.": { es: "Solo gerentes y administradores editan los horarios de atención del equipo. Para publicar los tuyos, pídele a un gerente que abra esta pestaña y use el botón «Editar horario» al lado de tu nombre." },
   " — não publicado": { es: " — no publicado" },
   "Escolha um fluxo publicado": { es: "Elige un flujo publicado" },
-  "Nenhum fluxo ativo. Publique um follow-up em Follow-ups para usá-lo aqui.": { es: "Ningún flujo activo. Publica un seguimiento en Seguimientos para usarlo aquí." },
+  "Nenhum fluxo ativo. Publique um follow-up em Fluxos para usá-lo aqui.": { es: "Ningún flujo activo. Publica un seguimiento en Flujos para usarlo aquí." },
   "Só entram fluxos publicados e ativos.": { es: "Solo entran flujos publicados y activos." },
   "Sem eles ninguém consegue marcar — nem você, nem o agente.": { es: "Sin ellos nadie puede agendar — ni tú, ni el agente." },
   "Configurar meus horários de atendimento": { es: "Configurar mis horarios de atención" },

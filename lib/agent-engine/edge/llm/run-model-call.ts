@@ -113,7 +113,7 @@ export class LlmEnderecoExigeChaveDaEmpresaError extends Error {
   override readonly name = 'llm_endereco_exige_chave_da_empresa';
   constructor() {
     super(
-      'o endereço de IA configurado para esta empresa só é usado com a chave dela, e ela não tem chave cadastrada para este provedor — a chave da instalação não é enviada a endereço escolhido pela empresa; cadastre a chave da empresa em Agente de IA › Provedores, ou tire o endereço próprio para voltar ao provedor padrão da instalação',
+      'o endereço de IA configurado para esta empresa só é usado com a chave dela, e ela não tem chave cadastrada para este provedor — a chave da instalação não é enviada a endereço escolhido pela empresa; cadastre a chave da empresa em Configurações › Provedores, ou tire o endereço próprio para voltar ao provedor padrão da instalação',
     );
   }
 }
@@ -152,7 +152,7 @@ export function corpoDoAvisoDeEnderecoSemChave(d: {
     // Endereço que nem é URL: o aviso segue sem o host, que é detalhe.
   }
   return (
-    `O ponto "${ponto}" está configurado em Agente de IA › Provedores para ${destino}, ` +
+    `O ponto "${ponto}" está configurado em Configurações › Provedores para ${destino}, ` +
     `mas esta empresa não tem chave de ${d.provider} cadastrada e validada. ` +
     `A chave de IA da instalação — a que paga a conta de todas as empresas deste servidor — ` +
     `não é enviada a um endereço escolhido por uma empresa. ` +
@@ -163,7 +163,7 @@ export function corpoDoAvisoDeEnderecoSemChave(d: {
       : `A chamada SEGUIU desta vez, mas isso tem prazo: a partir de ${prazoLegivel()} ela passa a ser ` +
         `recusada, e quando o ponto faz parte do atendimento o agente deixa de responder aos clientes ` +
         `desta empresa. Corrija antes dessa data. `) +
-    `Para resolver: cadastre a chave da empresa em Agente de IA › Provedores, ` +
+    `Para resolver: cadastre a chave da empresa em Configurações › Provedores, ` +
     `ou tire o endereço próprio para voltar ao provedor padrão da instalação.`
   );
 }

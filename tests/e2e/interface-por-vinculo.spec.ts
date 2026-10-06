@@ -95,25 +95,20 @@ test("interface por membro atualiza ao vivo, preserva formulário e convite apli
     await member.goto("/app/settings/profile");
     await member.getByLabel("Nome completo").fill("Rascunho não salvo");
     await login(other, emails[2]!);
-    // Desde 2026-10-06 só o Inbox ocupa linha no sidebar (decisão do dono):
-    // a prova de "aparece/some com a interface" vai pelo ⌘K, que respeita a
-    // mesma `destinosDaInterface` do menu (`searchable()`).
-    await member.keyboard.press("ControlOrMeta+k");
-    await member.getByRole("combobox").fill("Radar");
-    await expect(member.getByRole("option", { name: "Radar", exact: true })).toBeVisible();
-    await member.keyboard.press("Escape");
+    // Desde 2026-10-06 o sidebar mostra o uso diário em bandeja recolhida: a
+    // prova de "aparece/some com a interface" continua valendo no menu para
+    // quem tem interface completa.
+    await expect(nav(member).getByRole("link", { name: "Radar", exact: true })).toHaveCount(0);
+    await nav(member).getByRole("button", { name: "Atendimento" }).click();
+    await expect(nav(member).getByRole("link", { name: "Radar", exact: true })).toBeVisible();
     const framesBefore = realtime.length;
     await customize(page, emails[1]!);
     // Evento real precisa chegar; polling não pode aprovar a observação em tempo real.
     await expect.poll(() => realtime.length, { timeout: 15_000 }).toBeGreaterThan(framesBefore);
-    await member.keyboard.press("ControlOrMeta+k");
-    await member.getByRole("combobox").fill("Radar");
-    await expect(member.getByRole("option", { name: "Radar", exact: true })).toHaveCount(0);
-    await member.keyboard.press("Escape");
-    await other.keyboard.press("ControlOrMeta+k");
-    await other.getByRole("combobox").fill("Radar");
-    await expect(other.getByRole("option", { name: "Radar", exact: true })).toBeVisible();
-    await other.keyboard.press("Escape");
+    await expect(nav(member).getByRole("link", { name: "Radar", exact: true })).toHaveCount(0);
+    await expect(nav(other).getByRole("link", { name: "Radar", exact: true })).toHaveCount(0);
+    await nav(other).getByRole("button", { name: "Atendimento" }).click();
+    await expect(nav(other).getByRole("link", { name: "Radar", exact: true })).toBeVisible();
     await expect(member.getByLabel("Nome completo")).toHaveValue("Rascunho não salvo");
     expect(member.url()).toContain("/app/settings/profile");
     await expect(member.getByTestId("alerts-bell")).toHaveCount(0);

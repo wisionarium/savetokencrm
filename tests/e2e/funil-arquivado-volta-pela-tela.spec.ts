@@ -99,19 +99,20 @@ async function login(page: Page, email: string, senha: string): Promise<void> {
   await page.waitForURL(/\/app/, { timeout: 60_000 });
 }
 
+const sidebar = (page: Page) => page.getByRole("navigation", { name: "Navegação principal" });
+
 /**
- * O caminho do leigo até a tela: a busca ⌘K, não a URL digitada.
+ * O caminho do leigo até a tela: o item do menu, não a URL digitada.
  *
  * Quem tem um funil arquivado não sabe que a tela dele mora em `/app/kanban` —
- * ele busca "Funis". Desde 2026-10-06 só o Inbox ocupa linha no sidebar (decisão
- * do dono), então a porta navegável é o ⌘K (`searchable()`). `navegacao.spec.ts`
- * prende que a porta existe; percorrê-la aqui é o que garante que a gaveta seja
- * alcançável pelo mesmo gesto, e não só por quem já sabe o endereço.
+ * ele clica em "Funis". O bloco nasce recolhido (bandeja), então o caminho é
+ * expandir o CRM e clicar. `navegacao.spec.ts` prende que a porta existe no
+ * grupo certo; percorrê-la aqui é o que garante que a gaveta seja alcançável
+ * pelo mesmo gesto, e não só por quem já sabe o endereço.
  */
 async function irParaFunis(page: Page): Promise<void> {
-  await page.keyboard.press("ControlOrMeta+k");
-  await page.getByRole("combobox").fill("Funis");
-  await page.getByRole("option", { name: "Funis", exact: true }).click();
+  await sidebar(page).getByRole("button", { name: "CRM" }).click();
+  await sidebar(page).getByRole("link", { name: "Funis", exact: true }).click();
   await page.waitForURL(/\/app\/kanban/);
   await expect(page.getByRole("heading", { name: "Funis", level: 1 })).toBeVisible();
 }

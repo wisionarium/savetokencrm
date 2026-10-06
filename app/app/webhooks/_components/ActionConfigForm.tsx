@@ -411,7 +411,7 @@ function StartMessageFlowForm({ config, onChange }: FormProps<{ flow_pointer_id:
       </Select>
       {!isLoading && active.length === 0 ? (
         <p className="text-xs text-muted-foreground">
-          {t("Nenhum fluxo ativo. Publique um follow-up em Follow-ups para usá-lo aqui.")}
+          {t("Nenhum fluxo ativo. Publique um follow-up em Fluxos para usá-lo aqui.")}
         </p>
       ) : (
         <p className="text-xs text-muted-foreground">

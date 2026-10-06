@@ -274,7 +274,7 @@ test.describe("Relatório de atividades — o período, pela tela", () => {
     await limparFixtures();
   });
 
-  test("a porta existe na barra lateral, no grupo Análise, e leva à tela", async ({ page }) => {
+  test("a porta existe no ⌘K e leva à tela", async ({ page }) => {
     const errosDeConsole: string[] = [];
     page.on("console", (m) => {
       if (m.type() === "error") errosDeConsole.push(m.text());
@@ -282,25 +282,21 @@ test.describe("Relatório de atividades — o período, pela tela", () => {
 
     await login(page, creds.users.manager!.email, creds.password);
 
-    const sidebar = page.getByRole("navigation", { name: "Navegação principal" });
-    const item = sidebar.getByRole("link", { name: "Atividades", exact: true });
+    // Desde 2026-10-06 só o Inbox ocupa linha no sidebar (decisão do dono):
+    // a porta navegável é o ⌘K. Tela sem porta é tela que só existe para quem
+    // digita a URL.
+    await expect(
+      page.getByRole("navigation", { name: "Navegação principal" }).getByRole("link", {
+        name: "Atividades",
+        exact: true,
+      }),
+    ).toHaveCount(0);
+    await page.keyboard.press("ControlOrMeta+k");
+    await page.getByRole("combobox").fill("Atividades");
+    const item = page.getByRole("option", { name: /Atividades/ });
     await expect(item, "tela sem porta é tela que só existe para quem digita a URL").toBeVisible({
       timeout: 30_000,
     });
-    expect(await item.getAttribute("href")).toBe("/app/activities");
-
-    // O grupo importa: "Atividades" é irmã de Desempenho e Audit Log, não de
-    // Inbox. Ir parar no grupo errado é a diferença entre achar e caçar.
-    const grupo = await item.evaluate((a) => {
-      let el: Element | null = a;
-      while (el && el.previousElementSibling === null) el = el.parentElement;
-      // sobe até achar o cabeçalho de grupo mais próximo acima
-      const titulos = [...document.querySelectorAll('nav[aria-label="Navegação principal"] h2')];
-      const y = a.getBoundingClientRect().top;
-      const acima = titulos.filter((h) => h.getBoundingClientRect().top < y);
-      return (acima[acima.length - 1]?.textContent ?? "").trim();
-    });
-    expect(grupo, "Atividades pertence ao grupo Análise").toMatch(/an[áa]lise/i);
 
     await item.click();
     await page.waitForURL(/\/app\/activities/, { timeout: 30_000 });
@@ -431,13 +427,16 @@ test.describe("Relatório de atividades — o período, pela tela", () => {
   }) => {
     await login(page, creds.users.viewer!.email, creds.password);
 
-    // A porta aparece para viewer — o item não declara `minRole`, e o piso da
-    // rota é `viewer` de propósito: um piso mais alto esconderia da pessoa as
-    // atividades dela mesma.
-    const sidebar = page.getByRole("navigation", { name: "Navegação principal" });
-    await expect(sidebar.getByRole("link", { name: "Atividades", exact: true })).toBeVisible({
+    // A porta aparece no ⌘K para viewer — o item não declara `minRole`, e o
+    // piso da rota é `viewer` de propósito: um piso mais alto esconderia da
+    // pessoa as atividades dela mesma. No sidebar, desde 2026-10-06, só o
+    // Inbox ocupa linha (decisão do dono).
+    await page.keyboard.press("ControlOrMeta+k");
+    await page.getByRole("combobox").fill("Atividades");
+    await expect(page.getByRole("option", { name: /Atividades/ })).toBeVisible({
       timeout: 30_000,
     });
+    await page.keyboard.press("Escape");
 
     await page.goto("/app/activities");
     await expect(page.getByRole("heading", { name: "Atividades", level: 1 })).toBeVisible({

@@ -53,8 +53,7 @@ export interface NavMetadata {
  * aqui, e não junto dos agentes.
  *
  * Sem hubs no meio (só Organização mantém o seu, no rodapé): todo destino do
- * grupo aparece clicando no bloco, e os grupos nascem recolhidos — só
- * Atendimento abre. É o que mantém o menu curto sem esconder tela nenhuma.
+ * grupo aparece clicando no bloco, e os grupos nascem todos recolhidos.
  */
 export const NAV_GROUPS: NavGroup[] = [
   { id: "atendimento", label: "Atendimento" },
@@ -95,6 +94,11 @@ export const GRUPO_NO_RODAPE: NavGroupId = "organizacao";
  */
 export const NAV_CATALOG = [
   // ---- Atendimento — onde o operador passa o dia ----
+  //
+  // Decisão do dono (2026-10-06): o sidebar mostra SÓ o Inbox. Todo o resto
+  // segue existindo no registro — e portanto no ⌘K (`searchable()`), nos hubs
+  // e por URL direta — mas não ocupa linha no menu. Para devolver um destino
+  // ao menu, basta devolver `sidebar: true` nele.
   {
     href: "/app/inbox",
     label: "Inbox",
@@ -109,7 +113,6 @@ export const NAV_CATALOG = [
     description: "Quem esfriou e ainda está aberto — o que corre risco de morrer sem resposta.",
     icon: "ClockCountdown",
     group: "atendimento",
-    sidebar: true,
   },
   {
     // Entra em "atendimento", e não em "organizacao", porque a Agenda é onde o
@@ -129,7 +132,6 @@ export const NAV_CATALOG = [
     description: "O que está marcado, com quem, e quem atende — seu e da equipe.",
     icon: "CalendarBlank",
     group: "atendimento",
-    sidebar: true,
   },
   {
     // Renomeado de "Templates": estes são scripts do atendente, consumidos pelo
@@ -140,7 +142,6 @@ export const NAV_CATALOG = [
     description: "Scripts salvos para responder mais rápido, seus ou da equipe.",
     icon: "FileText",
     group: "atendimento",
-    sidebar: true,
   },
   {
     // Biblioteca do time: tudo que foi subido no chat, nos fluxos e direto
@@ -150,7 +151,6 @@ export const NAV_CATALOG = [
     description: "As imagens do time: do chat, dos fluxos e as suas pastas.",
     icon: "ImageSquare",
     group: "atendimento",
-    sidebar: true,
   },
 
   // ---- CRM — o funil ----
@@ -171,7 +171,6 @@ export const NAV_CATALOG = [
     icon: "Kanban",
     group: "crm",
     section: "O dia a dia da venda",
-    sidebar: true,
   },
   {
     href: "/app/contacts",
@@ -180,21 +179,20 @@ export const NAV_CATALOG = [
     icon: "Users",
     group: "crm",
     section: "O dia a dia da venda",
-    sidebar: true,
   },
   {
-    // Extraída do PR #418 (@clinicacentrodosorrisosc-code). Fica no CRM e no
-    // sidebar porque é tela de USO DIÁRIO — quem atende abre para ver o que
-    // vence hoje, do mesmo jeito que abre o Inbox. Sem `minRole`: `viewer` VÊ
-    // o que o time combinou (é informação de operação), e a criação é cobrada
-    // pela rota, com `requireRole("agent")`.
+    // Extraída do PR #418 (@clinicacentrodosorrisosc-code). Fica no CRM porque
+    // é tela de USO DIÁRIO — quem atende abre para ver o que vence hoje, do
+    // mesmo jeito que abre o Inbox. Fora do sidebar desde 2026-10-06 por
+    // decisão do dono (só o Inbox no menu; o resto via ⌘K/hub/URL). Sem
+    // `minRole`: `viewer` VÊ o que o time combinou (é informação de operação),
+    // e a criação é cobrada pela rota, com `requireRole("agent")`.
     href: "/app/tasks",
     label: "Tarefas",
     description: "O que ficou combinado, com prazo — e o que já venceu sem ninguém fazer.",
     icon: "ListChecks",
     group: "crm",
     section: "O dia a dia da venda",
-    sidebar: true,
   },
   {
     // ⚠️ Esta tela nasceu porque a FERRAMENTA já existia sem ela. O agente de IA
@@ -216,7 +214,6 @@ export const NAV_CATALOG = [
     icon: "Storefront",
     group: "crm",
     section: "Preparar a venda",
-    sidebar: true,
   },
   {
     // A promessa que o comentário da Agenda fazia desde que ela nasceu. Aqui se
@@ -257,7 +254,6 @@ export const NAV_CATALOG = [
     group: "crm",
     section: "Preparar a venda",
     minRole: "manager",
-    sidebar: true,
   },
 
   // ---- Agente de IA — montar, ensinar, acompanhar ----
@@ -269,7 +265,6 @@ export const NAV_CATALOG = [
     group: "ia",
     section: "Montar o agente",
     minRole: "manager",
-    sidebar: true,
   },
   {
     href: "/app/ai/followups",
@@ -279,7 +274,6 @@ export const NAV_CATALOG = [
     group: "ia",
     section: "Montar o agente",
     minRole: "manager",
-    sidebar: true,
   },
   {
     // Sem `sidebar`: chega-se pelo botão "Novo fluxo de disparo" (aba
@@ -291,7 +285,6 @@ export const NAV_CATALOG = [
     group: "ia",
     section: "Montar o agente",
     minRole: "manager",
-    sidebar: true,
   },
   {
     href: "/app/ai/routers",
@@ -301,7 +294,6 @@ export const NAV_CATALOG = [
     group: "ia",
     section: "Montar o agente",
     minRole: "manager",
-    sidebar: true,
   },
   {
     href: "/app/ai/credentials",
@@ -323,7 +315,6 @@ export const NAV_CATALOG = [
     group: "ia",
     section: "Montar o agente",
     minRole: "manager",
-    sidebar: true,
   },
   {
     href: "/app/ai/inbox",
@@ -332,7 +323,6 @@ export const NAV_CATALOG = [
     icon: "Flag",
     group: "ia",
     section: "Acompanhar o agente",
-    sidebar: true,
   },
   {
     // "Aviso no WhatsApp", NUNCA "Avisos": a vizinha de cima chama-se "Alertas"
@@ -349,7 +339,6 @@ export const NAV_CATALOG = [
     // `admin` porque escolhe um número conectado e manda dado de cliente para um
     // celular — o mesmo gate da rota e da RLS de `config_aviso_de_caso`.
     minRole: "admin",
-    sidebar: true,
   },
   {
     // Órfã: nenhum lugar do app linkava para cá. O flywheel gerava propostas de
@@ -360,7 +349,6 @@ export const NAV_CATALOG = [
     icon: "Lightbulb",
     group: "ia",
     section: "Acompanhar o agente",
-    sidebar: true,
   },
   {
     // A tela de Uso responde "quanto gastei". Esta responde a pergunta que não
@@ -374,7 +362,6 @@ export const NAV_CATALOG = [
     group: "ia",
     section: "Acompanhar o agente",
     minRole: "manager",
-    sidebar: true,
   },
   {
     href: "/app/ai/usage",
@@ -384,7 +371,6 @@ export const NAV_CATALOG = [
     group: "ia",
     section: "Acompanhar o agente",
     minRole: "manager",
-    sidebar: true,
   },
 
   // ---- Canais — por onde as mensagens entram e saem ----
@@ -400,7 +386,6 @@ export const NAV_CATALOG = [
     icon: "PlugsConnected",
     group: "canais",
     minRole: "admin",
-    sidebar: true,
     healthDot: true,
   },
   {
@@ -434,11 +419,10 @@ export const NAV_CATALOG = [
     icon: "WebhooksLogo",
     group: "canais",
     minRole: "manager",
-    sidebar: true,
   },
 
   // ---- Análise — olhar o sistema funcionando ----
-  // Os grupos nascem recolhidos (so Atendimento abre), entao o menu inicial e
+  // Os grupos nascem todos recolhidos, entao o menu inicial e
   // curto de qualquer jeito. A ordem abaixo segue a frequencia: primeiro o que
   // se pergunta toda semana, por ultimo o que se visita de proposito.
   {
@@ -448,7 +432,6 @@ export const NAV_CATALOG = [
     icon: "ChartBar",
     group: "analise",
     section: "Os números do período",
-    sidebar: true,
   },
   {
     // Logo abaixo de Desempenho porque responde a metade da MESMA pergunta: lá
@@ -464,7 +447,6 @@ export const NAV_CATALOG = [
     // pessoa — orçamento e criativo são da empresa inteira. Mesmo grau dos
     // outros dois vizinhos do grupo.
     minRole: "manager",
-    sidebar: true,
   },
   {
     // Irmã de "Desempenho", não a mesma coisa: lá é DESFECHO (funil agora,
@@ -479,7 +461,6 @@ export const NAV_CATALOG = [
     icon: "ClockCounterClockwise",
     group: "analise",
     section: "Os números do período",
-    sidebar: true,
   },
   {
     // Observabilidade, não configuração: por isso não fica junto dos agentes.
@@ -490,7 +471,6 @@ export const NAV_CATALOG = [
     group: "analise",
     section: "O histórico que se consulta",
     minRole: "manager",
-    sidebar: true,
   },
   {
     href: "/app/audit",
@@ -500,7 +480,6 @@ export const NAV_CATALOG = [
     group: "analise",
     section: "O histórico que se consulta",
     minRole: "manager",
-    sidebar: true,
   },
 
   // ---- Organização — conta, empresa, acesso ----

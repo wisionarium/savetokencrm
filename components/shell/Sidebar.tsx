@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useT } from "@/hooks/i18n/useT";
 import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { CaretDoubleLeft, CaretDoubleRight, CaretDown, Gear } from "@/lib/ui/icons";
 import { cn } from "@/lib/utils";
 import { toggleSidebar } from "@/app/actions/shell/toggleSidebar";
@@ -13,17 +13,6 @@ import { LogotipoDoProduto, SimboloDoProduto } from "@/components/branding/Marca
 import { marcaEhADoProduto } from "@/lib/branding";
 import { useMarcaDaInstalacao } from "@/lib/branding/contexto";
 import { GRUPO_NO_RODAPE, NAV_GROUPS, sidebarGroups } from "@/lib/navigation/registry";
-
-const CHAVE_GRUPOS_FECHADOS = "sidebar-grupos-fechados";
-
-/**
- * Grupos recolhidos no primeiro acesso: tudo, menos Atendimento (onde mora
- * o Inbox). Clicar no cabeçalho abre/fecha e a escolha sobrevive no
- * `localStorage` deste navegador.
- */
-const GRUPOS_RECOLHIDOS_POR_PADRAO: readonly string[] = NAV_GROUPS.map((g) => g.id).filter(
-  (id) => id !== "atendimento" && id !== GRUPO_NO_RODAPE,
-);
 
 interface SidebarContentProps {
   collapsed: boolean;
@@ -65,34 +54,20 @@ export function SidebarContent({
   const rodape = todos.find((g) => g.group.id === GRUPO_NO_RODAPE)?.group.hub;
 
   /**
-   * Grupo fechado é preferência POR NAVEGADOR, não por conta: começa nos
-   * recolhidos por padrão (só Atendimento abre) em toda renderização —
-   * servidor, primeira pintura do cliente e nos testes — e só muda depois do
-   * mount, se o `localStorage` tiver algo salvo. Guardar o CONJUNTO DOS
-   * FECHADOS, e não dos abertos, é o que faz a preferência salva continuar
-   * valendo grupo a grupo.
+   * Tudo recolhido ao abrir, sempre — o clique abre um bloco por vez e vale
+   * para a sessão. Sem persistência de propósito (ver acima).
    */
+  // Tudo recolhido ao abrir o app, sempre: quem abre expande um bloco por
+  // vez. Sem leitura de `localStorage` de propósito — preferência salva
+  // reabriria os blocos no próximo acesso e a bandeja voltaria cheia.
   const [gruposFechados, setGruposFechados] = useState<Set<string>>(
-    () => new Set(GRUPOS_RECOLHIDOS_POR_PADRAO),
+    () => new Set(NAV_GROUPS.map((g) => g.id)),
   );
-  useEffect(() => {
-    try {
-      const salvo = window.localStorage.getItem(CHAVE_GRUPOS_FECHADOS);
-      if (salvo) setGruposFechados(new Set(JSON.parse(salvo) as string[]));
-    } catch {
-      // Storage bloqueado (aba privada) — vale o padrão acima.
-    }
-  }, []);
   function toggleGrupo(id: string) {
     setGruposFechados((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
-      try {
-        window.localStorage.setItem(CHAVE_GRUPOS_FECHADOS, JSON.stringify([...next]));
-      } catch {
-        // Clique continua funcionando nesta sessão; só não sobrevive a um F5.
-      }
       return next;
     });
   }

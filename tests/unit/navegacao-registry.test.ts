@@ -81,45 +81,53 @@ describe("sidebarGroups", () => {
     expect(ordem).toEqual(esperada);
   });
 
-  it("só inclui destino marcado como sidebar", () => {
+  it("só inclui destino marcado como sidebar — desde 2026-10-06, só o Inbox", () => {
     const hrefs = sidebarGroups(true, null).flatMap((g) => g.items.map((i) => i.href));
-    expect(hrefs).toContain("/app/ai/agents");
-    // Conhecimento, Memória, Skills e Casos saíram da navegação; Credenciais
-    // mora em Configurações (grupo organizacao, fora do menu lateral).
+    expect(hrefs).toEqual(["/app/inbox"]);
+    // Todo o resto segue no registro (porta via ⌘K/hub/URL direta), mas fora
+    // do menu lateral por decisão do dono (ver catalogo.ts).
     for (const fora of [
+      "/app/radar",
+      "/app/kanban",
+      "/app/ai/agents",
+      "/app/connections",
       "/app/ai/knowledge/sources",
       "/app/ai/memory",
       "/app/ai/skills",
       "/app/ai/cases",
       "/app/ai/credentials",
+      "/app/integrations/nuvemshop",
     ])
       expect(hrefs).not.toContain(fora);
-    // Nuvemshop segue fora por escolha do dono do produto (ver catalogo.ts).
-    expect(hrefs).not.toContain("/app/integrations/nuvemshop");
   });
 
   it("Etapas do funil é CRM, não Configurações — o achado que originou esta mudança", () => {
-    // A porta agora é o próprio bloco do CRM no sidebar (sem hub no meio).
-    //
     // O que NÃO pode voltar é o destino trocar de grupo: é isso que a primeira
     // asserção prende, e ela não depende de onde o item é desenhado.
     expect(dest("/app/settings/tenant/pipelines").group).toBe("crm");
+    // Desde 2026-10-06 o sidebar mostra só o Inbox: a porta é o ⌘K/hub/URL,
+    // não mais o bloco do CRM.
     const sidebar = sidebarGroups(true, null)
       .find((g) => g.group.id === "crm")
       ?.items.map((i) => i.href);
-    expect(sidebar).toContain("/app/settings/tenant/pipelines");
+    expect(sidebar ?? []).not.toContain("/app/settings/tenant/pipelines");
+    expect(searchable(true, null).map((d) => d.href)).toContain(
+      "/app/settings/tenant/pipelines",
+    );
   });
 
-  it("o CRM não tem hub: o sidebar traz as cinco telas do grupo", () => {
+  it("o CRM não tem hub: o sidebar não traz nenhuma tela do grupo (só Inbox no menu)", () => {
     const crm = sidebarGroups(true, null).find((g) => g.group.id === "crm");
-    expect(crm?.items.map((i) => i.href)).toEqual([
+    expect(crm).toBeUndefined();
+    expect(NAV_GROUPS.find((g) => g.id === "crm")?.hub).toBeUndefined();
+    // O inventário continua no hub/⌘K: as cinco telas do grupo seguem no registro.
+    expect(hubSections("crm", true, null).flatMap((s) => s.items.map((i) => i.href))).toEqual([
       "/app/kanban",
       "/app/contacts",
       "/app/tasks",
       "/app/products",
       "/app/settings/tenant/pipelines",
     ]);
-    expect(NAV_GROUPS.find((g) => g.id === "crm")?.hub).toBeUndefined();
   });
 
   it("omite o grupo inteiro quando o papel não vê nenhum item dele", () => {
@@ -129,25 +137,13 @@ describe("sidebarGroups", () => {
     expect(ids).toContain("atendimento");
   });
 
-  it("a ordem dentro do grupo de IA é a do registro, sem hub no meio", () => {
-    // Todas as telas do grupo aparecem clicando no bloco — a lista é EXATA de
-    // propósito: item novo entra com decisão explícita de posição.
-    // Conhecimento, Memória, Skills e Casos saíram da navegação; Credenciais
-    // mora em Configurações.
+  it("o grupo de IA não ocupa linha no sidebar (só Inbox no menu) — o inventário segue no hub/⌘K", () => {
+    // Desde 2026-10-06 o sidebar mostra só o Inbox. Grupo sem item no menu é
+    // omitido por `sidebarGroups`; o que NÃO pode sumir é o inventário.
     const ia = sidebarGroups(true, null).find((g) => g.group.id === "ia");
-    expect(ia?.items.map((i) => i.href)).toEqual([
-      "/app/ai/agents",
-      "/app/ai/followups",
-      "/app/ai/followups/novo-disparo",
-      "/app/ai/routers",
-      "/app/ai/providers",
-      "/app/ai/inbox",
-      "/app/ai/cases/avisos",
-      "/app/ai/proposals",
-      "/app/ai/runs",
-      "/app/ai/usage",
-    ]);
+    expect(ia).toBeUndefined();
     expect(NAV_GROUPS.find((g) => g.id === "ia")?.hub).toBeUndefined();
+    expect(searchable(true, null).map((d) => d.href)).toContain("/app/ai/agents");
   });
 });
 

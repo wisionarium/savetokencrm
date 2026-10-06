@@ -217,7 +217,11 @@ export const ConversationListItem = memo(function ConversationListItem({
       className={cn(
         "group relative flex w-full items-start gap-3 border-b border-border/70 px-3 py-2.5 text-left transition-colors hover:bg-surface-elevated",
         "focus-visible:outline-hidden focus-visible:bg-surface-elevated",
-        isSelected && "bg-accent-50 hover:bg-accent-50",
+        // Selecionado pinta com `accent-soft` (o mesmo fundo dos badges da tela),
+        // e NÃO com `accent-50`: o stop 50 é tom fixo claro nos dois temas
+        // (branco no escuro, lavado no claro). O soft se adapta — `#dde5f1` no
+        // claro, navy `#1c2d43` no escuro — e já é superfície medida pela régua.
+        isSelected && "bg-accent-soft hover:bg-accent-soft",
       )}
       aria-current={isSelected ? "true" : undefined}
     >

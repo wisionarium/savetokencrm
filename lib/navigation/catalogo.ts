@@ -15,7 +15,7 @@ import type { Role } from "@/lib/auth/types";
  * Doutrina: docs/doctrine/sistema-vivo.md — "por qual porta se chega até mim?"
  */
 
-export type NavGroupId = "atendimento" | "crm" | "ia" | "canais" | "analise" | "organizacao";
+export type NavGroupId = "atendimento" | "crm" | "ia" | "fluxos" | "canais" | "analise" | "organizacao";
 
 export interface NavGroup {
   id: NavGroupId;
@@ -59,6 +59,10 @@ export const NAV_GROUPS: NavGroup[] = [
   { id: "atendimento", label: "Atendimento" },
   { id: "crm", label: "CRM" },
   { id: "ia", label: "Agente de IA" },
+  // Bandeja própria dos fluxos desde 2026-10-06 (decisão do dono): os fluxos
+  // saíram de dentro de Agente de IA e têm bloco só deles — follow-up,
+  // disparo e automação, na página /app/ai/fluxos.
+  { id: "fluxos", label: "Fluxos" },
   { id: "canais", label: "Canais" },
   { id: "analise", label: "Análise" },
   {
@@ -279,15 +283,15 @@ export const NAV_CATALOG = [
     sidebar: true,
   },
   {
-    // Os 3 fluxos moram aqui, FORA de Agentes (decisão do dono, 2026-10-06):
-    // follow-up, disparo e automação. As rotas antigas seguem no registro
-    // (porta via ⌘K/URL), mas a porta navegável é esta página.
+    // Bloco próprio desde 2026-10-06 (decisão do dono): os 3 fluxos moram
+    // aqui, FORA de Agente de IA — follow-up, disparo e automação. As rotas
+    // antigas seguem no registro (porta via ⌘K/URL), mas a porta navegável é
+    // esta página.
     href: "/app/ai/fluxos",
     label: "Fluxos",
     description: "Os fluxos do agente num lugar só: follow-up, disparo e automação.",
     icon: "FlowArrow",
-    group: "ia",
-    section: "Montar o agente",
+    group: "fluxos",
     minRole: "manager",
     sidebar: true,
   },
@@ -298,7 +302,7 @@ export const NAV_CATALOG = [
     label: "Follow-ups",
     description: "Como o agente retoma uma conversa que esfriou, para nenhuma morrer no silêncio.",
     icon: "FlowArrow",
-    group: "ia",
+    group: "fluxos",
     section: "Montar o agente",
     minRole: "manager",
   },
@@ -309,7 +313,7 @@ export const NAV_CATALOG = [
     label: "Novo fluxo de disparo",
     description: "Criar imagem + texto para os atendentes dispararem no chat.",
     icon: "FlowArrow",
-    group: "ia",
+    group: "fluxos",
     section: "Montar o agente",
     minRole: "manager",
   },
@@ -374,42 +378,6 @@ export const NAV_CATALOG = [
     minRole: "admin",
     sidebar: true,
   },
-  {
-    // Órfã: nenhum lugar do app linkava para cá. O flywheel gerava propostas de
-    // melhoria do agente e a fila só era vista por quem soubesse a URL.
-    href: "/app/ai/proposals",
-    label: "Propostas",
-    description: "Melhorias que a IA sugere para si mesma, esperando sua decisão.",
-    icon: "Lightbulb",
-    group: "ia",
-    section: "Acompanhar o agente",
-    sidebar: true,
-  },
-  {
-    // A tela de Uso responde "quanto gastei". Esta responde a pergunta que não
-    // tinha lugar nenhum: "o agente parou de responder, o que aconteceu?".
-    // Antes da migration 0128 ela seria impossível de construir com honestidade
-    // — llm_calls só registrava sucesso.
-    href: "/app/ai/runs",
-    label: "Execuções",
-    description: "O que a IA fez — e, quando falhou, o que aconteceu e o que fazer.",
-    icon: "ListChecks",
-    group: "ia",
-    section: "Acompanhar o agente",
-    minRole: "manager",
-    sidebar: true,
-  },
-  {
-    href: "/app/ai/usage",
-    label: "Uso e orçamento",
-    description: "Quanto a IA consumiu e qual é o teto de gasto do mês.",
-    icon: "Gauge",
-    group: "ia",
-    section: "Acompanhar o agente",
-    minRole: "manager",
-    sidebar: true,
-  },
-
   // ---- Canais — por onde as mensagens entram e saem ----
   //
   // Desde 2026-10-06 (decisão do dono) este grupo não ocupa linha no menu: as
@@ -534,6 +502,48 @@ export const NAV_CATALOG = [
     icon: "ClockCounterClockwise",
     group: "analise",
     section: "O histórico que se consulta",
+    minRole: "manager",
+    sidebar: true,
+  },
+  {
+    // No grupo Análise desde 2026-10-06 (decisão do dono): no bloco de
+    // Agentes ficam SÓ Agentes, Alertas e Aviso no WhatsApp. Propostas,
+    // Execuções e Uso e orçamento são observar o sistema funcionando — a
+    // mesma razão que já mantinha Evolução da IA na Análise, e não junto
+    // dos agentes.
+    //
+    // Órfã um dia: nenhum lugar do app linkava para Propostas. O flywheel
+    // gerava propostas de melhoria do agente e a fila só era vista por quem
+    // soubesse a URL.
+    href: "/app/ai/proposals",
+    label: "Propostas",
+    description: "Melhorias que a IA sugere para si mesma, esperando sua decisão.",
+    icon: "Lightbulb",
+    group: "analise",
+    section: "Acompanhar o agente",
+    sidebar: true,
+  },
+  {
+    // A tela de Uso responde "quanto gastei". Esta responde a pergunta que não
+    // tinha lugar nenhum: "o agente parou de responder, o que aconteceu?".
+    // Antes da migration 0128 ela seria impossível de construir com honestidade
+    // — llm_calls só registrava sucesso.
+    href: "/app/ai/runs",
+    label: "Execuções",
+    description: "O que a IA fez — e, quando falhou, o que aconteceu e o que fazer.",
+    icon: "ListChecks",
+    group: "analise",
+    section: "Acompanhar o agente",
+    minRole: "manager",
+    sidebar: true,
+  },
+  {
+    href: "/app/ai/usage",
+    label: "Uso e orçamento",
+    description: "Quanto a IA consumiu e qual é o teto de gasto do mês.",
+    icon: "Gauge",
+    group: "analise",
+    section: "Acompanhar o agente",
     minRole: "manager",
     sidebar: true,
   },

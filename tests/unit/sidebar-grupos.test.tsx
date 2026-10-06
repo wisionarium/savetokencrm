@@ -64,8 +64,8 @@ describe("Sidebar agrupado", () => {
     // fixo, fora da área que rola — medido, ele caía fora da dobra até em 1080px.
     // Canais não tem título desde 2026-10-06: Conexões e Webhooks foram para o
     // hub Configurações e a Nuvemshop segue só no ⌘K — grupo sem item no menu
-    // é omitido, não órfão.
-    expect(titulos).toEqual(["Atendimento", "CRM", "Agente de IA", "Análise"]);
+    // é omitido, não órfão. Fluxos tem bandeja própria desde 2026-10-06.
+    expect(titulos).toEqual(["Atendimento", "CRM", "Agente de IA", "Fluxos", "Análise"]);
   });
 
   it("tudo nasce recolhido ao abrir — um bloco por vez, sem exceção", () => {
@@ -78,30 +78,37 @@ describe("Sidebar agrupado", () => {
     expect(screen.queryByRole("link", { name: /Audit Log/ })).toBeNull();
   });
 
-  it("clicar no bloco mostra o grupo — e Fluxos mora no bloco de IA, fora de Agentes", () => {
+  it("no bloco de IA ficam SÓ Agentes, Alertas e Aviso — Fluxos tem bandeja própria", () => {
     comoPapel("admin");
     render(<Sidebar collapsed={false} />);
-    expandirGrupo("Atendimento");
-    expect(screen.getByRole("link", { name: /Inbox/ })).toHaveAttribute("href", "/app/inbox");
     expandirGrupo("Agente de IA");
     expect(screen.getByRole("link", { name: "Agentes" })).toHaveAttribute(
       "href",
       "/app/ai/agents",
     );
+    expect(screen.getByRole("link", { name: "Alertas" })).toHaveAttribute(
+      "href",
+      "/app/ai/inbox",
+    );
+    // Fluxos saiu para a bandeja própria; Propostas, Execuções e Uso foram
+    // para a Análise; Roteadores e Provedores, para Configurações.
+    expect(screen.queryByRole("link", { name: "Fluxos" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Follow-ups" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Propostas" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Roteadores" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Provedores" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Conhecimento" })).toBeNull();
+  });
+
+  it("a bandeja Fluxos leva à página dos 3 fluxos", () => {
+    comoPapel("admin");
+    render(<Sidebar collapsed={false} />);
+    expect(screen.queryByRole("link", { name: "Fluxos" })).toBeNull();
+    expandirGrupo("Fluxos");
     expect(screen.getByRole("link", { name: "Fluxos" })).toHaveAttribute(
       "href",
       "/app/ai/fluxos",
     );
-    expect(screen.getByRole("link", { name: "Uso e orçamento" })).toHaveAttribute(
-      "href",
-      "/app/ai/usage",
-    );
-    // Os fluxos antigos saíram do menu (moram nas abas de /app/ai/fluxos);
-    // Roteadores e Provedores foram para o hub Configurações.
-    expect(screen.queryByRole("link", { name: "Conhecimento" })).toBeNull();
-    expect(screen.queryByRole("link", { name: "Follow-ups" })).toBeNull();
-    expect(screen.queryByRole("link", { name: "Roteadores" })).toBeNull();
-    expect(screen.queryByRole("link", { name: "Provedores" })).toBeNull();
   });
 
   it("leva às Etapas do funil pelo CRM, e não por Configurações", () => {
@@ -153,10 +160,12 @@ describe("Sidebar agrupado", () => {
 
   it("não deixa cabeçalho órfão quando a permissão esvazia o grupo", () => {
     // CANAIS é todo manager+/admin. Um agent não pode ver o título sozinho.
+    // Fluxos também é manager+ — mesma regra.
     comoPapel("agent");
     render(<Sidebar collapsed={false} />);
     const titulos = screen.getAllByRole("heading").map((el) => el.textContent?.trim());
     expect(titulos).not.toContain("Canais");
+    expect(titulos).not.toContain("Fluxos");
     expect(titulos).toContain("Atendimento");
   });
 
@@ -165,7 +174,7 @@ describe("Sidebar agrupado", () => {
     render(<Sidebar collapsed={false} />);
     // Nenhum grupo oferece atalho cumulativo — o bloco É o caminho.
     expect(screen.queryByRole("link", { name: /Ver tudo/ })).toBeNull();
-    for (const grupo of ["CRM", "Agente de IA", "Análise"]) expandirGrupo(grupo);
+    for (const grupo of ["CRM", "Agente de IA", "Fluxos", "Análise"]) expandirGrupo(grupo);
     expect(screen.getByRole("link", { name: "Produtos" })).toHaveAttribute(
       "href",
       "/app/products",

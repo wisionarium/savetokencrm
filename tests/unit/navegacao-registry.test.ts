@@ -144,22 +144,45 @@ describe("sidebarGroups", () => {
     expect(ids).toContain("atendimento");
   });
 
-  it("o bloco de IA traz Agentes e Fluxos, sem os fluxos antigos nem o que foi para Config", () => {
+  it("o bloco de IA traz SÓ Agentes, Alertas e Aviso — o resto saiu em 2026-10-06", () => {
     // Todas as telas do bloco aparecem clicando nele — a lista é EXATA de
     // propósito: item novo entra com decisão explícita de posição.
-    // Follow-ups e Novo disparo moram na página Fluxos; Roteadores e
+    // Fluxos tem bandeja própria; Propostas, Execuções e Uso e orçamento
+    // foram para a Análise (observar o sistema funcionando); Roteadores e
     // Provedores moram no hub Configurações (decisão do dono, 2026-10-06).
     const ia = sidebarGroups(true, null).find((g) => g.group.id === "ia");
     expect(ia?.items.map((i) => i.href)).toEqual([
       "/app/ai/agents",
-      "/app/ai/fluxos",
       "/app/ai/inbox",
       "/app/ai/cases/avisos",
+    ]);
+    expect(NAV_GROUPS.find((g) => g.id === "ia")?.hub).toBeUndefined();
+  });
+
+  it("Fluxos tem bandeja própria com os 3 fluxos — fora de Agentes", () => {
+    const fluxos = sidebarGroups(true, null).find((g) => g.group.id === "fluxos");
+    expect(fluxos?.items.map((i) => i.href)).toEqual(["/app/ai/fluxos"]);
+    expect(NAV_GROUPS.find((g) => g.id === "fluxos")?.hub).toBeUndefined();
+    // As rotas antigas seguem no grupo Fluxos e no ⌘K, como rotas internas.
+    for (const href of ["/app/ai/followups", "/app/ai/followups/novo-disparo"] as const)
+      expect(dest(href).group).toBe("fluxos");
+    expect(searchable(true, null).map((d) => d.href)).toContain("/app/ai/followups");
+  });
+
+  it("Propostas, Execuções e Uso e orçamento moram na Análise", () => {
+    for (const href of ["/app/ai/proposals", "/app/ai/runs", "/app/ai/usage"] as const)
+      expect(dest(href).group).toBe("analise");
+    const analise = sidebarGroups(true, null).find((g) => g.group.id === "analise");
+    expect(analise?.items.map((i) => i.href)).toEqual([
+      "/app/metrics",
+      "/app/ads/meta",
+      "/app/activities",
+      "/app/ai/evolution",
+      "/app/audit",
       "/app/ai/proposals",
       "/app/ai/runs",
       "/app/ai/usage",
     ]);
-    expect(NAV_GROUPS.find((g) => g.id === "ia")?.hub).toBeUndefined();
   });
 
   it("Conexões, Provedores, Roteadores e Webhooks moram no hub Configurações", () => {
@@ -200,9 +223,10 @@ describe("hubSections", () => {
   it("o hub mostra também o que já está no sidebar — é inventário, não sobra", () => {
     const hrefs = hubSections("ia", true, null).flatMap((s) => s.items.map((i) => i.href));
     expect(hrefs).toContain("/app/ai/agents");
-    expect(hrefs).toContain("/app/ai/fluxos");
-    // Provedores saiu do grupo IA para o hub Configurações (decisão do dono,
+    expect(hrefs).toContain("/app/ai/inbox");
+    // Fluxos saiu do grupo IA para a bandeja própria (decisão do dono,
     // 2026-10-06) — o inventário de cada hub cobre o próprio grupo.
+    expect(hrefs).not.toContain("/app/ai/fluxos");
     expect(hrefs).not.toContain("/app/ai/providers");
     expect(
       hubSections("organizacao", true, null).flatMap((s) => s.items.map((i) => i.href)),

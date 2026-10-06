@@ -125,8 +125,11 @@ describe("NavHub", () => {
       "Acompañar al agente",
     ]);
     expect(
-      screen.getByRole("link", { name: /Uso y presupuesto/ }),
+      screen.getByRole("link", { name: /Alertas/ }),
     ).toBeTruthy();
+    // Uso e orçamento saiu do grupo IA para a Análise (decisão do dono,
+    // 2026-10-06) — não há mais link dele neste hub.
+    expect(screen.queryByRole("link", { name: /Uso y presupuesto/ })).toBeNull();
   });
 
   it("todo texto registrado no hub de IA tem tradução em espanhol", () => {

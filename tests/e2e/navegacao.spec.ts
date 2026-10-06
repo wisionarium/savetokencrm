@@ -96,6 +96,7 @@ test.describe("navegação agrupada", () => {
       "Atendimento",
       "CRM",
       "Agente de IA",
+      "Fluxos",
       "Análise",
     ]);
 
@@ -144,10 +145,10 @@ test.describe("navegação agrupada", () => {
     await expect(page.getByRole("heading", { name: "Funis", level: 1 })).toBeVisible();
   });
 
-  test("chega em Fluxos pelo bloco de IA, fora de Agentes", async ({ page }) => {
+  test("chega em Fluxos pela bandeja própria, fora de Agentes", async ({ page }) => {
     await loginAdmin(page);
 
-    await sidebar(page).getByRole("button", { name: "Agente de IA" }).click();
+    await sidebar(page).getByRole("button", { name: "Fluxos" }).click();
     await sidebar(page).getByRole("link", { name: "Fluxos", exact: true }).click();
     await page.waitForURL(/\/app\/ai\/fluxos/);
     await expect(page.getByRole("heading", { name: "Fluxos", level: 1 })).toBeVisible();

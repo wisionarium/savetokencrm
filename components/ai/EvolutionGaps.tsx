@@ -104,9 +104,10 @@ export function montaLacunas(gaps: EvolutionPayload["gaps"]): Lacuna[] {
         `${gaps.knowledge_empty} ${plural(gaps.knowledge_empty, "pergunta de cliente não encontrou", "perguntas de clientes não encontraram")} ` +
         `resposta nos seus materiais. São os assuntos que ainda faltam escrever — cada um deles é uma conversa em que o ` +
         `agente teve que improvisar ou passar adiante.`,
-      href: "/app/ai/knowledge/sources",
-      cta: "Abrir a base de conhecimento",
     });
+
+    // Sem destino clicável: a lacuna continua informando o problema, só não
+    // promete conserto num clique.
   }
 
   if (gaps.knowledge_near_misses > 0) {
@@ -117,8 +118,6 @@ export function montaLacunas(gaps: EvolutionPayload["gaps"]): Lacuna[] {
         `havia material parecido, mas não parecido o bastante para o agente arriscar usar. Aqui o conteúdo provavelmente ` +
         `já existe — só está escrito com palavras diferentes das que o cliente usa. Vale reescrever esses materiais com as ` +
         `perguntas do jeito que chegam.`,
-      href: "/app/ai/knowledge/sources",
-      cta: "Abrir a base de conhecimento",
     });
   }
 

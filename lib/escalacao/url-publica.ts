@@ -65,11 +65,15 @@ export function urlPublicaUsavel(bruto: string | null | undefined): boolean {
 }
 
 /**
- * O endereço do caso. Uma função, e não um template no chamador: a rota do caso
- * já está escrita em `REFERENCIAS_DE_AVISO.agent_case`
- * (`lib/ai/inbox-destino.ts`), e uma terceira cópia dela divergiria no dia em
- * que a tela mudasse de lugar.
+ * O endereço do atendimento do caso. Uma função, e não um template no chamador:
+ * o destino do caso já está decidido em `lib/ai/inbox-destino.ts`
+ * (`agent_case` abre a conversa no inbox), e uma terceira cópia dela divergiria
+ * no dia em que o destino mudasse de lugar.
+ *
+ * Sem conversa (não deveria acontecer — `agent_cases.conversation_id` é
+ * NOT NULL), cai na Central de avisos em vez de inventar um destino.
  */
-export function linkDoCaso(base: string, caseId: string): string {
-  return `${base.replace(/\/+$/, "")}/app/ai/cases?caso=${caseId}`;
+export function linkDoCaso(base: string, conversationId: string | null): string {
+  const raiz = base.replace(/\/+$/, "");
+  return conversationId ? `${raiz}/app/inbox/${conversationId}` : `${raiz}/app/ai/inbox`;
 }

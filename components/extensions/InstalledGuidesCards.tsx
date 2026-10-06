@@ -46,10 +46,7 @@ export function InstalledGuidesCards({
           {traduzir("Orientações instaladas", locale)}
         </h2>
         <p className="mt-1 text-xs text-muted-foreground">
-          {traduzir(
-            "Guias adicionados depois da instalação, sem acesso aos dados do CRM.",
-            locale,
-          )}
+          {traduzir("Guias adicionados depois da instalação, sem acesso aos dados do CRM.", locale)}
         </p>
       </div>
 

@@ -40,8 +40,8 @@ describe("CommandPalette", () => {
   it("acha uma tela que o sidebar não mostra", async () => {
     const user = userEvent.setup();
     abrir();
-    await user.type(screen.getByRole("combobox"), "conhec");
-    expect(screen.getByRole("option", { name: /Conhecimento/ })).toBeTruthy();
+    await user.type(screen.getByRole("combobox"), "nuvem");
+    expect(screen.getByRole("option", { name: /Nuvemshop/ })).toBeTruthy();
   });
 
   it("ignora acento, porque ninguém digita acento com pressa", async () => {
@@ -70,9 +70,9 @@ describe("CommandPalette", () => {
   it("Enter navega para o item destacado", async () => {
     const user = userEvent.setup();
     abrir();
-    await user.type(screen.getByRole("combobox"), "conhec");
+    await user.type(screen.getByRole("combobox"), "rote");
     await user.keyboard("{Enter}");
-    expect(push).toHaveBeenCalledWith("/app/ai/knowledge/sources");
+    expect(push).toHaveBeenCalledWith("/app/ai/routers");
   });
 
   it("seta para baixo move o destaque antes do Enter", async () => {

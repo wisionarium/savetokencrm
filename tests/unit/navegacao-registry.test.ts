@@ -83,10 +83,17 @@ describe("sidebarGroups", () => {
 
   it("só inclui destino marcado como sidebar", () => {
     const hrefs = sidebarGroups(true, null).flatMap((g) => g.items.map((i) => i.href));
-    // Sem hubs no meio, todo destino do grupo aparece clicando no bloco —
-    // inclusive os que moravam atrás de "Ver tudo".
-    expect(hrefs).toContain("/app/ai/knowledge/sources");
     expect(hrefs).toContain("/app/ai/agents");
+    // Conhecimento, Memória, Skills e Casos saíram da navegação; Credenciais
+    // mora em Configurações (grupo organizacao, fora do menu lateral).
+    for (const fora of [
+      "/app/ai/knowledge/sources",
+      "/app/ai/memory",
+      "/app/ai/skills",
+      "/app/ai/cases",
+      "/app/ai/credentials",
+    ])
+      expect(hrefs).not.toContain(fora);
     // Nuvemshop segue fora por escolha do dono do produto (ver catalogo.ts).
     expect(hrefs).not.toContain("/app/integrations/nuvemshop");
   });
@@ -125,18 +132,15 @@ describe("sidebarGroups", () => {
   it("a ordem dentro do grupo de IA é a do registro, sem hub no meio", () => {
     // Todas as telas do grupo aparecem clicando no bloco — a lista é EXATA de
     // propósito: item novo entra com decisão explícita de posição.
+    // Conhecimento, Memória, Skills e Casos saíram da navegação; Credenciais
+    // mora em Configurações.
     const ia = sidebarGroups(true, null).find((g) => g.group.id === "ia");
     expect(ia?.items.map((i) => i.href)).toEqual([
       "/app/ai/agents",
       "/app/ai/followups",
       "/app/ai/followups/novo-disparo",
       "/app/ai/routers",
-      "/app/ai/credentials",
       "/app/ai/providers",
-      "/app/ai/knowledge/sources",
-      "/app/ai/memory",
-      "/app/ai/skills",
-      "/app/ai/cases",
       "/app/ai/inbox",
       "/app/ai/cases/avisos",
       "/app/ai/proposals",
@@ -163,15 +167,15 @@ describe("hubSections", () => {
     ]);
   });
 
-  it("agrupa a IA nas três etapas da jornada, na ordem", () => {
+  it("agrupa a IA nas etapas da jornada, na ordem", () => {
     const secoes = hubSections("ia", true, null).map((s) => s.section);
-    expect(secoes).toEqual(["Montar o agente", "Ensinar o agente", "Acompanhar o agente"]);
+    expect(secoes).toEqual(["Montar o agente", "Acompanhar o agente"]);
   });
 
   it("o hub mostra também o que já está no sidebar — é inventário, não sobra", () => {
     const hrefs = hubSections("ia", true, null).flatMap((s) => s.items.map((i) => i.href));
     expect(hrefs).toContain("/app/ai/agents");
-    expect(hrefs).toContain("/app/ai/knowledge/sources");
+    expect(hrefs).toContain("/app/ai/providers");
   });
 
   it("não vaza destino acima do papel", () => {
@@ -191,7 +195,7 @@ describe("hubSections", () => {
 describe("searchable", () => {
   it("expõe todo destino visível, do sidebar ou não", () => {
     const hrefs = searchable(ADMIN.platform, ADMIN.role).map((d) => d.href);
-    expect(hrefs).toContain("/app/ai/knowledge/sources");
+    expect(hrefs).toContain("/app/ai/providers");
     expect(hrefs).toContain("/app/inbox");
   });
 

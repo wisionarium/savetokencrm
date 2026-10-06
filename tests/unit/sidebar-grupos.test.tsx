@@ -91,10 +91,11 @@ describe("Sidebar agrupado", () => {
       "href",
       "/app/ai/agents",
     );
-    expect(screen.getByRole("link", { name: "Conhecimento" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Uso e orçamento" })).toHaveAttribute(
       "href",
-      "/app/ai/knowledge/sources",
+      "/app/ai/usage",
     );
+    expect(screen.queryByRole("link", { name: "Conhecimento" })).toBeNull();
     unmount();
     cleanup();
     // Segunda montagem lê a preferência salva: o grupo continua aberto.
@@ -173,14 +174,14 @@ describe("Sidebar agrupado", () => {
       "href",
       "/app/products",
     );
-    expect(screen.getByRole("link", { name: "Credenciais" })).toHaveAttribute(
-      "href",
-      "/app/ai/credentials",
-    );
     expect(screen.getByRole("link", { name: "Evolução da IA" })).toHaveAttribute(
       "href",
       "/app/ai/evolution",
     );
+    // Conhecimento, Memória, Skills e Casos saíram da navegação; Credenciais
+    // mora em Configurações (fora do menu lateral).
+    expect(screen.queryByRole("link", { name: "Conhecimento" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Credenciais" })).toBeNull();
   });
 
   it("colapsado esconde os títulos mas mantém os links", () => {

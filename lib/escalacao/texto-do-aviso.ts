@@ -13,7 +13,7 @@
  *     O que o cliente precisa: 15% de desconto no plano anual
  *     Por que a IA travou: a política permite até 10%
  *
- *     Abrir: https://crm.exemplo.com.br/app/ai/cases?caso=<uuid>
+ *     Abrir: https://crm.exemplo.com.br/app/inbox/<uuid-da-conversa>
  *
  *     Responder aqui não chega ao cliente — abra o link para responder.
  *

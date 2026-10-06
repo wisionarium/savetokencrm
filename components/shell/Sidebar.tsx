@@ -65,11 +65,12 @@ export function SidebarContent({
   const rodape = todos.find((g) => g.group.id === GRUPO_NO_RODAPE)?.group.hub;
 
   /**
-   * Grupo fechado é preferência POR NAVEGADOR, não por conta: começa vazio (tudo
-   * aberto) em toda renderização — servidor, primeira pintura do cliente e nos
-   * testes, que nunca clicam em nada — e só muda depois do mount, se o
-   * `localStorage` tiver algo salvo. Guardar o CONJUNTO DOS FECHADOS, e não dos
-   * abertos, é o que faz "sem preferência salva" já significar "tudo aberto".
+   * Grupo fechado é preferência POR NAVEGADOR, não por conta: começa nos
+   * recolhidos por padrão (só Atendimento abre) em toda renderização —
+   * servidor, primeira pintura do cliente e nos testes — e só muda depois do
+   * mount, se o `localStorage` tiver algo salvo. Guardar o CONJUNTO DOS
+   * FECHADOS, e não dos abertos, é o que faz a preferência salva continuar
+   * valendo grupo a grupo.
    */
   const [gruposFechados, setGruposFechados] = useState<Set<string>>(
     () => new Set(GRUPOS_RECOLHIDOS_POR_PADRAO),

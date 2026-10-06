@@ -92,7 +92,7 @@ describe("o caminho feliz", () => {
     const corpo = enviados[0]!.body;
 
     expect(corpo).toContain("Acme");
-    expect(corpo).toContain("https://crm.exemplo.com.br/app/ai/cases");
+    expect(corpo).toContain("https://crm.exemplo.com.br/app/ai/inbox");
     // A última linha do aviso real precisa estar AQUI também: é no teste que a
     // pessoa aprende que aquele número não recebe resposta.
     expect(corpo).toContain("Responder aqui não chega ao cliente");

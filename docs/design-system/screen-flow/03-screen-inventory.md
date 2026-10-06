@@ -8,7 +8,7 @@ date: 2026-04-28
 
 # 03 — Screen Inventory
 
-> Tabela exaustiva de todas as telas mapeadas. Cada linha = uma tela única. Estados explícitos por tela. Total 95 telas. Componentes-chave referenciados pelos Sub-PRDs.
+> Tabela exaustiva de todas as telas mapeadas. Cada linha = uma tela única. Estados explícitos por tela. Total 94 telas. Componentes-chave referenciados pelos Sub-PRDs.
 
 > **Este doc é um PLANO, não um mapa do que existe.** Foi escrito em 2026-04-28 e a
 > construção divergiu dele nos dois sentidos. O que o plano previu e ainda não existe, e o
@@ -86,7 +86,7 @@ date: 2026-04-28
 | 30 | `/app/orders` | P1, P3, P4 | default, empty, sync-pending | `<OrdersTable>`, `<NuvemshopBadge>` | — | P1 |
 | 31 | `/app/orders/[id]` | idem | default, loading, payload-stale | `<OrderDetail>`, `<OrderTimeline>` | — | P1 |
 
-## G. App tenant — IA (11 telas)
+## G. App tenant — IA (10 telas)
 
 | # | Path | Persona | Estados | Componentes | RT | Prio |
 |---|---|---|---|---|---|---|
@@ -94,7 +94,6 @@ date: 2026-04-28
 | 33 | `/app/ai/agents/[id]` | P3 admin | default, edit-mode, save-error, diff-vs-prod | `<AgentEditor>`, `<SystemPromptEditor>`, `<GuardrailsEditor>` | — | P1 |
 | 34 | `/app/ai/agents/new` | P3 admin | default, validation-error | `<AgentWizard>` | — | P2 |
 | 35 | `/app/ai/knowledge` | manager+ | default, source-counts | `<KnowledgeOverview>` | — | P1 |
-| 36 | `/app/ai/knowledge/sources` | manager+ | default, indexing, indexing-failed | `<SourcesList>` | sim (status) | P1 |
 | 37 | `/app/ai/knowledge/sources/faq` | manager+ | default, edit, version-history | `<FAQEditor>`, `<VersionTimeline>` | — | P1 |
 | 38 | `/app/ai/knowledge/sources/policies` | manager+ | default, uploading, parse-failed | `<PolicyUploader>` | — | P1 |
 | 39 | `/app/ai/knowledge/sources/catalog` | manager+ | default, sync-paused, sync-active | `<CatalogSyncStatus>` | sim | P1 |
@@ -207,12 +206,12 @@ Contados, não estimados. Os `~` saíram: os números abaixo são derivados das 
 por `scripts/inventario-de-telas.ts` e vigiados por `tests/unit/inventario-de-telas.test.ts`
 — mexer numa tabela sem mexer aqui reprova o `verify`.
 
-- **Total de telas únicas**: 95 (algumas têm sub-states relevantes mas mesma rota)
+- **Total de telas únicas**: 94 (algumas têm sub-states relevantes mas mesma rota)
 - **P0** (semana 1–4): 41 telas
-- **P1** (semana 5–8): 46 telas
+- **P1** (semana 5–8): 45 telas
 - **P2** (Fase 1.5+): 6 telas
 - **Entregues** fora da escala de prioridade (marcadas `**entregue**`): 2 telas
-- **Realtime obrigatório**: 27 telas
+- **Realtime obrigatório**: 26 telas
 - **Cross-tenant (super-admin)**: 18 telas
 
 ## Reconciliação com o disco

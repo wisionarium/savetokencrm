@@ -465,7 +465,7 @@ export async function aplicaAvisoDeCaso(
     summary: caso.summary,
     blocker: caso.blocker,
     nomeDoCliente: nome,
-    link: linkDoCaso(deps.urlPublica, caso.id),
+    link: linkDoCaso(deps.urlPublica, caso.conversation_id),
   });
 
   // ── 14. O transporte ─────────────────────────────────────────────────────

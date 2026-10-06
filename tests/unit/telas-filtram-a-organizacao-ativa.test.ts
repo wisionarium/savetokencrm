@@ -75,13 +75,7 @@ const FILTRO_DE_ORG = /\.(?:eq|in|is|neq|match|contains|filter)\(\s*"organizatio
  * Consultas que a varredura aceita sem filtro de organização — cada uma com o
  * motivo escrito. Esta lista só ENCOLHE.
  */
-const JUSTIFICADAS: Record<string, string> = {
-  "app/app/ai/skills/page.tsx:skill_versions":
-    "Resolve por `.in('id', versionIds)`, e os ids vêm dos DOIS ponteiros logo " +
-    "acima — o da org (já filtrado por organization_id) e o de plataforma " +
-    "(`.is('organization_id', null)`). O conjunto já nasce escopado; filtrar a " +
-    "org aqui esconderia justamente as habilidades do catálogo.",
-};
+const JUSTIFICADAS: Record<string, string> = {};
 
 function telasDeServidor(dir: string): string[] {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {

@@ -102,7 +102,7 @@ export function taxaDeAjuda(rate: number, t: (texto: string) => string = (texto)
  * que muda é a frase que diz do que ele é feito.
  */
 const DESCRICAO_RESULTADO_SEM_ATIVIDADE =
-  "Não houve atendimento neste período, então os zeros abaixo querem dizer \"nada aconteceu\", e não \"foi mal\". Mude as datas acima para um período com movimento.";
+  'Não houve atendimento neste período, então os zeros abaixo querem dizer "nada aconteceu", e não "foi mal". Mude as datas acima para um período com movimento.';
 
 /**
  * A escolha da descrição olha SÓ `messages_received`, e recebe o `outcome`
@@ -306,9 +306,7 @@ function Ranking({
                 <span className="truncate text-sm" title={nome}>
                   {nome}
                 </span>
-                <span className="shrink-0 text-sm tabular-nums text-text-muted">
-                  {num(qtd)}
-                </span>
+                <span className="shrink-0 text-sm text-text-muted tabular-nums">{num(qtd)}</span>
               </div>
               <div className="h-1.5 w-full rounded-full bg-surface-elevated">
                 <div
@@ -445,7 +443,9 @@ function Conteudo({ payload }: { payload: NonNullable<ReturnType<typeof useEvolu
         <Card className="p-4">
           <h3 className="text-sm font-medium">{t("Linha do tempo do aprendizado")}</h3>
           <p className="mt-1 text-xs text-text-muted">
-            {t("Cada linha é uma coisa nova que o agente passou a saber, na ordem em que aconteceu.")}
+            {t(
+              "Cada linha é uma coisa nova que o agente passou a saber, na ordem em que aconteceu.",
+            )}
           </p>
           <div className="mt-3">
             {learned.timeline.length === 0 ? (
@@ -455,13 +455,9 @@ function Conteudo({ payload }: { payload: NonNullable<ReturnType<typeof useEvolu
               // mas não tem data" era inalcançável.
               <Vazio
                 texto={t(
-                  "Seu agente ainda não aprendeu nada neste período. Ele aprende de três jeitos: você publica uma regra na Memória da IA, aprova uma sugestão de melhoria na aba Propostas do agente, ou instala uma habilidade em Skills da IA.",
+                  "Seu agente ainda não aprendeu nada neste período. Ele aprende quando você aprova uma sugestão de melhoria na aba Propostas do agente.",
                 )}
-                acoes={[
-                  { href: "/app/ai/memory", label: t("Publicar uma regra") },
-                  { href: "/app/ai/agents", label: t("Ver sugestões de melhoria") },
-                  { href: "/app/ai/skills", label: t("Instalar uma habilidade") },
-                ]}
+                acoes={[{ href: "/app/ai/agents", label: t("Ver sugestões de melhoria") }]}
               />
             ) : (
               <EvolutionTimeline items={learned.timeline} />
@@ -473,7 +469,9 @@ function Conteudo({ payload }: { payload: NonNullable<ReturnType<typeof useEvolu
       <Bloco
         testId="bloco-fez"
         titulo={t("O que ele fez")}
-        descricao={t("O trabalho do dia a dia: quantas vezes ele usou cada recurso que você deu a ele.")}
+        descricao={t(
+          "O trabalho do dia a dia: quantas vezes ele usou cada recurso que você deu a ele.",
+        )}
       >
         <div className="grid gap-3 lg:grid-cols-3">
           <GraficoDiario
@@ -488,7 +486,6 @@ function Conteudo({ payload }: { payload: NonNullable<ReturnType<typeof useEvolu
                 texto={t(
                   "Nenhuma habilidade foi usada. Ou o agente ainda não tem nenhuma instalada, ou as conversas do período não pediram nenhuma.",
                 )}
-                acoes={[{ href: "/app/ai/skills", label: t("Ver habilidades disponíveis") }]}
               />
             }
           />
@@ -520,7 +517,6 @@ function Conteudo({ payload }: { payload: NonNullable<ReturnType<typeof useEvolu
                 texto={t(
                   "O agente não consultou seus materiais. Ou não há nada publicado na base de conhecimento, ou as conversas não chegaram a precisar.",
                 )}
-                acoes={[{ href: "/app/ai/knowledge/sources", label: t("Publicar material") }]}
               />
             }
           />
@@ -532,8 +528,9 @@ function Conteudo({ payload }: { payload: NonNullable<ReturnType<typeof useEvolu
             contagem={activity.by_skill}
             vazio={
               <Vazio
-                texto={t("Nenhuma habilidade foi usada neste período, então não há o que ranquear.")}
-                acoes={[{ href: "/app/ai/skills", label: t("Ver habilidades disponíveis") }]}
+                texto={t(
+                  "Nenhuma habilidade foi usada neste período, então não há o que ranquear.",
+                )}
               />
             }
           />

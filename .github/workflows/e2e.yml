@@ -724,20 +724,17 @@ jobs:
         agenda-busca-cliente-pelo-nome-do-perfil.spec.ts
         agente-organiza-operacao.spec.ts
         central-de-avisos-capacidades.spec.ts
-        escalacao-ciclo.spec.ts
         distribuicao-atendimento.spec.ts
         capacidades-do-agente.spec.ts
         escopo-de-funil-do-agente.spec.ts
         followup-tempo-adaptativo.spec.ts
         gatilho-de-etapa.spec.ts
         gatilho-de-caso.spec.ts
-        conversa-do-caso.spec.ts
         aviso-de-caso-no-whatsapp.spec.ts
         agenda-ocupacao-do-google-na-grade.spec.ts
         agenda-ocupacao-do-google-no-historico.spec.ts
         followup-publicado-abre-no-construtor.spec.ts
         automacao-diz-a-verdade.spec.ts
-        acervo-de-conhecimento.spec.ts
         agenda-kit-visual.spec.ts
         agenda-conectar-google.spec.ts
         agenda-painel-cabe-na-tela.spec.ts
@@ -941,7 +938,6 @@ jobs:
         central-avisos-destino.spec.ts
         agenda-presenca-recuperacao.spec.ts
         agenda-google-sync.spec.ts
-        encerramento-atendimento.spec.ts
         passagem-com-contexto.spec.ts
         interface-por-vinculo.spec.ts
         pipelines-gestao.spec.ts

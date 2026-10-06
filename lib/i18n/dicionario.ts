@@ -2646,6 +2646,7 @@ export const DICIONARIO: Traducoes = {
   "Ver aprendizados arquivados": { es: "Ver aprendizajes archivados" },
   "Ver aprendizados ativos": { es: "Ver aprendizajes activos" },
   "Ver habilidades disponíveis": { es: "Ver habilidades disponibles" },
+  "Seu agente ainda não aprendeu nada neste período. Ele aprende quando você aprova uma sugestão de melhoria na aba Propostas do agente.": { es: "Tu agente aún no ha aprendido nada en este período. Aprende cuando apruebas una sugerencia de mejora en la pestaña Propuestas del agente." },
   "Ver sugestões de melhoria": { es: "Ver sugerencias de mejora" },
   "Ver só as falhas": { es: "Ver solo las fallas" },
   "Você ainda não cadastrou nenhuma chave de provedor. Enquanto isso, tudo usa a chave que veio na instalação.": {
@@ -7928,7 +7929,7 @@ export const DICIONARIO: Traducoes = {
   "Usando a chave que veio na instalação.": { es: "Usando la clave que vino con la instalación." },
   "A chave escolhida no painel de Provedores para este ponto não está utilizável (desativada, apagada ou ainda não validada). Seguindo com a próxima chave disponível.": { es: "La clave elegida en el panel de Proveedores para este punto no es utilizable (desactivada, borrada o todavía sin validar). Seguimos con la siguiente clave disponible." },
 
-  // ─── Acervo: a listagem (app/app/ai/knowledge/sources/_client.tsx) ───
+  // ─── Acervo (página removida; entradas mantidas por uso em outros textos) ───
   //
   // Este arquivo escapou das DUAS varreduras do merge: não é arquivo NOVO (a
   // 1.8.0 o modificou), e não estava entre os que 'os dois lados tocaram'

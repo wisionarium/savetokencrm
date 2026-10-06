@@ -78,11 +78,11 @@ test("o retorno marcado pelo agente aparece no Radar e na linha do tempo", async
   await page.goto("/app/radar");
   await expect(page.getByRole("heading", { name: "Radar de risco" })).toBeVisible();
 
-  const linha = page.locator('[data-testid="radar-item"]', { hasText: creds.retorno.lead_title });
+  const linha = page.locator('[data-testid="radar-em-voo"]', { hasText: creds.retorno.lead_title });
   await expect(linha).toBeVisible();
   // "Em voo" é a afirmação de que a demanda NÃO está morrendo: alguém prometeu
-  // voltar. Sem o retorno, este mesmo negócio apareceria como crítico.
-  await expect(linha).toContainText(/voo/i);
+  // voltar. Sem o retorno, este mesmo negócio apareceria como crítico no quadro.
+  await expect(linha).toContainText(/voo|retorno/i);
   await captura(page, "w2-retorno-no-radar.png");
 
   // A timeline do NEGÓCIO — o acontecimento tem de ser legível por quem opera,

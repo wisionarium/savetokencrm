@@ -39,6 +39,13 @@ export interface Conversation {
   last_message_at: string | null;
   last_message_preview: string | null;
   unread_count_for_assignee: number;
+  /**
+   * Total de mensagens inbound do contato nesta conversa
+   * (`fn_conversa_inbound_total`, migration 0346) — o combustível do foguinho
+   * de streak. Opcional: payloads de antes do campo e respostas de mutação não
+   * o trazem; ausente vale como 0 (sem chama), nunca como erro.
+   */
+  inbound_total?: number | null;
   is_group: boolean;
   group_chat_id: string | null;
   tags: string[];

@@ -32117,6 +32117,32 @@ as $$
   ]::text[]);
 $$;
 
+-- ---- foguinho de streak: total de inbound por conversa (migration 0346) ----
+--
+-- Idempotente (`create or replace` + revoke/grant repetíveis). Entra ANTES do
+-- bloco da VARREDURA anon (logo abaixo), que proíbe `create function` depois
+-- dele — ver o cabeçalho de lá.
+create or replace function public.fn_conversa_inbound_total(p_conversation_ids uuid[])
+returns table (conversation_id uuid, inbound_total integer)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select m.conversation_id, count(*)::integer
+  from public.messages m
+  where m.organization_id in (select public.fn_user_org_ids())
+    and m.direction = 'inbound'
+    and m.conversation_id = any (p_conversation_ids)
+  group by m.conversation_id;
+$$;
+
+revoke execute on function public.fn_conversa_inbound_total(uuid[]) from public, anon;
+grant execute on function public.fn_conversa_inbound_total(uuid[]) to authenticated, service_role;
+
+comment on function public.fn_conversa_inbound_total(uuid[]) is
+  'Total de mensagens inbound por conversa (foguinho de streak do Radar/inbox); org via fn_user_org_ids, nunca por argumento.';
+
 -- ---- VARREDURA anon: função nova nasce exposta em quem ATUALIZA (migration 0116) ----
 --
 -- ⚠️ DE PROPÓSITO, NENHUMA FUNÇÃO É CRIADA DEPOIS DESTE BLOCO. Apêndice que cria

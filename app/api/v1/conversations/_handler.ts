@@ -16,6 +16,7 @@ import type {
   PatchConversationInput,
 } from "@/lib/schemas";
 import type { Conversation } from "@/lib/types/messaging";
+import { totaisInboundPorConversa } from "@/lib/inbox/totais-inbound";
 import { normalizarTermoDeBusca } from "@/lib/inbox/termo-de-busca";
 import { ORDEM_DA_ESPERA, ehAFila } from "@/lib/inbox/comando-da-conversa";
 import { aplicarMarcador } from "@/lib/inbox/marcador-da-conversa";
@@ -399,7 +400,20 @@ export async function listConversationsHandler(
       ? encodeCursor({ sort: (last[sortCol] as string | null) ?? null, id: last.id })
       : null;
 
-  return { conversations: page, cursor, has_more: hasMore };
+  // O total de inbound alimenta o foguinho de streak do card. UMA consulta
+  // para o quadro (ver `totaisInboundPorConversa`): conversa sem linha no
+  // retorno tem 0 inbound de verdade — e se a RPC falhar, o `warn` já saiu
+  // lá dentro e a chama apaga em vez de o quadro não abrir.
+  const totais = await totaisInboundPorConversa(
+    supabase,
+    page.map((c) => c.id),
+  );
+  const comTotais = page.map((c) => ({
+    ...c,
+    inbound_total: totais.get(c.id) ?? 0,
+  }));
+
+  return { conversations: comTotais, cursor, has_more: hasMore };
 }
 
 // ---------------------------------------------------------------------------

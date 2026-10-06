@@ -4,6 +4,8 @@ import type { MouseEvent } from "react";
 import { useT } from "@/hooks/i18n/useT";
 import { cn } from "@/lib/utils";
 import type { Lead } from "@/lib/types/leads";
+import { engajamentoDaConversa } from "@/lib/inbox/engajamento";
+import { ChamaDeEngajamento } from "@/components/inbox/ChamaDeEngajamento";
 import { resolveCardState, stageAgeLabel, type CardInput } from "@/lib/kanban/card-state";
 import { KanbanCardActions } from "./KanbanCardActions";
 import { NextActionSlot } from "./NextActionSlot";
@@ -85,6 +87,13 @@ export function KanbanCard({
   const value = formatBRL(card.valueCents, card.currency);
   const state = resolveCardState(card, t);
   const age = stageAgeLabel(card.hoursInStage, t);
+  // O foguinho é decoração do título, NÃO faixa ③: não entra na precedência
+  // de `resolveCardState` (que decide o que exige decisão agora) — e some
+  // sozinho quando a conversa esfria, pela mesma régua do inbox.
+  const streak = engajamentoDaConversa({
+    last_inbound_at: lead.conversa?.last_inbound_at ?? null,
+    inbound_total: lead.conversa?.inbound_total ?? null,
+  });
 
   // Clique ABRE o dossiê; ctrl/cmd+clique SELECIONA; shift+clique estende até a
   // âncora. "Clicar abre" é a convenção mais forte, e seleção múltipla é recurso
@@ -237,6 +246,11 @@ export function KanbanCard({
                   {card.title}
                 </button>
               </h3>
+              {streak.nivel === "quente" && streak.motivo ? (
+                <span className="mt-0.5 shrink-0">
+                  <ChamaDeEngajamento motivo={streak.motivo} />
+                </span>
+              ) : null}
             </div>
             <KanbanCardActions lead={lead} pipelineId={pipelineId} />
           </div>

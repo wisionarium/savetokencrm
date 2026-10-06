@@ -5883,6 +5883,14 @@ export const DICIONARIO: Traducoes = {
     es: "Ajusta el filtro de fechas o la búsqueda para ver eventos.",
   },
   "Nenhum funil ainda": { es: "Ningún embudo todavía" },
+  "Nenhum funil para exibir": { es: "Ningún embudo para mostrar" },
+  "Os negócios em risco, no quadro do funil: arrastar move a etapa de verdade. Se o assistente já agendou um retorno, aparece como “em voo”; sem próximo passo, é risco de perder o cliente.": {
+    es: "Los negocios en riesgo, en el tablero del embudo: arrastrar mueve la etapa de verdad. Si el asistente ya agendó un retorno, aparece como “en vuelo”; sin próximo paso, es riesgo de perder al cliente.",
+  },
+  "Crie um funil em Funis para ver o quadro do Radar.": {
+    es: "Crea un embudo en Embudos para ver el tablero del Radar.",
+  },
+  "Não consegui carregar este funil.": { es: "No pude cargar este embudo." },
   "Um funil é o caminho que o cliente percorre até fechar. Crie o primeiro para ter um quadro.": {
     es: "Un embudo es el camino que el cliente recorre hasta cerrar. Crea el primero para tener un tablero.",
   },
@@ -5920,6 +5928,8 @@ export const DICIONARIO: Traducoes = {
   "Retomada de contato descartada": { es: "Retomada de contacto descartada" },
   "Sugestão de retomada venceu sem decisão": { es: "La sugerencia de retomada venció sin decisión" },
   "Retorno agendado": { es: "Retorno agendado" },
+  "retorno agendado": { es: "retorno agendado" },
+  "retornos agendados": { es: "retornos agendados" },
   "Retorno cancelado": { es: "Retorno cancelado" },
   "Desmarcado por uma pessoa da equipe": { es: "Desmarcado por una persona del equipo" },
   "Sem motivo informado": { es: "Sin motivo informado" },

@@ -25,8 +25,8 @@
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 /* ─────────────────────────────────────────────────────────────────────────
-   DeskcommCRM — Design System tokens (Sage palette · density Aerada)
-   Source of truth: /app/design/lib/tokens.ts (PALETTES.sage)
+   DeskcommCRM — Design System tokens (Oceano palette · density Aerada)
+   Source of truth: /app/design/lib/tokens.ts (PALETTES.oceano)
    Light + dark drawn separately (NOT inverted).
    ───────────────────────────────────────────────────────────────────────── */
 
@@ -46,18 +46,22 @@
   --color-border: #e7e3da;
   --color-border-strong: #d2cdbf;
 
-  /* Accent — Sage (11 stops) */
-  --color-accent-50:  #f3f6f1;
-  --color-accent-100: #e4ebe0;
-  --color-accent-200: #c8d6c1;
-  --color-accent-300: #a4ba9a;
-  --color-accent-400: #82a077;
-  --color-accent-500: #67885d;
-  --color-accent-600: #506d48;
-  --color-accent-700: #41573b;
-  --color-accent-800: #374731;
-  --color-accent-900: #2f3c2b;
-  --color-accent-950: #171f15;
+  /* Accent — Oceano · azul-marinho dessaturado (11 stops)
+     Semente #1e3a5f no grau 600; os demais graus saem de
+     `rampaDeSemente('#1e3a5f')` (lib/branding/rampa.ts), a mesma curva de
+     luminosidade do sistema. Claro usa o 600 (11,50:1 contra bg), escuro usa
+     o 400 com frente preta (4,76:1) — branco, preto e azul em contraste. */
+  --color-accent-50:  #f1f5fa;
+  --color-accent-100: #dde5f1;
+  --color-accent-200: #b6c7dd;
+  --color-accent-300: #869fc0;
+  --color-accent-400: #5b7aa4;
+  --color-accent-500: #395a86;
+  --color-accent-600: #1e3a5f;
+  --color-accent-700: #1d324f;
+  --color-accent-800: #1c2d43;
+  --color-accent-900: #1c293a;
+  --color-accent-950: #151d28;
   --color-accent: var(--color-accent-600);
   --color-accent-fg: #ffffff;
   --color-accent-soft: var(--color-accent-100);
@@ -192,8 +196,18 @@
    * equipe. Por isso Telha, Âmbar, Oliva, Turquesa, Azul, Índigo, Violeta,
    * Framboesa: oito palavras diferentes.
    *
-   * A faixa 113-165 é vetada: é onde mora a accent Sage (139 graus). Cor de
-   * PESSOA não pode ser confundida com cor de ESTADO do sistema.
+    * A faixa 230-282 é onde mora o accent Oceano (256 graus). Cor de PESSOA
+    * evita essa faixa — e as duas trilhas vizinhas de matiz (5 · azul 225°,
+    * e 6 · índigo 262°) se sustentam pela luminosidade, não pelo matiz:
+    * medido em OKLab contra os papéis de accent (repouso, hover e anel nos
+    * dois temas), o pior par pessoa×accent em repouso é 0,2006 no claro e
+    * 0,1200 no escuro — acima dos 0,1162 do pior par pessoa×pessoa que a
+    * régua aceita. Os dois pares mais apertados no geral envolvem estado
+    * TRANSITÓRIO (trilha 5 × anel de foco 500 no claro, 0,0925; trilha 6 ×
+    * hover 300 no escuro, 0,0740): 2px que só existem com o teclado ou o
+    * cursor em cima, ao lado de uma trilha que carrega a inicial da pessoa.
+    * Matiz sozinho diria que a trilha 6 (a 6° do accent) é confusão certa;
+    * a medida diz que a luminosidade separa.
    *
    * A luminosidade ALTERNA entre vizinhos, que é o truque da Okabe-Ito para
    * separar o azul-céu do azul — e foi exatamente o que a minha versão
@@ -241,7 +255,7 @@
    As 11 paradas `--color-accent-NNN` ficam DE FORA de propósito. Elas são
    idênticas nos dois blocos do produto, então omiti-las não muda pixel algum
    aqui; e, na instalação que trocou a cor, a subárvore clara passa a herdar a
-   rampa do `<html>` (a do revendedor) em vez de fixar a Sage. Pelo mesmo
+    rampa do `<html>` (a do revendedor) em vez de fixar a Oceano. Pelo mesmo
    motivo os papéis abaixo mantêm a forma `var(--color-accent-NNN)`.
 
    Buraco conhecido: `--color-accent-fg` é literal `#ffffff` e, numa subárvore
@@ -342,21 +356,30 @@
   --color-border: #33312a;
   --color-border-strong: #444239;
 
-  /* Accent stays same hex stops; default shifts up for dark contrast */
-  --color-accent-50:  #f3f6f1;
-  --color-accent-100: #e4ebe0;
-  --color-accent-200: #c8d6c1;
-  --color-accent-300: #a4ba9a;
-  --color-accent-400: #82a077;
-  --color-accent-500: #67885d;
-  --color-accent-600: #506d48;
-  --color-accent-700: #41573b;
-  --color-accent-800: #374731;
-  --color-accent-900: #2f3c2b;
-  --color-accent-950: #171f15;
+  /* Accent — mesma rampa Oceano; o default sobe para o 400 por contraste
+     (4,15:1 contra bg, 3,87 contra surface, 3,44 contra elevated) e a frente
+     é preta pura (4,76:1) — o par branco/preto/azul do produto. */
+  --color-accent-50:  #f1f5fa;
+  --color-accent-100: #dde5f1;
+  --color-accent-200: #b6c7dd;
+  --color-accent-300: #869fc0;
+  --color-accent-400: #5b7aa4;
+  --color-accent-500: #395a86;
+  --color-accent-600: #1e3a5f;
+  --color-accent-700: #1d324f;
+  --color-accent-800: #1c2d43;
+  --color-accent-900: #1c293a;
+  --color-accent-950: #151d28;
   --color-accent: var(--color-accent-400);
-  --color-accent-fg: #161510;
-  --color-accent-soft: rgba(130, 160, 119, 0.16);
+  --color-accent-fg: #000000;
+  /* Soft escuro OPACO (grau 800, por referência — como o claro referencia o
+     100), e não translúcido. A 16% sobre as bases, a tinta do accent deixava
+     o `text-accent` dos badges a 2,90:1 do chip sobre elevated (piso 3,0 de
+     WCAG 1.4.11) — e a derivação reancora tinta literal no accent, então
+     escurecer a tinta no CSS não adiantava. Por referência, o chip anda COM
+     a rampa (`indices.soft = 8`) e o par dá 3,16:1. Medido em
+     `tests/unit/branding-contraste.test.ts`. */
+  --color-accent-soft: var(--color-accent-800);
   --color-accent-hover: var(--color-accent-300);
 
   /* Neutrals — greige (11 stops, dark) */
@@ -463,7 +486,7 @@
   --color-text-muted: var(--color-text-muted);
   --color-text-subtle: var(--color-text-subtle);
 
-  /* Accent — Sage */
+  /* Accent — Oceano */
   --color-accent: var(--color-accent);
   --color-accent-foreground: var(--color-accent-fg);
   --color-accent-soft: var(--color-accent-soft);
@@ -604,18 +627,18 @@
    (h-7/h-8/h-9 dos botões e selects continuam cabendo: 19px em 32px, 17px em
    28px — medido, não estimado). */
 @theme {
-  --text-xs: 17px;
-  --text-xs--line-height: 1.5rem;
-  --text-sm: 19px;
-  --text-sm--line-height: 1.75rem;
-  --text-base: 21px;
-  --text-base--line-height: 2rem;
-  --text-lg: 23px;
-  --text-lg--line-height: 2rem;
-  --text-xl: 25px;
-  --text-xl--line-height: 2.25rem;
-  --text-2xl: 29px;
-  --text-2xl--line-height: 2.5rem;
+  --text-xs: 15px;
+  --text-xs--line-height: 1.375rem;
+  --text-sm: 17px;
+  --text-sm--line-height: 1.625rem;
+  --text-base: 19px;
+  --text-base--line-height: 1.875rem;
+  --text-lg: 21px;
+  --text-lg--line-height: 1.875rem;
+  --text-xl: 23px;
+  --text-xl--line-height: 2rem;
+  --text-2xl: 27px;
+  --text-2xl--line-height: 2.25rem;
 }
 
 /* Texto miúdo com tamanho CHAPADO (`text-[10px]` e irmãs, ~170 usos em
@@ -627,13 +650,13 @@
    Sem layer de propósito: sem layer vence qualquer utilitário em `@layer
    utilities`, independente da ordem no arquivo. */
 .text-\[10px\] {
-  font-size: 15px;
+  font-size: 13px;
 }
 .text-\[11px\] {
-  font-size: 16px;
+  font-size: 14px;
 }
 .text-\[13px\] {
-  font-size: 18px;
+  font-size: 16px;
 }
 
 
@@ -767,7 +790,7 @@
     color: var(--color-accent-50);
   }
 
-  /* Focus ring: Sage 500/400, 2px with offset */
+  /* Focus ring: Oceano 500/400, 2px with offset */
   :focus-visible {
     outline: 2px solid var(--color-accent-500);
     outline-offset: 2px;
@@ -1040,7 +1063,52 @@
   }
 }
 
-/* ---- Toasts (sonner) na identidade Sage --------------------------------
+/* ---- "digitando…" do thread (presença no CRM) ------------------------------
+   Três pontos que sobem e descem em cascata — o mesmo vocabulário da chama:
+   lento, decorativo, e parado com `prefers-reduced-motion` (o texto "está
+   digitando" continua lá, que é o que carrega o sentido). Tinta do token
+   `text-muted`, então acompanha claro/escuro e marca da instalação. */
+.digitacao-pontos {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.digitacao-pontos > i {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-text-muted);
+  animation: deskcomm-digitacao 1.2s var(--ease-in-out) infinite;
+}
+
+.digitacao-pontos > i:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.digitacao-pontos > i:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes deskcomm-digitacao {
+  0%, 60%, 100% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+  30% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .digitacao-pontos > i {
+    animation: none;
+    opacity: 0.8;
+  }
+}
+
+/* ---- Toasts (sonner) na identidade Oceano --------------------------------
    O default do sonner é outro produto: fundo branco/preto puro, ícone de
    erro num vermelho saturado (#e5484d) e raio próprio. Como todo toast do
    CRM passa por este seletor (seja via `toast()`, `toast.error()` ou

@@ -185,6 +185,54 @@ export const metaCloudAdapter: ChannelAdapter = {
     unknownError: "meta_unknown",
   },
 
+  /**
+   * "digitando…" de verdade no aparelho do cliente (Cloud API, `typing_indicator`).
+   *
+   * A Meta ancora o indicador numa mensagem RECEBIDA (`message_id` = wamid):
+   * sem âncora não há onde pendurar, e a chamada sai em silêncio — nunca com
+   * um id inventado. Com âncora, o indicador cai sozinho ao responder ou em
+   * ~25s (medido na doc oficial). Quem resolve a âncora é `sinalizarDigitando`
+   * (`lib/messaging/presenca.ts`), que lê o último inbound do banco; aqui só
+   * se traduz formato, como em todo adapter.
+   */
+  async signalTyping(input): Promise<void> {
+    const wamid = input.emRespostaA?.startsWith("wamid.") ? input.emRespostaA : null;
+    if (!wamid) return;
+    const creds = await resolveMetaCreds(createAdminClient(), {
+      organizationId: input.organizationId,
+      phoneNumberId: input.sessionRef,
+    });
+    if (!creds) {
+      throw new Error("meta_not_configured: sem credencial para sinalizar digitação.");
+    }
+    const res = await fetch(
+      `https://graph.facebook.com/${creds.graphVersion}/${creds.phoneNumberId}/messages`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${creds.token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          status: "read",
+          message_id: wamid,
+          typing_indicator: { type: "text" },
+        }),
+        // Fora do caminho de resposta ao cliente: pendurar aqui penduraria o turno.
+        signal: AbortSignal.timeout(10_000),
+      },
+    );
+    if (!res.ok) {
+      const corpo = (await res.json().catch(() => ({}))) as {
+        error?: { code?: number; message?: string };
+      };
+      throw new Error(
+        `meta_${corpo.error?.code ?? res.status}: ${corpo.error?.message ?? "falha ao sinalizar digitação"}`,
+      );
+    }
+  },
+
   async fetchInboundMedia(input): Promise<{ buffer: Buffer; mime: string }> {
     const creds = await resolveMetaCreds(createAdminClient(), {
       organizationId: input.organizationId,

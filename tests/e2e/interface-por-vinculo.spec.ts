@@ -95,13 +95,13 @@ test("interface por membro atualiza ao vivo, preserva formulário e convite apli
     await member.goto("/app/settings/profile");
     await member.getByLabel("Nome completo").fill("Rascunho não salvo");
     await login(other, emails[2]!);
-    await expect(nav(member).getByRole("link", { name: "Radar", exact: true })).toBeVisible();
+    await expect(nav(member).getByRole("link", { name: "Kanban", exact: true })).toBeVisible();
     const framesBefore = realtime.length;
     await customize(page, emails[1]!);
     // Evento real precisa chegar; polling não pode aprovar a observação em tempo real.
     await expect.poll(() => realtime.length, { timeout: 15_000 }).toBeGreaterThan(framesBefore);
-    await expect(nav(member).getByRole("link", { name: "Radar", exact: true })).toHaveCount(0);
-    await expect(nav(other).getByRole("link", { name: "Radar", exact: true })).toBeVisible();
+    await expect(nav(member).getByRole("link", { name: "Kanban", exact: true })).toHaveCount(0);
+    await expect(nav(other).getByRole("link", { name: "Kanban", exact: true })).toBeVisible();
     await expect(member.getByLabel("Nome completo")).toHaveValue("Rascunho não salvo");
     expect(member.url()).toContain("/app/settings/profile");
     await expect(member.getByTestId("alerts-bell")).toHaveCount(0);
@@ -115,7 +115,7 @@ test("interface por membro atualiza ao vivo, preserva formulário e convite apli
     ).toBe(403);
     // Área oculta autorizada continua disponível diretamente.
     await member.goto("/app/radar");
-    await expect(member.getByRole("heading", { name: /Radar/ }).first()).toBeVisible();
+    await expect(member.getByRole("heading", { name: /Kanban/ }).first()).toBeVisible();
     await member.goto("/app/settings/profile");
     await customize(page, emails[1]!, "Produtos");
     await expect(nav(member).getByRole("link", { name: "Inbox", exact: true })).toHaveCount(0);

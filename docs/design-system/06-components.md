@@ -88,7 +88,7 @@ Padding: `space-5` (20px) em Aerada. Radius: `radius-md` (12px).
 | Variant | bg | fg | Uso |
 |---------|----|----|-----|
 | `neutral` | `surface-elevated` | `text-muted` | Tag genérica, status default |
-| `accent` | `accent-soft` (`#e4ebe0`) | `accent` | Highlight não-semântico, "novo" |
+| `accent` | `accent-soft` (`#dde5f1` no claro, `#1c2d43` no escuro) | `accent` | Highlight não-semântico, "novo" |
 | `success` | `success/14%` | `success` | Resolvido, Pago, Entregue |
 | `warning` | `warning/14%` | `warning` | SLA próximo, Aguardando |
 | `error` | `error/14%` | `error` | Vencido, Falhou, Cancelado |

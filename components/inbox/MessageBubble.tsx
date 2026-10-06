@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { useLocaleDeData } from "@/hooks/i18n/useLocaleDeData";
 import { format } from "date-fns";
 import { useT } from "@/hooks/i18n/useT";
@@ -54,7 +55,7 @@ function AckIndicator({ status, t }: { status: string; t: (texto: string) => str
   return null;
 }
 
-export function MessageBubble({
+export const MessageBubble = memo(function MessageBubble({
   message,
   debugCitations,
   onResponder,
@@ -319,4 +320,4 @@ export function MessageBubble({
       )}
     </div>
   );
-}
+});

@@ -2,7 +2,7 @@
 // "Soft-tech / calmo" — neutros desaturados (greige/warm-gray), accent não-saturado.
 // 5-Constraint Rule applied: Shape, Color (exact hex), Typography, Motion, Layout.
 
-export type PaletteId = "sage" | "clay" | "mist" | "plum" | "olive";
+export type PaletteId = "sage" | "oceano" | "clay" | "mist" | "plum" | "olive";
 export type TypoId = "bricolage-jakarta" | "fraunces-manrope" | "atkinson" | "source-plex";
 export type DensityId = "aerada" | "equilibrada" | "compacta";
 export type ThemeId = "light" | "dark";
@@ -38,6 +38,34 @@ export type PaletteDef = {
 // ─── Palettes ──────────────────────────────────────────────────────────────
 
 export const PALETTES: Record<PaletteId, PaletteDef> = {
+  oceano: {
+    id: "oceano",
+    name: "Oceano",
+    description: "Azul-marinho dessaturado. Corporativo, calmo, de alto contraste.",
+    accent: {
+      50: "#f1f5fa", 100: "#dde5f1", 200: "#b6c7dd", 300: "#869fc0",
+      400: "#5b7aa4", 500: "#395a86", 600: "#1e3a5f", 700: "#1d324f",
+      800: "#1c2d43", 900: "#1c293a", 950: "#151d28",
+    },
+    neutralLight: {
+      50: "#faf9f6", 100: "#f3f1ec", 200: "#e7e3da", 300: "#d2cdbf",
+      400: "#a9a395", 500: "#7d786c", 600: "#5d594f", 700: "#46433b",
+      800: "#2e2c26", 900: "#1c1a16", 950: "#0e0d0a",
+    },
+    neutralDark: {
+      50: "#f5f4ef", 100: "#e6e4dc", 200: "#bbb8ac", 300: "#8e8b7f",
+      400: "#605e54", 500: "#444239", 600: "#33312a", 700: "#272620",
+      800: "#1d1c17", 900: "#161510", 950: "#0c0b08",
+    },
+    states: {
+      light: { success: "#5a8a5f", warning: "#b07a2b", error: "#a94a3c", info: "#4a7a93" },
+      dark:  { success: "#82a077", warning: "#d09455", error: "#c87263", info: "#7da9bf" },
+    },
+    surfaces: {
+      light: { bg: "#faf9f6", surface: "#ffffff", surfaceElevated: "#f5f3ee", text: "#1c1a16", textMuted: "#5d594f", border: "#e7e3da" },
+      dark:  { bg: "#161510", surface: "#1d1c17", surfaceElevated: "#272620", text: "#f5f4ef", textMuted: "#8e8b7f", border: "#33312a" },
+    },
+  },
   sage: {
     id: "sage",
     name: "Sage",

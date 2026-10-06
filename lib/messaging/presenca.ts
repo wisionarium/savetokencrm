@@ -63,6 +63,11 @@ export interface SinalizarDigitandoInput {
   conversationId: string;
 }
 
+/** A âncora vale quando é wamid — o formato que a ingestão grava em `external_id`. */
+export function ancoraDeDigitandoValida(externalId: string | null | undefined): string | null {
+  return externalId?.startsWith("wamid.") ? externalId : null;
+}
+
 export async function sinalizarDigitando(
   supabase: SupabaseClient,
   input: SinalizarDigitandoInput,
@@ -99,9 +104,25 @@ export async function sinalizarDigitando(
   });
   if (!recipient) return;
 
+  // A âncora da Cloud API: o último inbound, cujo `external_id` a ingestão
+  // grava como wamid. Sem ela o adapter fica em silêncio (documentado lá) —
+  // indicador sem âncora seria no lugar errado.
+  const { data: ultimoInbound } = await supabase
+    .from("messages")
+    .select("external_id")
+    .eq("organization_id", input.organizationId)
+    .eq("conversation_id", input.conversationId)
+    .eq("direction", "inbound")
+    .order("sent_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
   await adapter.signalTyping({
     organizationId: input.organizationId,
     sessionRef: resolveSessionRef(sessao),
     recipient,
+    emRespostaA: ancoraDeDigitandoValida(
+      (ultimoInbound as { external_id?: string | null } | null)?.external_id ?? null,
+    ),
   });
 }

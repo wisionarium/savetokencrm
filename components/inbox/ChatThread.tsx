@@ -12,6 +12,8 @@ import { MessageBubble } from "./MessageBubble";
 import { NoteCard } from "./NoteCard";
 import { PassagemCard } from "./PassagemCard";
 import { useMessagesRealtime } from "@/hooks/inbox/useMessagesRealtime";
+import { useDigitacao } from "@/hooks/inbox/useDigitacao";
+import { IndicadorDeDigitacao } from "./IndicadorDeDigitacao";
 import { useConversationNotes } from "@/hooks/inbox/useConversationNotes";
 import { usePassagensDaConversa } from "@/hooks/inbox/usePassagensDaConversa";
 import { useClaimConversation } from "@/hooks/inbox/useClaimConversation";
@@ -40,6 +42,12 @@ interface Props {
    */
   dono?: { userId: string | null; nome: string | null } | null;
   contatoId?: string | null;
+  /**
+   * Um fluxo de disparo está rodando nesta conversa (o POST ainda não voltou).
+   * Mostra "disparando fluxo…" no fio — sem isto, os até 30s de espera entre
+   * os passos do fluxo são silêncio que parece tela travada.
+   */
+  disparandoFluxo?: boolean;
 }
 
 /**
@@ -78,7 +86,7 @@ function dayLabel(d: Date, t: (texto: string) => string = (texto) => texto, loca
   return format(d, "dd/MM/yyyy", { locale: locale });
 }
 
-export function ChatThread({ conversationId, onResponder, dono, contatoId }: Props) {
+export function ChatThread({ conversationId, onResponder, dono, contatoId, disparandoFluxo }: Props) {
   const localeDaData = useLocaleDeData();
   const t = useT();
   const q = useMessagesRealtime(conversationId);
@@ -102,6 +110,13 @@ export function ChatThread({ conversationId, onResponder, dono, contatoId }: Pro
   const deleteMessage = useDeleteMessage(conversationId ?? "");
   const canManage = activeOrg != null && ROLE_RANK[activeOrg.role] >= ROLE_RANK.manager;
   const { enabled: debugCitations } = useDebugToggle(activeOrg?.role ?? null);
+  // Digitação alheia: o composer do colega avisa por broadcast, o fio mostra.
+  // O próprio aviso nunca volta (`self: false` + filtro por id) — quem digita
+  // já vê o próprio texto no campo.
+  const { digitadores } = useDigitacao(conversationId, {
+    userId: currentUser.id ?? null,
+    nome: null,
+  });
 
   const messages: Message[] = useMemo(
     () => q.data?.pages.flatMap((p) => p.data) ?? [],
@@ -360,6 +375,14 @@ export function ChatThread({ conversationId, onResponder, dono, contatoId }: Pro
         ))}
 
         <div ref={bottomRef} />
+        {(digitadores.length > 0 || disparandoFluxo) && (
+          <div className="space-y-1 pb-2">
+            {digitadores.map((d) => (
+              <IndicadorDeDigitacao key={d.user_id} aviso={d} />
+            ))}
+            {disparandoFluxo && <IndicadorDeDigitacao texto={t("disparando fluxo")} />}
+          </div>
+        )}
       </div>
     </div>
   );

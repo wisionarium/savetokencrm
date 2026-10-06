@@ -18,9 +18,15 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   conversationId: string;
+  /**
+   * O disparo está no ar (POST ainda não voltou). O thread mostra "disparando
+   * fluxo…" — sem isto, os até 30s de espera entre os passos são silêncio que
+   * parece tela travada.
+   */
+  onDisparandoChange?: (disparando: boolean) => void;
 }
 
-export function DispatchFlowsDialog({ open, onOpenChange, conversationId }: Props) {
+export function DispatchFlowsDialog({ open, onOpenChange, conversationId, onDisparandoChange }: Props) {
   const t = useT();
   const qc = useQueryClient();
   const { data: flows, isPending } = useFollowupFlows();
@@ -28,11 +34,16 @@ export function DispatchFlowsDialog({ open, onOpenChange, conversationId }: Prop
 
   const dispatchMutation = useMutation({
     mutationFn: async (pointerId: string) => {
-      const res = await apiClient.post<{ data: { dispatched: boolean; flow_name: string } }>(
-        `/api/v1/conversations/${conversationId}/dispatch-flow`,
-        { pointer_id: pointerId }
-      );
-      return res.data;
+      onDisparandoChange?.(true);
+      try {
+        const res = await apiClient.post<{ data: { dispatched: boolean; flow_name: string } }>(
+          `/api/v1/conversations/${conversationId}/dispatch-flow`,
+          { pointer_id: pointerId }
+        );
+        return res.data;
+      } finally {
+        onDisparandoChange?.(false);
+      }
     },
     onSuccess: (data) => {
       toast.success(t(`Fluxo "${data.flow_name}" disparado com sucesso!`));

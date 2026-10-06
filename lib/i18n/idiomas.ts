@@ -25,7 +25,7 @@
  * Esta seção dizia, com números, que a tradução cobria "o que a equipe usa todo
  * dia — inbox, kanban, contatos, conexões" e que o resto seguia em português.
  * Era verdade quando foi escrita e venceu: o PR #352 cobriu IA e Admin, e o
- * passe seguinte fechou Agenda, Desempenho, Radar e Respostas rápidas.
+ * passe seguinte fechou Agenda, Desempenho, Kanban e Respostas rápidas.
  *
  * O que substitui a frase não é outro número — números envelhecem calados. É um
  * guarda: `tests/unit/i18n-espanhol-cobre-a-tela` varre o AST de toda tela e

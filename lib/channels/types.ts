@@ -278,10 +278,16 @@ export interface ChannelAdapter {
    * LANÇA quando o transporte recusa, e é de propósito: a decisão de engolir é
    * de quem chama (o indicador é decoração; a mensagem é o produto), e engolir
    * aqui esconderia de todo chamador futuro que a chamada nem chega.
+   *
+   * `emRespostaA`: o id da mensagem RECEBIDA em que o indicador se pendura, no
+   * formato do canal (na Cloud API, o `wamid`). Opcional porque nem todo
+   * transporte ancora em mensagem — mas quem ancora e não o recebe fica em
+   * silêncio, nunca inventa âncora: indicador no lugar errado é pior que nenhum.
    */
   signalTyping?(input: ChannelTenantScope & {
     sessionRef: string;
     recipient: string;
+    emRespostaA?: string | null;
   }): Promise<void>;
 
   /**

@@ -23,6 +23,8 @@ function nativeMime(): string | undefined {
 interface Props {
   conversationId: string;
   disabled?: boolean;
+  /** Avisa quando a gravação começa/termina — o thread mostra "gravando áudio…". */
+  onRecordingChange?: (gravando: boolean) => void;
 }
 
 /**
@@ -40,7 +42,7 @@ interface GravadorDeVoz {
 }
 
 /** Gravação de voz estilo WhatsApp: mic → timer + cancelar/enviar → PTT. */
-export function AudioRecorder({ conversationId, disabled }: Props) {
+export function AudioRecorder({ conversationId, disabled, onRecordingChange }: Props) {
   const t = useT();
   const [recording, setRecording] = useState(false);
   const [elapsed, setElapsed] = useState(0);
@@ -51,6 +53,12 @@ export function AudioRecorder({ conversationId, disabled }: Props) {
   const startingRef = useRef(false);
   const upload = useUploadMedia();
   const send = useSendMessage();
+
+  // O thread mostra "gravando áudio…" enquanto grava — via prop, não via
+  // estado global: só o composer sabe que ESTE gravador está ligado.
+  useEffect(() => {
+    onRecordingChange?.(recording);
+  }, [recording, onRecordingChange]);
 
   useEffect(() => {
     if (!recording) return;

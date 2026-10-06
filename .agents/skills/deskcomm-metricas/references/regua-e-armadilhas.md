@@ -81,7 +81,7 @@ taxas de texto, não confie.
 
 ## Tetos silenciosos
 
-Uso lê no máximo 50 mil linhas; Evolução 50 mil (com aviso); Radar 500 leads. Numa organização
+Uso lê no máximo 50 mil linhas; Evolução 50 mil (com aviso); Kanban 500 leads. Numa organização
 grande, a tela corta; a consulta direta não. Se os números divergirem da tela, é isso antes de
 qualquer outra hipótese.
 

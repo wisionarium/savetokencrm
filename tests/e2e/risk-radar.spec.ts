@@ -1,6 +1,6 @@
 /**
- * Radar de Risco (C1 — desilhamento da doutrina do sistema vivo). Prova, na
- * perspectiva do usuário real: (1) o atendente entra no Radar e VÊ a demanda
+ * Kanban de risco (C1 — desilhamento da doutrina do sistema vivo). Prova, na
+ * perspectiva do usuário real: (1) o atendente entra no Kanban e VÊ a demanda
  * aberta que esfriou (5 dias sem atividade, sem próximo passo) — o que antes
  * morria invisível no engine; (2) ele ASSUME a demanda direto da linha e a
  * responsabilidade passa a ser dele. Login como manager (sem MFA).
@@ -47,16 +47,16 @@ async function login(page: Page, email: string): Promise<void> {
 }
 
 async function gotoRadar(page: Page): Promise<void> {
-  await page.getByRole("link", { name: "Radar" }).click();
+  await page.getByRole("link", { name: "Kanban" }).click();
   await page.waitForURL(/\/app\/radar/);
-  await expect(page.getByRole("heading", { name: "Radar de risco" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Kanban de risco" })).toBeVisible();
 }
 
 function radarItem(page: Page) {
   return page.locator('[data-testid="radar-item"]', { hasText: creds.radar!.at_risk_title });
 }
 
-test("o atendente vê no Radar a demanda aberta que esfriou sem próximo passo", async ({ page }) => {
+test("o atendente vê no Kanban a demanda aberta que esfriou sem próximo passo", async ({ page }) => {
   await login(page, creds.users.manager!.email);
   await gotoRadar(page);
 
@@ -67,7 +67,7 @@ test("o atendente vê no Radar a demanda aberta que esfriou sem próximo passo",
   await expect(item.getByText(/Sem próximo passo/)).toBeVisible();
 });
 
-test("o atendente assume a demanda direto do Radar e vira o responsável", async ({ page }) => {
+test("o atendente assume a demanda direto do Kanban e vira o responsável", async ({ page }) => {
   await login(page, creds.users.manager!.email);
   await gotoRadar(page);
 

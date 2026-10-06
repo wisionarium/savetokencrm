@@ -19,7 +19,7 @@
  *
  * Este bloco dizia "só as telas do dia a dia", e era verdade. Deixou de ser: o
  * PR #352 trouxe IA e Admin, e o passe seguinte fechou Agenda, Desempenho,
- * Radar e Respostas rápidas.
+  * Kanban e Respostas rápidas.
  *
  * Não vale trocar por um número novo — ele envelheceria igual. Quem responde
  * "o que falta" é `tests/unit/i18n-espanhol-cobre-a-tela`, que varre o AST de
@@ -421,7 +421,7 @@ export const DICIONARIO: Traducoes = {
   "Revisar modelos do canal": { es: "Revisar plantillas del canal" },
   "Abrir uma conversa afetada": { es: "Abrir una conversación afectada" },
   "Abrir uso de IA": { es: "Abrir uso de IA" },
-  "Abrir Radar": { es: "Abrir Radar" },
+  "Abrir Kanban": { es: "Abrir Kanban" },
   "Peça a quem administra para revisar a conexão do WhatsApp.": { es: "Pide a quien administra que revise la conexión de WhatsApp." },
   "Confira o motivo deste aviso com quem administra antes de tentar a operação novamente.": { es: "Revisa el motivo de este aviso con quien administra antes de intentar la operación de nuevo." },
   "Peça a quem administra para conferir o processamento descrito neste aviso.": { es: "Pide a quien administra que revise el procesamiento descrito en este aviso." },
@@ -432,8 +432,8 @@ export const DICIONARIO: Traducoes = {
   "Peça ao gestor para revisar o acompanhamento que parou.": { es: "Pide al responsable que revise el seguimiento que se detuvo." },
   "Confira se cabe retomar o atendimento descrito neste aviso.": { es: "Revisa si corresponde retomar la atención descrita en este aviso." },
   "Confira os negócios do contato e escolha a qual deles pertence a próxima ação.": { es: "Revisa los negocios del contacto y elige a cuál pertenece la siguiente acción." },
-  "Revise os negócios parados no Radar e defina o próximo passo.": { es: "Revisa los negocios detenidos en el Radar y define el siguiente paso." },
-  "Revise no Radar se ainda cabe retomar os negócios indicados.": { es: "Revisa en el Radar si todavía corresponde retomar los negocios indicados." },
+  "Revise os negócios parados no Kanban e defina o próximo passo.": { es: "Revisa los negocios detenidos en el Kanban y define el siguiente paso." },
+  "Revise no Kanban se ainda cabe retomar os negócios indicados.": { es: "Revisa en el Kanban si todavía corresponde retomar los negocios indicados." },
   "Peça ao gestor para revisar as ferramentas habilitadas para o assistente deste atendimento.": { es: "Pide al responsable que revise las herramientas habilitadas para el asistente de esta atención." },
   "Confira a resposta que não chegou antes de decidir se precisa enviar novamente.": { es: "Revisa la respuesta que no llegó antes de decidir si debes enviarla de nuevo." },
   "Peça ao gestor para revisar o provedor e as credenciais de leitura de fotos e áudios.": { es: "Pide al responsable que revise el proveedor y las credenciales para leer fotos y audios." },
@@ -529,7 +529,7 @@ export const DICIONARIO: Traducoes = {
   // ─── Navegação (a barra lateral, presente em toda tela) ───
   Inbox: { es: "Inbox" },
   Agenda: { es: "Agenda" },
-  Radar: { es: "Radar" },
+  Kanban: { es: "Kanban" },
   "Respostas rápidas": { es: "Respuestas rápidas" },
   Contatos: { es: "Contactos" },
   // A CHAVE É O TEXTO PT-BR, então renomear um rótulo no registro de navegação
@@ -568,6 +568,10 @@ export const DICIONARIO: Traducoes = {
   "Não lidos": { es: "No leídos" },
   "Não lidas": { es: "No leídas" },
   Lidas: { es: "Leídas" },
+  "está digitando": { es: "está escribiendo" },
+  "gravando áudio": { es: "grabando audio" },
+  "enviando arquivo": { es: "enviando archivo" },
+  "disparando fluxo": { es: "disparando flujo" },
   "Filtrar por leitura": { es: "Filtrar por lectura" },
   "Filtrar por atendente": { es: "Filtrar por agente" },
   "Atendente removido": { es: "Agente eliminado" },
@@ -6917,7 +6921,7 @@ export const DICIONARIO: Traducoes = {
   "Senha deve ter pelo menos 8 caracteres": { es: "La contraseña debe tener al menos 8 caracteres" },
   "As senhas não coincidem": { es: "Las contraseñas no coinciden" },
 
-  // ═══ Agenda, Desempenho, Radar e Respostas rápidas ═══
+  // ═══ Agenda, Desempenho, Kanban e Respostas rápidas ═══
   //
   // Telas que nasceram DEPOIS do primeiro passe de tradução (PR #352) e por
   // isso apareciam inteiras em português para quem escolhia espanhol. Foram
@@ -7040,7 +7044,7 @@ export const DICIONARIO: Traducoes = {
   "crítico": { es: "crítico" },
   "em risco": { es: "en riesgo" },
   "em voo": { es: "en vuelo" },
-  "Radar de risco": { es: "Radar de riesgo" },
+  "Kanban de risco": { es: "Kanban de riesgo" },
   "Demandas abertas que esfriaram e precisam de você. Se o assistente já agendou um retorno, aparece como “em voo”; sem próximo passo, é risco de perder o cliente.": { es: "Demandas abiertas que se enfriaron y te necesitan. Si el asistente ya agendó un retorno, aparece como “en vuelo”; sin próximo paso, es riesgo de perder al cliente." },
   "Scripts salvos para responder mais rápido no atendimento.": { es: "Guiones guardados para responder más rápido en la atención." },
   "Saudação inicial": { es: "Saludo inicial" },
@@ -7299,7 +7303,7 @@ export const DICIONARIO: Traducoes = {
   //
   // Contribuição de @JowaniOrantes: as 398 entradas abaixo são as que o
   // passe dele cobriu e este PR não tinha — Desempenho, auditoria do tenant,
-  // Respostas rápidas, Radar, toasts de hook e as mensagens de erro da API.
+  // Respostas rápidas, Kanban, toasts de hook e as mensagens de erro da API.
   // Onde a mesma chave existia nos dois lados prevalece a tradução deste PR,
   // que é a que a spec de tela e o guarda de AST asseguram — as duas dizem a
   // mesma coisa em espanhol, então a escolha é de consistência, não de mérito.
@@ -7388,7 +7392,7 @@ export const DICIONARIO: Traducoes = {
   "Encerrar impersonate e voltar ao admin": { es: "Terminar impersonate y volver al admin" },
   "Encerrando…": { es: "Terminando…" },
 
-  // ─── Radar de risco ───
+  // ─── Kanban de risco ───
   "parado há": { es: "parado hace" },
   "Agente:": { es: "Agente:" },
   "sem nome": { es: "sin nombre" },

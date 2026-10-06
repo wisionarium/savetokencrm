@@ -449,9 +449,11 @@ function montarTema(
     indices: {
       accent: accent.indice,
       hover: hover.indice,
-      // `--color-accent-soft` no escuro é `rgba(130,160,119,0.16)` — verde Sage CRU, que
-      // sobreviveria intacto a qualquer override da rampa. Sem índice, ele é reancorado
-      // no stop do accent (ver `resolverSoft`); é a única forma de ele acompanhar a marca.
+      // `--color-accent-soft` sai por referência de grau nos dois temas (100 no
+      // claro, 800 no escuro), então ele anda com a rampa. Se um dia voltar a ser
+      // literal translúcido (foi `rgba(…, 0.16)` no escuro), o índice é nulo e ele
+      // é reancorado no stop do accent (ver `superficiesDoTema`): sem isso a tinta
+      // crua sobreviveria intacta a qualquer override da rampa.
       soft: soft.tipo === "grau" ? soft.indice : null,
     },
     // `frenteCalculada` só é construída para token `-fg`, nunca para `-soft`; o ramo
@@ -474,8 +476,9 @@ function resolverFonte(fonte: Fonte, rampa: Rampa, deslocamento: number): { hex:
 /**
  * Toda superfície do tema, já opaca. A tingida translúcida vira N superfícies — uma por
  * base — porque é isso que ela é na tela: `rgba(...)` a 16% sobre `surface-elevated` é
- * outro pixel que sobre `bg`, e a razão de contraste difere (4,99 · 4,59 · 4,02 na Sage
- * escura). Medir só uma delas escolheria a mais folgada por acidente.
+ * outro pixel que sobre `bg`, e a razão de contraste difere. Medir só uma delas
+ * escolheria a mais folgada por acidente. (O produto hoje usa soft opaco nos dois
+ * temas, então este ramo só vive para token translúcido futuro.)
  */
 export function superficiesDoTema(
   tema: TemaDaRegua,
@@ -485,9 +488,9 @@ export function superficiesDoTema(
   const saida = tema.base.map((b) => ({ ...b }));
   for (const t of tema.tingidas) {
     const { hex, alfa } = resolverFonte(t.fonte, rampa, deslocamento);
-    // Fonte literal numa tingida = o token não referencia a rampa (o caso do escuro).
-    // Reancoramos no stop que o tema pinta como accent: é o que faz a marca do cliente
-    // chegar ao chip em vez de o verde do produto ficar lá para sempre.
+    // Fonte literal numa tingida = o token não referencia a rampa. Reancoramos no
+    // stop que o tema pinta como accent: é o que faz a marca do cliente chegar ao
+    // chip em vez de a cor do produto ficar lá para sempre.
     const tinta =
       t.fonte.tipo === "grau" ? hex : stop(rampa, tema.indices.accent + deslocamento);
     if (alfa >= 1) saida.push({ chave: t.chave, hex: tinta });

@@ -20,7 +20,7 @@ const NOME_DA_PORTA: Record<ExtensionPermission, string> = {
   "navigation.kanban": "Funil",
   "navigation.contacts": "Contatos",
   "navigation.agenda": "Agenda",
-  "navigation.radar": "Radar",
+  "navigation.radar": "Kanban",
 };
 
 export function nomeDaPorta(permissao: ExtensionPermission): string {

@@ -54,9 +54,9 @@ describe("CommandPalette", () => {
   it("busca também na descrição, não só no rótulo", async () => {
     const user = userEvent.setup();
     abrir();
-    // Ninguém procura "Radar" por esse nome; procura pelo problema que resolve.
+    // Ninguém procura "Kanban" por esse nome; procura pelo problema que resolve.
     await user.type(screen.getByRole("combobox"), "esfriou");
-    expect(screen.getByRole("option", { name: /Radar/ })).toBeTruthy();
+    expect(screen.getByRole("option", { name: /Kanban/ })).toBeTruthy();
   });
 
   it("respeita o papel", async () => {

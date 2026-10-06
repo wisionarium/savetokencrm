@@ -72,11 +72,11 @@ function captura(page: Page, nome: string) {
   return page.screenshot({ path: path.join(EVIDENCIA, nome), fullPage: true });
 }
 
-test("o retorno marcado pelo agente aparece no Radar e na linha do tempo", async ({ page }) => {
+test("o retorno marcado pelo agente aparece no Kanban e na linha do tempo", async ({ page }) => {
   await login(page, creds.users.manager!.email);
 
   await page.goto("/app/radar");
-  await expect(page.getByRole("heading", { name: "Radar de risco" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Kanban de risco" })).toBeVisible();
 
   const linha = page.locator('[data-testid="radar-item"]', { hasText: creds.retorno.lead_title });
   await expect(linha).toBeVisible();

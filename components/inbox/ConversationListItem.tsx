@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { useLocaleDeData } from "@/hooks/i18n/useLocaleDeData";
 
 import type { Locale } from "date-fns";
@@ -121,7 +122,7 @@ function waitingLabel(
   return `${t("Aguardando")} ${formatDistanceToNowStrict(new Date(since), { addSuffix: true, locale: locale })}`;
 }
 
-export function ConversationListItem({
+export const ConversationListItem = memo(function ConversationListItem({
   conversation,
   isSelected,
   onSelect,
@@ -322,7 +323,7 @@ export function ConversationListItem({
             {mostrarCanal && rotuloCanal && (
               <Badge
                 variant="outline"
-                className="h-4 gap-1 px-1.5 text-[10px] font-normal text-text-muted"
+                className="min-h-4 gap-1 px-1.5 text-[10px] font-normal text-text-muted"
                 title={`${t("Entrou por")} ${rotuloCanal}`}
               >
                 <Phone size={9} weight="regular" aria-hidden />
@@ -330,12 +331,12 @@ export function ConversationListItem({
               </Badge>
             )}
             {c?.is_blocked && (
-              <Badge variant="destructive" className="h-4 px-1.5 text-[10px]">
+              <Badge variant="destructive" className="min-h-4 px-1.5 text-[10px]">
                 {t("Bloqueado")}
               </Badge>
             )}
             {c?.is_anonymized && (
-              <Badge variant="outline" className="h-4 px-1.5 text-[10px]">
+              <Badge variant="outline" className="min-h-4 px-1.5 text-[10px]">
                 {t("Anonimizado")}
               </Badge>
             )}
@@ -347,4 +348,4 @@ export function ConversationListItem({
       </div>
     </button>
   );
-}
+});

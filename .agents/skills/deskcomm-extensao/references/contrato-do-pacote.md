@@ -80,7 +80,7 @@ O vocabulário está em `lib/extensions/capacidades.ts`, e é fechado nos dois l
 | `navigation.kanban` | `kanban.open` | Funil |
 | `navigation.contacts` | `contacts.open` | Contatos |
 | `navigation.agenda` | `agenda.open` | Agenda |
-| `navigation.radar` | `radar.open` | Radar |
+| `navigation.radar` | `radar.open` | Kanban |
 
 **Toda capacidade usada num card tem de estar coberta por uma permissão declarada.** Usar
 `inbox.open` sem declarar `navigation.inbox` é recusado — na instalação, na ativação e na leitura.

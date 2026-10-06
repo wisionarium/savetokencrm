@@ -67,7 +67,7 @@ const TELAS = ["/app/inbox", "/app/kanban", "/app/contacts", "/app/metrics", "/a
 /**
  * Chaves que o dicionário traduz de verdade — o espanhol DIFERE do português.
  *
- * As que não diferem ("CRM", "Inbox", "Webhooks", "Radar") são inúteis como
+ * As que não diferem ("CRM", "Inbox", "Webhooks", "Kanban") são inúteis como
  * régua: aparecer igual nos dois idiomas é o comportamento correto delas, e
  * incluí-las produziria acusação em cima do que está certo.
  */

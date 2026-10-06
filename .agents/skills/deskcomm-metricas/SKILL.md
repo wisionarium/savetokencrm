@@ -8,7 +8,7 @@ metadata:
 
 # Analisar as métricas de uma instalação
 
-O produto mostra números em várias telas — Desempenho, Radar de risco, Uso e orçamento, Evolução
+O produto mostra números em várias telas — Desempenho, Kanban de risco, Uso e orçamento, Evolução
 da IA, Execuções, Atividades — e cada uma usa a própria régua: "handoff" tem **três definições**
 diferentes em três telas; "ganho" é `crm_leads` numa e a transição do agente noutra; um dia é UTC
 numa tela e o fuso da organização em outra. Um analista que soma números de telas diferentes

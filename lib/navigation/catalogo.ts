@@ -105,7 +105,7 @@ export const NAV_CATALOG = [
   },
   {
     href: "/app/radar",
-    label: "Radar",
+    label: "Kanban",
     description: "Quem esfriou e ainda está aberto — o que corre risco de morrer sem resposta.",
     icon: "ClockCountdown",
     group: "atendimento",

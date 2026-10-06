@@ -57,7 +57,7 @@ ferramenta ainda não existe: [`references/decidir-nucleo-ou-extensao.md`](refer
 descrição, blocos de texto e **um botão**, e esse botão abre uma tela que o CRM já tem. Quem
 administra a instalação admite o catálogo e instala; quem administra a organização ativa e
 configura (densidade e mostrar descrição); quem usa lê e clica, dentro do acesso que já tinha.
-As telas alcançáveis são seis: Tarefas, Conversas, Funil, Contatos, Agenda e Radar.
+As telas alcançáveis são seis: Tarefas, Conversas, Funil, Contatos, Agenda e Kanban.
 
 **O que ela não faz — e nenhuma dessas é "ainda não implementei":**
 

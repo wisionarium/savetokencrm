@@ -1,6 +1,10 @@
 # 02 — Paleta Sage
 
 > **Source of truth:** `app/design/lib/tokens.ts` → `PALETTES.sage`
+>
+> **Nota:** a Sage segue existindo como opção da galeria, mas o accent do
+> produto é a **Oceano** (`PALETTES.oceano`, semente `#1e3a5f`) — ver
+> `app/globals.css`. Os stops abaixo continuam valendo para a Sage da galeria.
 
 ## Filosofia da paleta
 

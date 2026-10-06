@@ -164,6 +164,12 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
   const [selectedId, setSelectedId] = useState<string | null>(initialSelectedId);
   const [visibleIds, setVisibleIds] = useState<string[]>([]);
   const [helpOpen, setHelpOpen] = useState(false);
+  /**
+   * Um fluxo de disparo está rodando (POST ainda não voltou). Mora aqui porque
+   * quem DISPARA é o composer (o diálogo vive nele) e quem MOSTRA ("disparando
+   * fluxo…" no fio) é o thread — irmãos, estado do pai.
+   */
+  const [fluxoDisparando, setFluxoDisparando] = useState(false);
   /** A ficha do contato como painel deslizante — só existe abaixo do `xl`. */
   const [fichaAberta, setFichaAberta] = useState(false);
   /**
@@ -490,6 +496,7 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
               <ChatThread
                 conversationId={selectedConversation.id}
                 onResponder={setRespondendo}
+                disparandoFluxo={fluxoDisparando}
                 // O cartão da passagem escolhe o gesto a partir de quem é o dono
                 // da conversa: sem dono convida a assumir, com outro dono diz
                 // quem atende. Sem estes dois campos ele cairia no estado mais
@@ -518,6 +525,7 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
               contactName={selectedConversation.contacts?.name ?? null}
               respondendo={respondendo}
               onCancelarResposta={() => setRespondendo(null)}
+              onFluxoDisparandoChange={setFluxoDisparando}
               currentContactId={selectedConversation.contact_id}
             />
           </>

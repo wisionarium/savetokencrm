@@ -2,6 +2,8 @@
 import { useT } from "@/hooks/i18n/useT";
 import {
   forwardRef,
+  useCallback,
+  useEffect,
   useImperativeHandle,
   useRef,
   useState,
@@ -24,6 +26,9 @@ import { useMessageTemplates, type MessageTemplate } from "@/hooks/inbox/useMess
 import { X } from "lucide-react";
 import { useSendMessage } from "@/hooks/inbox/useSendMessage";
 import { useUploadMedia } from "@/hooks/inbox/useUploadMedia";
+import { useDigitacao } from "@/hooks/inbox/useDigitacao";
+import { useUser } from "@/hooks/auth/AuthProvider";
+import { apiClient } from "@/lib/api/client";
 import { imagemDoClipboard } from "@/lib/inbox/clipboard-image";
 import { interpolateTemplate } from "@/lib/inbox/template-vars";
 import { cn } from "@/lib/utils";
@@ -58,6 +63,12 @@ interface Props {
   onCancelarResposta?: () => void;
   /** Nome do contato da conversa, para interpolar {{nome}}/{{primeiro_nome}} do template escolhido. */
   contactName?: string | null;
+  /**
+   * O fluxo de disparo está no ar (POST ainda não voltou). Sobe para o layout,
+   * que acende "disparando fluxo…" no thread — o diálogo mora aqui, o fio mora
+   * no irmão, e o estado comum é do pai.
+   */
+  onFluxoDisparandoChange?: (disparando: boolean) => void;
   /** Contato da conversa — excluído do seletor de cartão compartilhado. */
   currentContactId?: string | null;
 }
@@ -72,10 +83,20 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
     currentContactId,
     respondendo,
     onCancelarResposta,
+    onFluxoDisparandoChange,
   },
   ref,
 ) {
   const t = useT();
+  const usuario = useUser();
+  const primeiroNome =
+    usuario.full_name?.trim().split(/\s+/)[0] || t("Atendente");
+  // O thread mostra "Fulano está digitando" para os outros olhos na conversa.
+  // O próprio aviso nunca volta (`self: false` + filtro por id no hook).
+  const { avisar } = useDigitacao(conversationId, {
+    userId: usuario.id,
+    nome: primeiroNome,
+  });
   const [text, setText] = useState("");
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [contactPickerOpen, setContactPickerOpen] = useState(false);
@@ -102,6 +123,45 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
   // nota interna nunca chega ao cliente, e é onde o atendente registra por que
   // a conversa esfriou — barrá-la tira exatamente o que ainda dá para fazer.
   const respostaBarrada = isDisabled || (mode === "reply" && !!janelaFechada);
+
+  /**
+   * Acende o "digitando…" no APARELHO do cliente, throttled em ~15s.
+   *
+   * O indicador da Meta cai sozinho em ~25s, então 15s o mantém aceso sem
+   * rajada — e cada chamada é um SELECT barato + talvez um POST, nunca erro
+   * na cara de quem digita (a rota é fail-soft de propósito). Só em resposta:
+   * nota interna e campo vazio não acendem nada no cliente.
+   */
+  const ultimoWppRef = useRef(0);
+  const avisarWhatsApp = useCallback(() => {
+    const agora = Date.now();
+    if (agora - ultimoWppRef.current < 15_000) return;
+    ultimoWppRef.current = agora;
+    void apiClient
+      .post(`/api/v1/conversations/${conversationId}/typing`, {})
+      .catch(() => {});
+  }, [conversationId]);
+
+  function avisarDigitando(textoAtual: string) {
+    if (mode !== "reply" || respostaBarrada || !textoAtual.trim()) return;
+    // CRM (outros olhos na conversa) + WhatsApp (aparelho do cliente).
+    avisar("text");
+    avisarWhatsApp();
+  }
+
+  // Arquivo em preview = "enviando arquivo…" para os outros olhos. O efeito
+  // (e não a chamada direta no setter) porque o arquivo chega por três portas
+  // (menu +, Ctrl+V, galeria) e nenhuma pode esquecer de avisar.
+  useEffect(() => {
+    if (pendingFile) avisar("file");
+  }, [pendingFile, avisar]);
+
+  const avisarGravando = useCallback(
+    (gravando: boolean) => {
+      if (gravando) avisar("audio");
+    },
+    [avisar],
+  );
 
   function autoresize() {
     const ta = taRef.current;
@@ -314,6 +374,10 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
               setText(e.target.value);
               if (!resolveSlash(e.target.value).open) setMenuDismissed(false);
               autoresize();
+              // Digitou com conteúdo = "está digitando" nos dois lados. O hook
+              // throttla o broadcast (~2,5s) e a rota o WhatsApp (~15s); nota
+              // interna e campo vazio não acendem nada (ver `avisarDigitando`).
+              avisarDigitando(e.target.value);
             }}
             onKeyDown={onKeyDown}
             onPaste={onPaste}
@@ -357,7 +421,11 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
               <PaperPlaneTilt size={16} weight="fill" aria-hidden />
             </Button>
           ) : (
-            <AudioRecorder conversationId={conversationId} disabled={respostaBarrada} />
+            <AudioRecorder
+              conversationId={conversationId}
+              disabled={respostaBarrada}
+              onRecordingChange={avisarGravando}
+            />
           )}
         </div>
       </div>
@@ -413,6 +481,7 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
         open={dispatchFlowsOpen}
         onOpenChange={setDispatchFlowsOpen}
         conversationId={conversationId}
+        onDisparandoChange={onFluxoDisparandoChange}
       />
       <SeletorDaGaleria
         open={galeriaOpen}

@@ -10,18 +10,10 @@ export const metadata: Metadata = { title: "Configurações" };
  * Hub de Organização.
  *
  * A lista de cards que vivia aqui era uma segunda navegação escrita à mão, e
- * divergia do sidebar — Funis, Conexões e Audit Log apareciam como se fossem
- * configuração, quando são CRM, Canais e Análise. Agora o conteúdo vem do
- * registro, e o que sobra aqui é o que de fato é organização: sua conta, sua
- * empresa, e quem tem acesso ao quê.
- *
- * O card-ponte para "Canal oficial (Meta) e templates" que a `main` manteve
- * aqui NÃO foi perdido no merge — ele foi promovido. A ponte existia porque
- * conectar canal tinha duas respostas dependendo do WhatsApp, e quem já sabia
- * procurar em Configurações precisava continuar achando. Com o registro, o
- * grupo CANAIS fica visível no sidebar para todo admin e o ⌘K acha "canal
- * oficial" por nome — a pergunta passa a ter um lugar só, que é o que a ponte
- * tentava ensinar apontando para outro.
+ * divergia do sidebar. Agora o conteúdo vem do registro, e o que sobra aqui é
+ * o que de fato é organização e configuração sensível: sua conta, sua empresa
+ * (Conexões, Provedores, Roteadores), e quem tem acesso ao quê — decisão do
+ * dono em 2026-10-06. Funis e Audit Log continuam fora: são CRM e Análise.
  */
 export default async function SettingsHubPage() {
   const user = await requireAuth();

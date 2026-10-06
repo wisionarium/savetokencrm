@@ -135,7 +135,7 @@ export async function enviarAvisoDeTeste(
   const body = montarAvisoDeTeste({
     marca: marca.nome,
     idioma: marca.idioma,
-    link: `${deps.urlPublica.replace(/\/+$/, "")}/app/ai/cases`,
+    link: `${deps.urlPublica.replace(/\/+$/, "")}/app/ai/inbox`,
   });
 
   // ── 14. O transporte ─────────────────────────────────────────────────────

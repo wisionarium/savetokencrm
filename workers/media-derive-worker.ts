@@ -380,7 +380,7 @@ function buildDeriveDeps(
       const motivo = visao.sabemos
         ? `o modelo ${llm.defaultModel ?? "configurado"} não enxerga imagens`
         : `não sei se o modelo ${llm.defaultModel ?? "configurado"} enxerga imagens, ` +
-          `então não arrisquei enviar a foto — escolha um modelo do catálogo em Agente de IA → Provedores`;
+          `então não arrisquei enviar a foto — escolha um modelo do catálogo em Configurações → Provedores`;
       await avisarMidiaNaoLida(orgId, "imagem", motivo);
       return MARCADOR_NAO_LIDA;
     }
@@ -541,7 +541,7 @@ export function textoDoAvisoDeMidiaNaoLida(aviso: {
     title: `O agente não conseguiu ler ${aviso.tipo} que o cliente enviou`,
     body:
       `Motivo: ${aviso.motivo}. ${aviso.consequencia} ` +
-      `Para resolver, ajuste o modelo desse ponto em Agente de IA → Provedores, ou cadastre a chave necessária em Credenciais.` +
+      `Para resolver, ajuste o modelo desse ponto em Configurações → Provedores, ou cadastre a chave necessária em Credenciais.` +
       (aviso.detalheTecnico ? ` ${DETALHE_TECNICO} ${aviso.detalheTecnico}` : ""),
   };
 }

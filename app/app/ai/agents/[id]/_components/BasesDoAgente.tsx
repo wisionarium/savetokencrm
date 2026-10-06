@@ -33,7 +33,6 @@ import { useT } from "@/hooks/i18n/useT";
  *     assistente em nenhum aviso.
  */
 import * as React from "react";
-import Link from "next/link";
 
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -104,12 +103,7 @@ export function BasesDoAgente({ materiais, value, onChange, disabled = false }: 
       {visiveis.length === 0 ? (
         <p className="text-xs text-muted-foreground" data-testid="agente-sem-acervo">
           {t("Você ainda não cadastrou nenhum material.")}{" "}
-          <Link
-            href="/app/ai/knowledge/sources"
-            className="font-medium text-foreground underline underline-offset-4"
-          >
-            {t("Comece pelo que ele mais vai precisar")}
-          </Link>{" "}
+          {t("Comece pelo que ele mais vai precisar")}{" "}
           {t("— as perguntas que se repetem, e a política que você mais explica.")}
         </p>
       ) : (
@@ -195,13 +189,7 @@ export function BasesDoAgente({ materiais, value, onChange, disabled = false }: 
         <p data-testid="agente-base-sem-preparo" className="text-xs text-warning-fg">
           {semPreparo.length === 1
             ? `"${semPreparo[0]?.name}" ${t("está marcado mas ainda não foi preparado — o agente não vai achar nada nele.")}`
-            : `${semPreparo.length} ${t("materiais marcados ainda não foram preparados — o agente não vai achar nada neles.")}`}{" "}
-          <Link
-            href="/app/ai/knowledge/sources"
-            className="font-medium text-foreground underline underline-offset-4"
-          >
-            {t("Ver o acervo")}
-          </Link>
+            : `${semPreparo.length} ${t("materiais marcados ainda não foram preparados — o agente não vai achar nada neles.")}`}
         </p>
       ) : null}
     </Card>

@@ -10,7 +10,7 @@ export type DestinoDoAviso =
   | { estado: "sem_permissao" | "indisponivel" | "sem_destino"; orientacao: string };
 
 interface ReferenciaDoAviso { kind: string; ref_kind: string | null; ref_id: string | null }
-interface Alvo { tabela: string; papel: Role; rotulo: string; href: (id: string, pipelineId?: string) => string; ativo?: boolean }
+interface Alvo { tabela: string; papel: Role; rotulo: string; href: (id: string, pipelineId?: string, conversaId?: string) => string; ativo?: boolean }
 
 /** Apenas entidades que têm produtor e superfície atual; agenda nasce com a Task 6. */
 export const REFERENCIAS_DE_AVISO = {
@@ -21,8 +21,11 @@ export const REFERENCIAS_DE_AVISO = {
   lead: { tabela: "crm_leads", papel: "agent", rotulo: "Abrir negócio", href: (id: string, pipelineId?: string) => `/app/pipelines/${pipelineId}?lead=${id}` },
   followup_enrollment: { tabela: "followup_enrollments", papel: "viewer", rotulo: "Abrir acompanhamento", href: (id: string) => `/app/ai/followups/enrollments/${id}` },
   channel_session: { tabela: "channel_sessions", papel: "admin", rotulo: "Revisar conexão", href: () => "/app/connections", ativo: true },
-  ai_knowledge_source: { tabela: "ai_knowledge_sources", papel: "manager", rotulo: "Abrir base de conhecimento", href: () => "/app/ai/knowledge/sources" },
-  agent_case: { tabela: "agent_cases", papel: "agent", rotulo: "Abrir atendimento", href: (id: string) => `/app/ai/cases?caso=${id}` },
+  // O caso abre NA CONVERSA do inbox (e lá que se responde), não numa tela
+  // própria — as páginas de Casos saíram da navegação. Sem conversa
+  // (não deveria acontecer: a coluna é NOT NULL), cai na Central em vez
+  // de inventar destino.
+  agent_case: { tabela: "agent_cases", papel: "agent", rotulo: "Abrir atendimento", href: (id: string, _pipelineId?: string, conversaId?: string) => conversaId ? `/app/inbox/${conversaId}` : "/app/ai/inbox" },
   // O PONTEIRO do fluxo, não a inscrição: o aviso de `followup_sem_agente` é
   // sobre um fluxo que não tem inscrição nenhuma — é exatamente essa a queixa.
   // `manager` é a mesma régua da aba Fluxos (`canWrite` em FlowsList).
@@ -80,7 +83,10 @@ export const POLITICAS_DE_AVISO = {
   canal_mudo_sem_numero: { refs: ["channel_session"], orientacao: "Peça a quem administra para autorizar os números de teste em Conexões ou abrir o canal ao público." },
   promise_unfulfilled: { refs: ["conversation"], orientacao: "Confira o compromisso descrito e defina quem fica responsável." },
   contact_proposal_expired: { refs: ["organization"], orientacao: "A sugestão venceu. Se a informação ainda for relevante, confirme com o cliente antes de editar sua ficha." },
-  conhecimento_nao_indexado: { refs: ["ai_knowledge_source"], orientacao: "Peça ao gestor para conferir o material e o motivo da falha na base de conhecimento." },
+  // Sem refs: as páginas de Conhecimento saíram da navegação, então
+  // não há destino a oferecer — o aviso segue existindo com a orientação.
+  // Itens antigos que ainda trazem o ref caem em INDISPONIVEL abaixo.
+  conhecimento_nao_indexado: { refs: [], orientacao: "Peça ao gestor para conferir o material e o motivo da falha na base de conhecimento." },
   // Aponta para o CONTATO, e não para a chamada: a ficha do contato é onde mora
   // o botão de ligar (`components/voice/DialButton.tsx`), então "abrir o
   // contexto" e "fazer o que o aviso pede" viram o mesmo clique. Uma tela de
@@ -148,10 +154,11 @@ export async function resolverDestinosDosAvisos<T extends ReferenciaDoAviso>(
   }
   const visiveis = new Map<string, Set<string>>();
   const funilPorLead = new Map<string, string>();
+  const conversaPorCaso = new Map<string, string>();
   await Promise.all([...grupos].map(async ([ref, ids]) => {
     const a = alvo(ref)!;
     try {
-      let query = leitor.from(a.tabela).select(ref === "lead" ? "id, pipeline_id" : "id").eq("organization_id", organizationId).in("id", [...ids]);
+      let query = leitor.from(a.tabela).select(ref === "lead" ? "id, pipeline_id" : ref === "agent_case" ? "id, conversation_id" : "id").eq("organization_id", organizationId).in("id", [...ids]);
       if (a.ativo) query = query.is("archived_at", null);
       const { data, error } = await query;
       if (error) throw new Error("consulta_indisponivel");
@@ -167,6 +174,12 @@ export async function resolverDestinosDosAvisos<T extends ReferenciaDoAviso>(
           for (const lead of leads) if (permitidos.has(lead.pipeline_id)) funilPorLead.set(lead.id, lead.pipeline_id);
         }
         visiveis.set(ref, new Set(funilPorLead.keys()));
+      } else if (ref === "agent_case") {
+        const casos = (data ?? []) as unknown as Array<{ id: string; conversation_id: string | null }>;
+        for (const caso of casos) {
+          if (uuid.safeParse(caso.conversation_id).success) conversaPorCaso.set(caso.id, caso.conversation_id as string);
+        }
+        visiveis.set(ref, new Set(casos.map(linha => linha.id)));
       } else visiveis.set(ref, new Set(((data ?? []) as unknown as Array<{ id: string }>).map(linha => linha.id)));
     } catch {
       // Somente catálogo fechado e contagem. Nunca erro bruto, título, UUID ou payload.
@@ -188,7 +201,7 @@ export async function resolverDestinosDosAvisos<T extends ReferenciaDoAviso>(
         if (a) {
           destination = !permite(papel, a.papel) ? semPermissao(a.papel)
             : visiveis.get(item.ref_kind!)?.has(item.ref_id!)
-              ? { estado: "disponivel", rotulo: ROTULO_POR_KIND[item.kind] ?? a.rotulo, href: a.href(item.ref_id!, funilPorLead.get(item.ref_id!)) }
+              ? { estado: "disponivel", rotulo: ROTULO_POR_KIND[item.kind] ?? a.rotulo, href: a.href(item.ref_id!, funilPorLead.get(item.ref_id!), conversaPorCaso.get(item.ref_id!)) }
               : INDISPONIVEL;
         } else if (item.ref_kind === "ai_budget" || item.ref_kind === "organization") {
           destination = item.ref_id !== organizationId ? INDISPONIVEL

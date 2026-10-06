@@ -125,18 +125,34 @@ describe("o elo que some sem barulho", () => {
     // caso só olhava a chamada e o sabote passou.
     //
     // A resposta não sai mais direto de `withConversas`: a cadeia é
-    // withConversas → withMarcadoresDoContato → resposta. Exigir o texto
-    // `leads: leadsComConversa.leads` reprovava quem acrescentava uma etapa
-    // CERTA depois dela; o que importa é o resultado dela alimentar a próxima,
-    // e a resposta sair da última.
+    // withConversas → withEngajamento → withMarcadoresDoContato → resposta.
+    // Exigir o texto `leads: leadsComConversa.leads` reprovava quem acrescentava
+    // uma etapa CERTA depois dela; o que importa é o resultado dela alimentar
+    // a próxima, e a resposta sair da última.
     expect(
       fonte,
-      "o resultado de withConversas não alimenta withMarcadoresDoContato (cadeia: withConversas → withMarcadoresDoContato → resposta)",
-    ).toMatch(/withMarcadoresDoContato\(\s*supabase,[\s\S]*?leadsComConversa\.leads/);
+      "o resultado de withConversas não alimenta withEngajamento (cadeia: withConversas → withEngajamento → withMarcadoresDoContato → resposta)",
+    ).toMatch(/withEngajamento\(\s*supabase,[\s\S]*?leadsComConversa\.leads/);
+    expect(
+      fonte,
+      "o resultado de withEngajamento não alimenta withMarcadoresDoContato (cadeia: withConversas → withEngajamento → withMarcadoresDoContato → resposta)",
+    ).toMatch(/withMarcadoresDoContato\(\s*supabase,[\s\S]*?leadsComEngajamento\.leads/);
     expect(
       fonte,
       "a resposta não sai da última etapa (cadeia: withConversas → withMarcadoresDoContato → resposta)",
     ).toMatch(/leads:\s*leadsComMarcadores\.leads/);
+  });
+
+  it("a rota anexa o total de inbound — sem isso o foguinho nunca tem o que ler", () => {
+    // Mesma classe do caso acima: `engajamentoDaConversa` no card leria
+    // `inbound_total` ausente como 0 e a chama jamais acenderia, com o
+    // componente perfeito e o dado não chegando.
+    const fonte = readFileSync("app/api/v1/pipelines/[id]/board/route.ts", "utf8");
+    expect(fonte, "falta withEngajamento").toContain("withEngajamento");
+    expect(fonte, "withEngajamento não foi chamada").toMatch(
+      /leadsComEngajamento\s*=\s*await withEngajamento/,
+    );
+    expect(fonte, "withEngajamento não grava inbound_total").toContain("inbound_total");
   });
 
   it("a mais RECENTE por contato — não a primeira que o banco devolver", () => {

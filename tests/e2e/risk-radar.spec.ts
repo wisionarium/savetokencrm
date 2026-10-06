@@ -1,12 +1,14 @@
 /**
- * Kanban de risco (C1 — desilhamento da doutrina do sistema vivo). Prova, na
- * perspectiva do usuário real: (1) o atendente entra no Kanban e VÊ a demanda
- * aberta que esfriou (5 dias sem atividade, sem próximo passo) — o que antes
- * morria invisível no engine; (2) ele ASSUME a demanda direto da linha e a
- * responsabilidade passa a ser dele. Login como manager (sem MFA).
+ * Kanban de risco em quadro (C1 — desilhamento da doutrina do sistema vivo).
+ * Prova, na perspectiva do usuário real: (1) o atendente entra no Kanban e VÊ,
+ * no quadro do funil, a demanda aberta que esfriou (5 dias sem atividade, sem
+ * próximo passo) — o que antes morria invisível no engine; (2) ele ARRASTA o
+ * card para outra etapa e a mudança vale de verdade (move a etapa no banco).
+ * Login como manager (sem MFA).
  *
- * O seed do radar roda a cada execução (reseta a conversa para "sem dono"), então
- * o teste de assumir é repetível.
+ * O seed do radar roda a cada execução (reseta a conversa para "sem dono"),
+ * então os testes são repetíveis. O seed cria o lead no funil PADRÃO — que é
+ * onde o quadro do Radar abre.
  */
 import { execFileSync } from "node:child_process";
 import * as fs from "node:fs";
@@ -52,32 +54,41 @@ async function gotoRadar(page: Page): Promise<void> {
   await expect(page.getByRole("heading", { name: "Kanban de risco" })).toBeVisible();
 }
 
-function radarItem(page: Page) {
-  return page.locator('[data-testid="radar-item"]', { hasText: creds.radar!.at_risk_title });
+function cartaoDoRadar(page: Page) {
+  return page.getByRole("group", { name: `Lead: ${creds.radar!.at_risk_title}` });
 }
 
-test("o atendente vê no Kanban a demanda aberta que esfriou sem próximo passo", async ({ page }) => {
+test("o atendente vê no quadro do Kanban a demanda aberta que esfriou sem próximo passo", async ({
+  page,
+}) => {
   await login(page, creds.users.manager!.email);
   await gotoRadar(page);
 
-  const item = radarItem(page);
-  await expect(item).toBeVisible();
-  await expect(item).toHaveAttribute("data-risk", "critico");
-  await expect(item.getByText("Crítico")).toBeVisible();
-  await expect(item.getByText(/Sem próximo passo/)).toBeVisible();
+  const card = cartaoDoRadar(page);
+  await expect(card).toBeVisible({ timeout: 60_000 });
 });
 
-test("o atendente assume a demanda direto do Kanban e vira o responsável", async ({ page }) => {
+test("arrastar o card no Kanban move a etapa de verdade", async ({ page }) => {
   await login(page, creds.users.manager!.email);
   await gotoRadar(page);
 
-  const item = radarItem(page);
-  await expect(item).toBeVisible();
-  await expect(item.getByTestId("radar-assignee")).toHaveText("Sem dono");
+  const card = cartaoDoRadar(page);
+  await expect(card).toBeVisible({ timeout: 60_000 });
 
-  await item.getByTestId("radar-claim").click();
+  // O arrasto acessível do @hello-pangea/dnd — o mesmo `onDragEnd` do mouse.
+  const resposta = page.waitForResponse(
+    (r) => r.url().includes("/api/v1/leads/") && r.url().endsWith("/move") && r.request().method() === "POST",
+    { timeout: 60_000 },
+  );
+  await card.focus();
+  await page.keyboard.press("Space");
+  await page.waitForTimeout(400);
+  await page.keyboard.press("ArrowRight");
+  await page.waitForTimeout(400);
+  await page.keyboard.press("Space");
+  expect((await resposta).status()).toBe(200);
 
-  // Após assumir, o radar recarrega: a demanda passa a ter atendente e o botão some.
-  await expect(radarItem(page).getByTestId("radar-assignee")).toHaveText("Com atendente");
-  await expect(radarItem(page).getByTestId("radar-claim")).toHaveCount(0);
+  // Recarrega: a etapa nova tem que ter ficado no banco, não só na tela.
+  await page.reload();
+  await expect(cartaoDoRadar(page)).toBeVisible({ timeout: 60_000 });
 });

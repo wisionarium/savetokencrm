@@ -56,22 +56,26 @@ describe("NavHub", () => {
     },
   };
 
-  it("apresenta a IA nas três etapas da jornada, na ordem", () => {
+  it("apresenta a IA nas etapas da jornada, na ordem", () => {
     render(<NavHub group="ia" isPlatformAdmin role={null} title="Agente de IA" subtitle="" />);
     const secoes = screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent?.trim());
-    expect(secoes).toEqual(["Montar o agente", "Ensinar o agente", "Acompanhar o agente"]);
+    expect(secoes).toEqual(["Montar o agente", "Acompanhar o agente"]);
   });
 
-  it("desenterra Conhecimento, que só existia atrás das abas", () => {
-    render(<NavHub group="ia" isPlatformAdmin role={null} title="Agente de IA" subtitle="" />);
-    const link = screen.getByRole("link", { name: /Conhecimento/ });
-    expect(link).toHaveAttribute("href", "/app/ai/knowledge/sources");
+  it("desenterra Provedores no hub Configurações", () => {
+    render(
+      <NavHub group="organizacao" isPlatformAdmin role={null} title="Configurações" subtitle="" />,
+    );
+    const link = screen.getByRole("link", { name: /Provedores/ });
+    expect(link).toHaveAttribute("href", "/app/ai/providers");
   });
 
   it("cada card explica para que serve — é o que o sidebar não cabe dizer", () => {
-    render(<NavHub group="ia" isPlatformAdmin role={null} title="Agente de IA" subtitle="" />);
-    const link = screen.getByRole("link", { name: /Conhecimento/ });
-    expect(link.textContent).toMatch(/consulta antes de responder/i);
+    render(
+      <NavHub group="organizacao" isPlatformAdmin role={null} title="Configurações" subtitle="" />,
+    );
+    const link = screen.getByRole("link", { name: /Provedores/ });
+    expect(link.textContent).toMatch(/o que acontece se ela falhar/i);
   });
 
   it("mostra também o que já está no sidebar — é inventário, não sobra", () => {
@@ -96,9 +100,9 @@ describe("NavHub", () => {
 
   it("agrupa os cards sob a própria seção, não numa lista solta", () => {
     render(<NavHub group="ia" isPlatformAdmin role={null} title="Agente de IA" subtitle="" />);
-    const ensinar = screen.getByRole("region", { name: "Ensinar o agente" });
-    expect(within(ensinar).getByRole("link", { name: /Memória/ })).toBeTruthy();
-    expect(within(ensinar).queryByRole("link", { name: /Credenciais/ })).toBeNull();
+    const acompanhar = screen.getByRole("region", { name: "Acompanhar o agente" });
+    expect(within(acompanhar).getByRole("link", { name: /Alertas/ })).toBeTruthy();
+    expect(within(acompanhar).queryByRole("link", { name: /Credenciais/ })).toBeNull();
   });
 
   it("traduz o conteúdo do hub quando a página entrega o idioma", () => {
@@ -118,12 +122,14 @@ describe("NavHub", () => {
     ).toBeTruthy();
     expect(screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent?.trim())).toEqual([
       "Configurar el agente",
-      "Enseñar al agente",
       "Acompañar al agente",
     ]);
     expect(
-      screen.getByRole("link", { name: /Credenciales.*La clave del proveedor de IA/ }),
+      screen.getByRole("link", { name: /Alertas/ }),
     ).toBeTruthy();
+    // Uso e orçamento saiu do grupo IA para a Análise (decisão do dono,
+    // 2026-10-06) — não há mais link dele neste hub.
+    expect(screen.queryByRole("link", { name: /Uso y presupuesto/ })).toBeNull();
   });
 
   it("todo texto registrado no hub de IA tem tradução em espanhol", () => {

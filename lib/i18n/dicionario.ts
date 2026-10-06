@@ -811,6 +811,13 @@ export const DICIONARIO: Traducoes = {
   // gate i18n-espanhol-cobre-a-tela quitada junto).
   "Fluxos de IA": { es: "Flujos de IA" },
   "Fluxos de disparo": { es: "Flujos de disparo" },
+  "Os fluxos do agente num lugar só: follow-up, disparo e automação.": {
+    es: "Los flujos del agente en un solo lugar: follow-up, disparo y automatización.",
+  },
+  "Fluxo de automação": { es: "Flujo de automatización" },
+  "Follow-up, disparo e automação num lugar só — fora da configuração dos agentes.": {
+    es: "Follow-up, disparo y automatización en un solo lugar — fuera de la configuración de los agentes.",
+  },
   "Imagem do produto (opcional)": { es: "Imagen del producto (opcional)" },
   "Cole a URL da imagem ou dê Ctrl+V...": {
     es: "Pega la URL de la imagen o pulsa Ctrl+V...",
@@ -2650,6 +2657,7 @@ export const DICIONARIO: Traducoes = {
   "Ver aprendizados arquivados": { es: "Ver aprendizajes archivados" },
   "Ver aprendizados ativos": { es: "Ver aprendizajes activos" },
   "Ver habilidades disponíveis": { es: "Ver habilidades disponibles" },
+  "Seu agente ainda não aprendeu nada neste período. Ele aprende quando você aprova uma sugestão de melhoria na aba Propostas do agente.": { es: "Tu agente aún no ha aprendido nada en este período. Aprende cuando apruebas una sugerencia de mejora en la pestaña Propuestas del agente." },
   "Ver sugestões de melhoria": { es: "Ver sugerencias de mejora" },
   "Ver só as falhas": { es: "Ver solo las fallas" },
   "Você ainda não cadastrou nenhuma chave de provedor. Enquanto isso, tudo usa a chave que veio na instalação.": {
@@ -3027,8 +3035,8 @@ export const DICIONARIO: Traducoes = {
   "A IA parou porque o gasto do mês atingiu o limite que você definiu. Ajuste o limite (ou desligue a parada) em Uso de IA › Orçamento.": {
     es: "La IA se detuvo porque el gasto del mes llegó al límite que definiste. Ajusta el límite (o apaga la parada) en Uso de IA › Presupuesto.",
   },
-  "A chamada foi recusada porque este ponto usa um endereço próprio e a empresa não tem chave cadastrada para ele — a chave da instalação não vai para endereço escolhido pela empresa. Cadastre a chave da empresa em Agente de IA › Provedores, ou tire o endereço próprio do ponto.": {
-    es: "La llamada fue rechazada porque este punto usa una dirección propia y la empresa no tiene clave registrada para él — la clave de la instalación no va a una dirección elegida por la empresa. Registra la clave de la empresa en Agente de IA › Proveedores, o quita la dirección propia del punto.",
+  "A chamada foi recusada porque este ponto usa um endereço próprio e a empresa não tem chave cadastrada para ele — a chave da instalação não vai para endereço escolhido pela empresa. Cadastre a chave da empresa em Configurações › Provedores, ou tire o endereço próprio do ponto.": {
+    es: "La llamada fue rechazada porque este punto usa una dirección propia y la empresa no tiene clave registrada para él — la clave de la instalación no va a una dirección elegida por la empresa. Registra la clave de la empresa en Configuración › Proveedores, o quita la dirección propia del punto.",
   },
   "Não conseguimos classificar esta falha. A mensagem original do provedor está abaixo.": {
     es: "No pudimos clasificar esta falla. El mensaje original del proveedor está abajo.",
@@ -5425,7 +5433,7 @@ export const DICIONARIO: Traducoes = {
   "Ele roda no seu próprio servidor. Dá para seguir sem ele agora e conectar o número depois, em": {
     es: "Corre en tu propio servidor. Se puede seguir sin él ahora y conectar el número después, en",
   },
-  "Canais › Conexões": { es: "Canales › Conexiones" },
+  "Configurações › Conexões": { es: "Configuración › Conexiones" },
   "seu funcionário fica pronto de qualquer jeito, só não terá por onde atender ainda.": {
     es: "tu empleado queda listo de todas formas, solo que aún no tendrá por dónde atender.",
   },
@@ -5879,6 +5887,14 @@ export const DICIONARIO: Traducoes = {
     es: "Ajusta el filtro de fechas o la búsqueda para ver eventos.",
   },
   "Nenhum funil ainda": { es: "Ningún embudo todavía" },
+  "Nenhum funil para exibir": { es: "Ningún embudo para mostrar" },
+  "Os negócios em risco, no quadro do funil: arrastar move a etapa de verdade. Se o assistente já agendou um retorno, aparece como “em voo”; sem próximo passo, é risco de perder o cliente.": {
+    es: "Los negocios en riesgo, en el tablero del embudo: arrastrar mueve la etapa de verdad. Si el asistente ya agendó un retorno, aparece como “en vuelo”; sin próximo paso, es riesgo de perder al cliente.",
+  },
+  "Crie um funil em Funis para ver o quadro do Radar.": {
+    es: "Crea un embudo en Embudos para ver el tablero del Radar.",
+  },
+  "Não consegui carregar este funil.": { es: "No pude cargar este embudo." },
   "Um funil é o caminho que o cliente percorre até fechar. Crie o primeiro para ter um quadro.": {
     es: "Un embudo es el camino que el cliente recorre hasta cerrar. Crea el primero para tener un tablero.",
   },
@@ -5916,6 +5932,8 @@ export const DICIONARIO: Traducoes = {
   "Retomada de contato descartada": { es: "Retomada de contacto descartada" },
   "Sugestão de retomada venceu sem decisão": { es: "La sugerencia de retomada venció sin decisión" },
   "Retorno agendado": { es: "Retorno agendado" },
+  "retorno agendado": { es: "retorno agendado" },
+  "retornos agendados": { es: "retornos agendados" },
   "Retorno cancelado": { es: "Retorno cancelado" },
   "Desmarcado por uma pessoa da equipe": { es: "Desmarcado por una persona del equipo" },
   "Sem motivo informado": { es: "Sin motivo informado" },
@@ -7233,7 +7251,7 @@ export const DICIONARIO: Traducoes = {
   "Só gerentes e administradores editam os horários de atendimento da equipe. Para publicar os seus, peça a um gerente que abra esta aba e use o botão &ldquo;Editar horário&rdquo; ao lado do seu nome.": { es: "Solo gerentes y administradores editan los horarios de atención del equipo. Para publicar los tuyos, pídele a un gerente que abra esta pestaña y use el botón «Editar horario» al lado de tu nombre." },
   " — não publicado": { es: " — no publicado" },
   "Escolha um fluxo publicado": { es: "Elige un flujo publicado" },
-  "Nenhum fluxo ativo. Publique um follow-up em Follow-ups para usá-lo aqui.": { es: "Ningún flujo activo. Publica un seguimiento en Seguimientos para usarlo aquí." },
+  "Nenhum fluxo ativo. Publique um follow-up em Fluxos para usá-lo aqui.": { es: "Ningún flujo activo. Publica un seguimiento en Flujos para usarlo aquí." },
   "Só entram fluxos publicados e ativos.": { es: "Solo entran flujos publicados y activos." },
   "Sem eles ninguém consegue marcar — nem você, nem o agente.": { es: "Sin ellos nadie puede agendar — ni tú, ni el agente." },
   "Configurar meus horários de atendimento": { es: "Configurar mis horarios de atención" },
@@ -7932,7 +7950,7 @@ export const DICIONARIO: Traducoes = {
   "Usando a chave que veio na instalação.": { es: "Usando la clave que vino con la instalación." },
   "A chave escolhida no painel de Provedores para este ponto não está utilizável (desativada, apagada ou ainda não validada). Seguindo com a próxima chave disponível.": { es: "La clave elegida en el panel de Proveedores para este punto no es utilizable (desactivada, borrada o todavía sin validar). Seguimos con la siguiente clave disponible." },
 
-  // ─── Acervo: a listagem (app/app/ai/knowledge/sources/_client.tsx) ───
+  // ─── Acervo (página removida; entradas mantidas por uso em outros textos) ───
   //
   // Este arquivo escapou das DUAS varreduras do merge: não é arquivo NOVO (a
   // 1.8.0 o modificou), e não estava entre os que 'os dois lados tocaram'

@@ -27,7 +27,6 @@
  * intra-organização — casos avisados × casos não avisados —, porque num
  * self-host existe UMA organização e contraste entre contas não existe.
  */
-import Link from "next/link";
 import { format } from "date-fns";
 
 import { Card } from "@/components/ui/card";
@@ -36,7 +35,6 @@ import { useT } from "@/hooks/i18n/useT";
 import { FRASE_DO_ERRO_DO_AVISO } from "@/lib/escalacao/vocabulario-do-aviso";
 import type { EntregaNaTela } from "@/lib/escalacao/tela-do-aviso";
 import type { LacoDoAviso } from "@/lib/escalacao/laco-do-aviso";
-import { ArrowSquareOut } from "@/lib/ui/icons";
 
 /**
  * A palavra que descreve cada estado da entrega para quem não programa.
@@ -112,13 +110,7 @@ export function EntregasDoAviso({
                   {t(situacao(entrega.status))}
                 </span>
                 <span className="text-xs text-muted-foreground">{entrega.destino_mascarado}</span>
-                <Link
-                  href={`/app/ai/cases?caso=${entrega.case_id}`}
-                  className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-                >
-                  {t("Abrir o atendimento")}
-                  <ArrowSquareOut className="h-3 w-3" />
-                </Link>
+
                 {frase ? (
                   <span className="basis-full text-xs text-muted-foreground">{t(frase)}</span>
                 ) : null}

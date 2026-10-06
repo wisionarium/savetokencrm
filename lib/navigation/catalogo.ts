@@ -15,7 +15,7 @@ import type { Role } from "@/lib/auth/types";
  * Doutrina: docs/doctrine/sistema-vivo.md — "por qual porta se chega até mim?"
  */
 
-export type NavGroupId = "atendimento" | "crm" | "ia" | "canais" | "analise" | "organizacao";
+export type NavGroupId = "atendimento" | "crm" | "ia" | "fluxos" | "canais" | "analise" | "organizacao";
 
 export interface NavGroup {
   id: NavGroupId;
@@ -53,13 +53,16 @@ export interface NavMetadata {
  * aqui, e não junto dos agentes.
  *
  * Sem hubs no meio (só Organização mantém o seu, no rodapé): todo destino do
- * grupo aparece clicando no bloco, e os grupos nascem recolhidos — só
- * Atendimento abre. É o que mantém o menu curto sem esconder tela nenhuma.
+ * grupo aparece clicando no bloco, e os grupos nascem todos recolhidos.
  */
 export const NAV_GROUPS: NavGroup[] = [
   { id: "atendimento", label: "Atendimento" },
   { id: "crm", label: "CRM" },
   { id: "ia", label: "Agente de IA" },
+  // Bandeja própria dos fluxos desde 2026-10-06 (decisão do dono): os fluxos
+  // saíram de dentro de Agente de IA e têm bloco só deles — follow-up,
+  // disparo e automação, na página /app/ai/fluxos.
+  { id: "fluxos", label: "Fluxos" },
   { id: "canais", label: "Canais" },
   { id: "analise", label: "Análise" },
   {
@@ -95,6 +98,14 @@ export const GRUPO_NO_RODAPE: NavGroupId = "organizacao";
  */
 export const NAV_CATALOG = [
   // ---- Atendimento — onde o operador passa o dia ----
+  //
+  // Decisão do dono (2026-10-06, revista no mesmo dia): o sidebar volta a
+  // mostrar o uso diário. Só os FLUXOS saíram do menu (moram na página
+  // "Fluxos", /app/ai/fluxos) e 4 itens de configuração foram para o hub
+  // Configurações (Conexões, Provedores, Roteadores, Webhooks). Todo o resto
+  // segue no menu em bandeja recolhida; o que não está no menu continua no
+  // registro — e portanto no ⌘K, nos hubs e por URL direta. Para devolver um
+  // destino ao menu, basta devolver `sidebar: true` nele.
   {
     href: "/app/inbox",
     label: "Inbox",
@@ -272,99 +283,74 @@ export const NAV_CATALOG = [
     sidebar: true,
   },
   {
+    // Bloco próprio desde 2026-10-06 (decisão do dono): os 3 fluxos moram
+    // aqui, FORA de Agente de IA — follow-up, disparo e automação. As rotas
+    // antigas seguem no registro (porta via ⌘K/URL), mas a porta navegável é
+    // esta página.
+    href: "/app/ai/fluxos",
+    label: "Fluxos",
+    description: "Os fluxos do agente num lugar só: follow-up, disparo e automação.",
+    icon: "FlowArrow",
+    group: "fluxos",
+    minRole: "manager",
+    sidebar: true,
+  },
+  {
+    // Sem `sidebar`: a porta é a aba "Fluxo de follow-up" de /app/ai/fluxos.
+    // Segue no registro (e no ⌘K) como rota interna.
     href: "/app/ai/followups",
     label: "Follow-ups",
     description: "Como o agente retoma uma conversa que esfriou, para nenhuma morrer no silêncio.",
     icon: "FlowArrow",
-    group: "ia",
+    group: "fluxos",
     section: "Montar o agente",
     minRole: "manager",
-    sidebar: true,
   },
   {
-    // Sem `sidebar`: chega-se pelo botão "Novo fluxo de disparo" (aba
-    // Disparo) e pelo breadcrumb do editor.
+    // Sem `sidebar`: chega-se pela aba "Fluxos de disparo" de /app/ai/fluxos
+    // (botão "Novo fluxo de disparo") e pelo breadcrumb do editor.
     href: "/app/ai/followups/novo-disparo",
     label: "Novo fluxo de disparo",
     description: "Criar imagem + texto para os atendentes dispararem no chat.",
     icon: "FlowArrow",
-    group: "ia",
+    group: "fluxos",
     section: "Montar o agente",
     minRole: "manager",
-    sidebar: true,
   },
   {
+    // Em Configurações desde 2026-10-06 (decisão do dono): roteador é
+    // configuração sensível — qual agente pega qual conversa — e mora no hub
+    // da empresa, ao lado de Distribuição de atendimento.
     href: "/app/ai/routers",
     label: "Roteadores",
     description: "Qual agente pega qual conversa, e quando o humano assume.",
     icon: "Signpost",
-    group: "ia",
-    section: "Montar o agente",
+    group: "organizacao",
+    section: "Sua empresa",
     minRole: "manager",
-    sidebar: true,
   },
   {
     href: "/app/ai/credentials",
     label: "Credenciais",
     description: "A chave do provedor de IA que os agentes usam para pensar.",
     icon: "Key",
-    group: "ia",
-    section: "Montar o agente",
+    group: "organizacao",
+    section: "Sua empresa",
     minRole: "manager",
-    sidebar: true,
   },
   {
     // O sistema chama modelo em 23 lugares e, até esta tela, a escolha vivia
     // espalhada por três pilhas de código e sete variáveis de ambiente — não
     // havia onde responder "quem usa IA aqui, e com qual chave?".
+    // Em Configurações desde 2026-10-06 (decisão do dono): a chave do provedor
+    // é credencial sensível e mora no hub da empresa, junto de Credenciais.
     href: "/app/ai/providers",
     label: "Provedores",
     description: "Qual inteligência atende cada parte do sistema — e o que acontece se ela falhar.",
     icon: "Plugs",
-    group: "ia",
-    section: "Montar o agente",
+    group: "organizacao",
+    section: "Sua empresa",
     minRole: "manager",
-    sidebar: true,
-  },
-  {
-    href: "/app/ai/knowledge/sources",
-    label: "Conhecimento",
-    description: "Os materiais que o agente consulta antes de responder sobre o seu negócio.",
-    icon: "BookOpen",
-    group: "ia",
-    section: "Ensinar o agente",
-    minRole: "manager",
-    sidebar: true,
-  },
-  {
-    href: "/app/ai/memory",
-    label: "Memória",
-    description: "O que o agente já aprendeu sobre a sua operação e reaproveita.",
-    icon: "Brain",
-    group: "ia",
-    section: "Ensinar o agente",
-    minRole: "manager",
-    sidebar: true,
-  },
-  {
-    href: "/app/ai/skills",
-    label: "Skills",
-    description: "As ações que o agente pode executar sozinho durante o atendimento.",
-    icon: "PuzzlePiece",
-    group: "ia",
-    section: "Ensinar o agente",
-    minRole: "manager",
-    sidebar: true,
-  },
-  {
-    href: "/app/ai/cases",
-    label: "Casos",
-    description: "Os atendimentos que o agente conduziu, do início ao desfecho.",
-    icon: "ClipboardText",
-    group: "ia",
-    section: "Acompanhar o agente",
-    minRole: "agent",
-    sidebar: true,
   },
   {
     href: "/app/ai/inbox",
@@ -392,44 +378,17 @@ export const NAV_CATALOG = [
     minRole: "admin",
     sidebar: true,
   },
-  {
-    // Órfã: nenhum lugar do app linkava para cá. O flywheel gerava propostas de
-    // melhoria do agente e a fila só era vista por quem soubesse a URL.
-    href: "/app/ai/proposals",
-    label: "Propostas",
-    description: "Melhorias que a IA sugere para si mesma, esperando sua decisão.",
-    icon: "Lightbulb",
-    group: "ia",
-    section: "Acompanhar o agente",
-    sidebar: true,
-  },
-  {
-    // A tela de Uso responde "quanto gastei". Esta responde a pergunta que não
-    // tinha lugar nenhum: "o agente parou de responder, o que aconteceu?".
-    // Antes da migration 0128 ela seria impossível de construir com honestidade
-    // — llm_calls só registrava sucesso.
-    href: "/app/ai/runs",
-    label: "Execuções",
-    description: "O que a IA fez — e, quando falhou, o que aconteceu e o que fazer.",
-    icon: "ListChecks",
-    group: "ia",
-    section: "Acompanhar o agente",
-    minRole: "manager",
-    sidebar: true,
-  },
-  {
-    href: "/app/ai/usage",
-    label: "Uso e orçamento",
-    description: "Quanto a IA consumiu e qual é o teto de gasto do mês.",
-    icon: "Gauge",
-    group: "ia",
-    section: "Acompanhar o agente",
-    minRole: "manager",
-    sidebar: true,
-  },
-
   // ---- Canais — por onde as mensagens entram e saem ----
+  //
+  // Desde 2026-10-06 (decisão do dono) este grupo não ocupa linha no menu: as
+  // conexões (QR + canal oficial da Meta) e os webhooks moram no hub
+  // Configurações, e a Nuvemshop segue só no ⌘K. O grupo continua declarado
+  // porque a Nuvemshop aponta para ele.
   {
+    // Em Configurações desde 2026-10-06 (decisão do dono): é onde se conecta o
+    // número (QR) e o canal oficial da Meta — configuração da empresa, ao lado
+    // de Provedores e Roteadores. O `healthDot` segue declarado (a casca usa
+    // onde houver porta com saúde).
     href: "/app/connections",
     label: "Conexões",
     // Cobre os DOIS caminhos desde o PR #105: número por QR e canal oficial da
@@ -439,9 +398,9 @@ export const NAV_CATALOG = [
     description:
       "Seus números de WhatsApp: por QR ou canal oficial da Meta, com saúde, reconexão e templates.",
     icon: "PlugsConnected",
-    group: "canais",
+    group: "organizacao",
+    section: "Sua empresa",
     minRole: "admin",
-    sidebar: true,
     healthDot: true,
   },
   {
@@ -469,17 +428,20 @@ export const NAV_CATALOG = [
     // navegável. Para voltar a mostrá-la, basta devolver `sidebar: true`.
   },
   {
+    // Em Configurações desde 2026-10-06 (decisão do dono): captação e
+    // automações se configuram uma vez, ao lado de API Tokens — é a mesma
+    // superfície sistema-a-sistema ("Dados e acesso").
     href: "/app/webhooks",
     label: "Webhooks",
     description: "Avise outros sistemas quando algo acontecer aqui dentro.",
     icon: "WebhooksLogo",
-    group: "canais",
+    group: "organizacao",
+    section: "Dados e acesso",
     minRole: "manager",
-    sidebar: true,
   },
 
   // ---- Análise — olhar o sistema funcionando ----
-  // Os grupos nascem recolhidos (so Atendimento abre), entao o menu inicial e
+  // Os grupos nascem todos recolhidos, entao o menu inicial e
   // curto de qualquer jeito. A ordem abaixo segue a frequencia: primeiro o que
   // se pergunta toda semana, por ultimo o que se visita de proposito.
   {
@@ -540,6 +502,48 @@ export const NAV_CATALOG = [
     icon: "ClockCounterClockwise",
     group: "analise",
     section: "O histórico que se consulta",
+    minRole: "manager",
+    sidebar: true,
+  },
+  {
+    // No grupo Análise desde 2026-10-06 (decisão do dono): no bloco de
+    // Agentes ficam SÓ Agentes, Alertas e Aviso no WhatsApp. Propostas,
+    // Execuções e Uso e orçamento são observar o sistema funcionando — a
+    // mesma razão que já mantinha Evolução da IA na Análise, e não junto
+    // dos agentes.
+    //
+    // Órfã um dia: nenhum lugar do app linkava para Propostas. O flywheel
+    // gerava propostas de melhoria do agente e a fila só era vista por quem
+    // soubesse a URL.
+    href: "/app/ai/proposals",
+    label: "Propostas",
+    description: "Melhorias que a IA sugere para si mesma, esperando sua decisão.",
+    icon: "Lightbulb",
+    group: "analise",
+    section: "Acompanhar o agente",
+    sidebar: true,
+  },
+  {
+    // A tela de Uso responde "quanto gastei". Esta responde a pergunta que não
+    // tinha lugar nenhum: "o agente parou de responder, o que aconteceu?".
+    // Antes da migration 0128 ela seria impossível de construir com honestidade
+    // — llm_calls só registrava sucesso.
+    href: "/app/ai/runs",
+    label: "Execuções",
+    description: "O que a IA fez — e, quando falhou, o que aconteceu e o que fazer.",
+    icon: "ListChecks",
+    group: "analise",
+    section: "Acompanhar o agente",
+    minRole: "manager",
+    sidebar: true,
+  },
+  {
+    href: "/app/ai/usage",
+    label: "Uso e orçamento",
+    description: "Quanto a IA consumiu e qual é o teto de gasto do mês.",
+    icon: "Gauge",
+    group: "analise",
+    section: "Acompanhar o agente",
     minRole: "manager",
     sidebar: true,
   },

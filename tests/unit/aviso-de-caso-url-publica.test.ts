@@ -47,13 +47,19 @@ describe("urlPublicaUsavel", () => {
 });
 
 describe("linkDoCaso", () => {
-  it("monta o endereço do caso sem barra dupla, venha a base com ou sem barra", () => {
-    const id = "0b1f7a2e-0000-4000-8000-000000000000";
-    expect(linkDoCaso("https://crm.exemplo.com.br", id)).toBe(
-      `https://crm.exemplo.com.br/app/ai/cases?caso=${id}`,
+  it("abre a conversa do caso no inbox, sem barra dupla", () => {
+    const conversa = "0b1f7a2e-0000-4000-8000-000000000000";
+    expect(linkDoCaso("https://crm.exemplo.com.br", conversa)).toBe(
+      `https://crm.exemplo.com.br/app/inbox/${conversa}`,
     );
-    expect(linkDoCaso("https://crm.exemplo.com.br/", id)).toBe(
-      `https://crm.exemplo.com.br/app/ai/cases?caso=${id}`,
+    expect(linkDoCaso("https://crm.exemplo.com.br/", conversa)).toBe(
+      `https://crm.exemplo.com.br/app/inbox/${conversa}`,
+    );
+  });
+
+  it("sem conversa cai na Central, nunca inventa destino", () => {
+    expect(linkDoCaso("https://crm.exemplo.com.br", null)).toBe(
+      "https://crm.exemplo.com.br/app/ai/inbox",
     );
   });
 });

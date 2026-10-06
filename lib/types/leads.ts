@@ -78,6 +78,19 @@ export interface Lead {
     /** O que a lista do inbox mostra: última mensagem, já truncada na origem. */
     preview: string | null;
     last_message_at: string | null;
+    /**
+     * Última mensagem DO cliente — o foguinho de streak lê daqui.
+     *
+     * Opcional cobrindo payloads de antes do campo (e a rota do board só o
+     * preenche via `withConversas`); ausente vale como desconhecido = sem chama.
+     */
+    last_inbound_at?: string | null;
+    /**
+     * Total de inbound do contato nesta conversa (`fn_conversa_inbound_total`,
+     * migration 0346) — o combustível do foguinho. Opcional pelo mesmo motivo
+     * acima; ausente vale como 0.
+     */
+    inbound_total?: number | null;
     unread: number;
   } | null;
   score?: {

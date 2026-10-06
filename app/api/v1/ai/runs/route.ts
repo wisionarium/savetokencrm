@@ -48,7 +48,7 @@ const O_QUE_FAZER: Record<string, string> = {
   // A outra recusa deliberada: o ponto aponta para um endereço escolhido pela
   // empresa, e a chave que ia junto era a da instalação (decisão 22-a).
   endereco_exige_chave_da_empresa:
-    "A chamada foi recusada porque este ponto usa um endereço próprio e a empresa não tem chave cadastrada para ele — a chave da instalação não vai para endereço escolhido pela empresa. Cadastre a chave da empresa em Agente de IA › Provedores, ou tire o endereço próprio do ponto.",
+    "A chamada foi recusada porque este ponto usa um endereço próprio e a empresa não tem chave cadastrada para ele — a chave da instalação não vai para endereço escolhido pela empresa. Cadastre a chave da empresa em Configurações › Provedores, ou tire o endereço próprio do ponto.",
   erro_desconhecido:
     "Não conseguimos classificar esta falha. A mensagem original do provedor está abaixo.",
 };

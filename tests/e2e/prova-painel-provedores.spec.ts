@@ -173,18 +173,19 @@ test("F2 — a tela de execuções abre e responde 'está tudo bem?'", async ({ 
   await page.screenshot({ path: "evidence/provedores/07-execucoes.png", fullPage: true });
 });
 
-test("as duas telas têm porta na navegação — no bloco de IA", async ({ page }) => {
+test("as duas telas têm porta na navegação — no hub Configurações", async ({ page }) => {
   // Tela alcançável só por URL digitada é tela que não existe para o operador.
   //
-  // A porta é o próprio bloco de IA no sidebar (sem hub no meio): expandir o
-  // grupo mostra as duas.
+  // A porta é o hub Configurações (decisão do dono, 2026-10-06): Provedores e
+  // Roteadores são configuração sensível e moram nos cards da empresa — fora
+  // do sidebar, que mostra o uso diário em bandeja recolhida.
   await page.goto("/app/inbox");
   const sidebar = page.getByRole("navigation", { name: "Navegação principal" });
-  // O bloco nasce recolhido; a porta existe a um clique.
   await expect(sidebar.getByRole("link", { name: /Provedores/ })).toHaveCount(0);
-  await sidebar.getByRole("button", { name: "Agente de IA" }).click();
-  await expect(sidebar.getByRole("link", { name: /Provedores/ })).toBeVisible();
-  await expect(sidebar.getByRole("link", { name: /Execuções/ })).toBeVisible();
+  await page.getByRole("link", { name: "Configurações" }).click();
+  await page.waitForURL(/\/app\/settings/);
+  await page.getByRole("link", { name: /Provedores/ }).click();
+  await page.waitForURL(/\/app\/ai\/providers/);
 });
 
 test("instalação sem agente publicado: os dois pontos principais são EDITÁVEIS", async ({ page }) => {

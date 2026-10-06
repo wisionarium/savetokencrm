@@ -50,12 +50,50 @@ describe("destinos da Central", () => {
     ["handoff", "conversation", `/app/inbox/${ID}`], ["job_dead", "conversation", `/app/inbox/${ID}`],
     ["handoff", "contact", `/app/contacts/${ID}`], ["other", "lead", `/app/pipelines/${PIPELINE}?lead=${ID}`],
     ["followup_dead", "followup_enrollment", `/app/ai/followups/enrollments/${ID}`],
-    ["qr_rescan", "channel_session", "/app/connections"], ["conhecimento_nao_indexado", "ai_knowledge_source", "/app/ai/knowledge/sources"],
+    ["qr_rescan", "channel_session", "/app/connections"],
   ])("%s/%s abre somente contexto real", async (kind, ref, href) => {
     const l = leitor(); const [item] = await resolverDestinosDosAvisos(l.client, ORG, "admin", [aviso(kind, ref)]);
     expect(item?.destination).toMatchObject({ estado: "disponivel", href });
     expect(l.queries[0]?.org).toBe(ORG);
     if (ref === "channel_session") expect(l.queries[0]?.archived).toBe(true);
+  });
+  it("caso abre na conversa do inbox; sem conversa cai na Central", async () => {
+    const CONV = "55555555-5555-4555-8555-555555555555";
+    const comConversa = {
+      from(table: string) {
+        const chain = {
+          select: () => chain,
+          eq: () => chain,
+          in: () => chain,
+          is: () => chain,
+          then: (resolve: (v: unknown) => unknown) =>
+            Promise.resolve({ data: [{ id: ID, conversation_id: CONV }], error: null }).then(
+              resolve,
+            ),
+        };
+        return chain;
+      },
+    } as unknown as SupabaseClient;
+    const [item] = await resolverDestinosDosAvisos(
+      comConversa,
+      ORG,
+      "agent",
+      [aviso("case_stale", "agent_case")],
+    );
+    expect(item?.destination).toMatchObject({
+      estado: "disponivel",
+      href: `/app/inbox/${CONV}`,
+    });
+
+    // Sem conversa legível (mock sem a coluna): Central, nunca link morto.
+    const l = leitor();
+    const [semConversa] = await resolverDestinosDosAvisos(l.client, ORG, "agent", [
+      aviso("case_stale", "agent_case"),
+    ]);
+    expect(semConversa?.destination).toMatchObject({
+      estado: "disponivel",
+      href: "/app/ai/inbox",
+    });
   });
   it("consulta por tipo e deduplica IDs, não N+1", async () => {
     const l = leitor();
@@ -72,10 +110,14 @@ describe("destinos da Central", () => {
     const l = leitor(); const [item] = await resolverDestinosDosAvisos(l.client, ORG, role, [aviso("qr_rescan", "channel_session")]);
     expect(item?.destination.estado).toBe("sem_permissao"); expect(l.queries).toHaveLength(0);
   });
-  it("manager recebe uso/acervo e agent apenas orientação", async () => {
+  it("manager recebe uso; acervo sem tela vira indisponível, agent só orientação", async () => {
     for (const role of ["agent", "manager"] as const) {
       const items = await resolverDestinosDosAvisos(leitor().client, ORG, role, [aviso("budget_warning", "ai_budget", ORG), aviso("conhecimento_nao_indexado", "ai_knowledge_source")]);
-      expect(items.map(i => i.destination.estado)).toEqual(Array(2).fill(role === "agent" ? "sem_permissao" : "disponivel"));
+      // Sem páginas de Conhecimento, o alerta segue existindo (orientação),
+      // mas sem botão: indisponível para todo papel.
+      expect(items.map((i) => i.destination.estado)).toEqual(
+        role === "agent" ? ["sem_permissao", "indisponivel"] : ["disponivel", "indisponivel"],
+      );
     }
   });
   it.each([null, "not-a-uuid", missing])("ref %s não vira URL", async id => {

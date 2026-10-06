@@ -30,7 +30,7 @@ const BASE = {
   summary: "15% de desconto no plano anual",
   blocker: "a política permite até 10%",
   nomeDoCliente: "Maria Aparecida de Souza",
-  link: "https://crm.exemplo.com.br/app/ai/cases?caso=0b1f7a2e-0000-4000-8000-000000000000",
+  link: "https://crm.exemplo.com.br/app/inbox/0b1f7a2e-0000-4000-8000-000000000000",
 };
 
 describe("sanitizarTextoDoLead", () => {

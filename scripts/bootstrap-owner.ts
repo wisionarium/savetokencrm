@@ -174,7 +174,7 @@ async function aplicarProvedorEscolhido(orgId: string): Promise<void> {
     // pelo agente mudo.
     console.warn(
       `[bootstrap] não consegui gravar o provedor "${escolhido}" na organização: ${error.message}. ` +
-        `Ajuste em Agente de IA → Provedores depois de entrar.`,
+        `Ajuste em Configurações → Provedores depois de entrar.`,
     );
     return;
   }

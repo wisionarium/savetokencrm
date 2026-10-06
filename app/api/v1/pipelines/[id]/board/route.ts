@@ -24,6 +24,7 @@ import {
   type PropostaAmbigua,
 } from "@/lib/leads/next-action";
 import type { LeadCandidate } from "@/lib/leads/active-lead";
+import { totaisInboundPorConversa } from "@/lib/inbox/totais-inbound";
 import { createClient } from "@/lib/supabase/server";
 import type { BoardData, Pipeline, Stage } from "@/lib/kanban/types";
 import type { Lead } from "@/lib/types/leads";
@@ -261,7 +262,7 @@ async function withConversas(
 
   const { data, error } = await supabase
     .from("conversations")
-    .select("id, contact_id, last_message_preview, last_message_at, unread_count_for_assignee, tags")
+    .select("id, contact_id, last_message_preview, last_message_at, last_inbound_at, unread_count_for_assignee, tags")
     .eq("organization_id", organizationId)
     .in("contact_id", contactIds)
     .order("last_message_at", { ascending: false, nullsFirst: false });
@@ -274,6 +275,7 @@ async function withConversas(
     contact_id: string;
     last_message_preview: string | null;
     last_message_at: string | null;
+    last_inbound_at: string | null;
     unread_count_for_assignee: number | null;
     tags: string[] | null;
   }>) {
@@ -289,6 +291,7 @@ async function withConversas(
       id: row.id,
       preview: row.last_message_preview,
       last_message_at: row.last_message_at,
+      last_inbound_at: row.last_inbound_at,
       unread: row.unread_count_for_assignee ?? 0,
     });
   }
@@ -303,6 +306,41 @@ async function withConversas(
         ...(conversa ? { conversa } : {}),
         // Vazio não vira campo, como `contact_tags`: o payload não engorda.
         ...(marcadores && marcadores.size > 0 ? { conversation_tags: [...marcadores] } : {}),
+      };
+    }),
+    error: null,
+  };
+}
+
+/**
+ * Anexa o total de inbound à conversa do card — o combustível do foguinho.
+ *
+ * UMA consulta para o quadro (`fn_conversa_inbound_total`, migration 0346).
+ * LEFT como o resto: RPC falhou vira `null` (não medido) e a chama apaga, em
+ * vez de o quadro não abrir — ver `totaisInboundPorConversa`.
+ */
+async function withEngajamento(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  leads: Lead[],
+): Promise<{ leads: Lead[]; error: string | null }> {
+  const ids = [
+    ...new Set(
+      leads.map((l) => l.conversa?.id).filter((id): id is string => !!id),
+    ),
+  ];
+  if (ids.length === 0) return { leads, error: null };
+  // Sucesso = número exato (conversa sem linha no retorno tem 0 inbound de
+  // verdade); falha = mapa vazio e a chama apaga (o `warn` já saiu lá dentro).
+  const totais = await totaisInboundPorConversa(supabase, ids);
+  return {
+    leads: leads.map((lead) => {
+      if (!lead.conversa) return lead;
+      return {
+        ...lead,
+        conversa: {
+          ...lead.conversa,
+          inbound_total: totais.get(lead.conversa.id) ?? 0,
+        },
       };
     }),
     error: null,
@@ -495,10 +533,15 @@ export async function GET(_req: NextRequest, ctx: RouteCtx): Promise<Response> {
     return fail("internal_error", leadsComConversa.error, 500, { requestId });
   }
 
+  const leadsComEngajamento = await withEngajamento(supabase, leadsComConversa.leads);
+  if (leadsComEngajamento.error) {
+    return fail("internal_error", leadsComEngajamento.error, 500, { requestId });
+  }
+
   const leadsComMarcadores = await withMarcadoresDoContato(
     supabase,
     (pipeline as Pipeline).organization_id,
-    leadsComConversa.leads,
+    leadsComEngajamento.leads,
   );
   if (leadsComMarcadores.error) {
     return fail("internal_error", leadsComMarcadores.error, 500, { requestId });

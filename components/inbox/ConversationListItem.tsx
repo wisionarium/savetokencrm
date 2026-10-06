@@ -201,14 +201,12 @@ export const ConversationListItem = memo(function ConversationListItem({
     Boolean(c?.is_blocked) ||
     Boolean(c?.is_anonymized);
 
-  // O streak mora na linha, não no servidor (v1 visual): a régua lê o que a
-  // lista já carrega — recência do inbound + não-lidas. Sem chamada extra por
-  // linha, sem migration; quando o backend agregar de verdade, a régua troca
-  // por dentro (`lib/inbox/engajamento.ts`) e a tela não muda.
+  // O streak mora na linha: a régua v2 lê o total de inbound + a recência da
+  // última mensagem dele (`lib/inbox/engajamento.ts`). Sem chamada extra por
+  // linha — o total vem anexado pela lista (`inbound_total`).
   const engajamento = engajamentoDaConversa({
     last_inbound_at: conversation.last_inbound_at,
-    last_outbound_at: conversation.last_outbound_at,
-    unread_count_for_assignee: conversation.unread_count_for_assignee ?? 0,
+    inbound_total: conversation.inbound_total ?? null,
   });
 
   return (

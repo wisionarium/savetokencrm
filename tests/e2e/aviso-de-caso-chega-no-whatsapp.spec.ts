@@ -310,7 +310,7 @@ test.describe("o aviso de caso chega no WhatsApp da equipe", () => {
       // cabeçalho de caso como ruído e ignoraria o primeiro de verdade.
       expect(textoDoTeste).toContain("teste de aviso");
       expect(textoDoTeste).not.toContain("novo caso esperando você");
-      expect(textoDoTeste).toContain(`${urlPublica}/app/ai/cases`);
+      expect(textoDoTeste).toContain(`${urlPublica}/app/ai/inbox`);
       expect(textoDoTeste).toContain("Responder aqui não chega ao cliente");
       // A chave vai no CABEÇALHO, nunca na URL (ela vaza em log de proxy).
       const ultimo = recebidos.at(-1)!;
@@ -408,7 +408,9 @@ test.describe("o aviso de caso chega no WhatsApp da equipe", () => {
         aviso,
         "o sobrenome identifica a pessoa se a mensagem for encaminhada",
       ).not.toContain(creds.escalacao.contact_name);
-      expect(aviso, "o link tem de abrir o caso").toContain(`${urlPublica}/app/ai/cases?caso=${casoId}`);
+      expect(aviso, "o link tem de abrir a conversa no inbox").toContain(
+        `${urlPublica}/app/inbox/${creds.escalacao.conversation_id}`,
+      );
       expect(aviso, "responder ali não chega a ninguém, e isso precisa estar escrito").toContain(
         "Responder aqui não chega ao cliente",
       );
@@ -435,13 +437,15 @@ test.describe("o aviso de caso chega no WhatsApp da equipe", () => {
       });
       await captura(page, "72-entrega-enviada");
 
-      // ── 6. e na linha do tempo do caso, para quem atende ───────────────
-      await page.goto(`/app/ai/cases?caso=${casoId}`);
-      await expect(
-        page.getByText("Avisamos o suporte no WhatsApp").first(),
-        "quem abre o caso precisa saber que a equipe já foi avisada",
-      ).toBeVisible({ timeout: ESPERA });
-      await captura(page, "73-linha-do-tempo-do-caso");
+      // 6. a entrega continua registrada: a linha do tempo do caso saiu da
+      // navegacao junto com a pagina de Casos. A entrega segue provada no
+      // passo 5 (lista de entregas) e no banco; aqui abre-se a conversa,
+      // que e o destino do link do aviso.
+      await page.goto(`/app/inbox/${creds.escalacao.conversation_id}`);
+      await expect(page.getByRole("heading", { name: /Inbox/ }).first()).toBeVisible({
+        timeout: ESPERA,
+      });
+      await captura(page, "73-conversa-do-caso");
     } finally {
       if (casoId) {
         await admin.from("entregas_de_aviso_de_caso").delete().eq("case_id", casoId);

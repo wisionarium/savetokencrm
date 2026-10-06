@@ -95,12 +95,19 @@ test("interface por membro atualiza ao vivo, preserva formulário e convite apli
     await member.goto("/app/settings/profile");
     await member.getByLabel("Nome completo").fill("Rascunho não salvo");
     await login(other, emails[2]!);
+    // Desde 2026-10-06 o sidebar mostra o uso diário em bandeja recolhida: a
+    // prova de "aparece/some com a interface" continua valendo no menu para
+    // quem tem interface completa.
+    await expect(nav(member).getByRole("link", { name: "Kanban", exact: true })).toHaveCount(0);
+    await nav(member).getByRole("button", { name: "Atendimento" }).click();
     await expect(nav(member).getByRole("link", { name: "Kanban", exact: true })).toBeVisible();
     const framesBefore = realtime.length;
     await customize(page, emails[1]!);
     // Evento real precisa chegar; polling não pode aprovar a observação em tempo real.
     await expect.poll(() => realtime.length, { timeout: 15_000 }).toBeGreaterThan(framesBefore);
     await expect(nav(member).getByRole("link", { name: "Kanban", exact: true })).toHaveCount(0);
+    await expect(nav(other).getByRole("link", { name: "Kanban", exact: true })).toHaveCount(0);
+    await nav(other).getByRole("button", { name: "Atendimento" }).click();
     await expect(nav(other).getByRole("link", { name: "Kanban", exact: true })).toBeVisible();
     await expect(member.getByLabel("Nome completo")).toHaveValue("Rascunho não salvo");
     expect(member.url()).toContain("/app/settings/profile");

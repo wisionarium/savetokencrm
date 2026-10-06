@@ -32,9 +32,6 @@ interface Creds {
 
 /** Telas do épico que estavam SEM cobertura alguma na medição de `dffa823a`. */
 const TELAS = [
-  { rota: "/app/ai/knowledge/sources", nome: "acervo-de-conhecimento", dono: "W5" },
-  { rota: "/app/ai/skills", nome: "habilidades", dono: "W5" },
-  { rota: "/app/ai/memory", nome: "memoria-da-organizacao", dono: "W5" },
   { rota: "/app/ai/usage", nome: "consumo", dono: "W1" },
   { rota: "/app/ai/inbox", nome: "caixa-do-humano", dono: "W3" },
   { rota: "/app/ai/routers", nome: "roteadores", dono: "W3" },

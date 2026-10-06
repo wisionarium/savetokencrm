@@ -1,28 +1,29 @@
 /**
- * Streak de engajamento do lead — a chaminha da lista (v1, só visual).
+ * Streak de engajamento do lead — o foguinho (v2, regra do dono 2026-10-06).
  *
  * ─── O que ela responde ────────────────────────────────────────────────────
- * "Este lead está quente AGORA?" — quente = o cliente escreveu há pouco e ainda
- * espera resposta, ou escreveu várias vezes sem que ninguém respondesse. É o
- * sinal que o atendente usa para escolher quem chamar primeiro na Fila.
+ * "Este lead está quente AGORA?" — quente = o cliente ESCREVEU (2+ mensagens,
+ * última há até 1h). É o sinal que o atendente usa para escolher quem chamar
+ * primeiro — no inbox e no quadro do Radar.
  *
- * ─── Por que só com o que a lista já tem ────────────────────────────────────
- * A lista (`ConversationWithContact`) não traz contagem de mensagens, tipo de
- * mídia nem tempo de resposta medido — trazer isso pediria agregação no banco
- * (migration + baseline + MANIFEST). Esta v1 é função pura sobre o que a linha
- * já carrega: recência do inbound + não-lidas. Quando o backend agregar de
- * verdade, a régua troca por dentro e a tela não muda.
+ * ─── A regra, sem inventar ──────────────────────────────────────────────────
+ * Pedido do dono: dura 1h; a próxima mensagem dele renova (o `last_inbound_at`
+ * anda); UMA mensagem sozinha nunca acende — streak é conversa, não visita.
+ * Formalizado: `inbound_total >= 2 && idade(last_inbound_at) <= 1h`.
  *
- * ─── INFERIDO, não medido ───────────────────────────────────────────────────
- * Os pisos abaixo (5 min, 15 min, 3 mensagens) são ponto de partida calibrável,
- * não número de negócio: nenhum PRD deste repo define "lead quente". Se a
- * operação achar a chama acesa demais ou de menos, é aqui que se mexe.
+ * ─── De onde vem o total ────────────────────────────────────────────────────
+ * `fn_conversa_inbound_total` (migration 0346), anexado pela lista do inbox e
+ * pelo board (`withConversas`). Ausente (`null`, RPC falhou) = 0 = sem chama:
+ * o foguinho é realce progressivo, nunca motivo para a tela não abrir.
  */
 
 export interface EntradaDoEngajamento {
   last_inbound_at: string | null;
-  last_outbound_at: string | null;
-  unread_count_for_assignee: number;
+  /**
+   * Total de mensagens inbound do contato nesta conversa. `null` = não medido
+   * (a RPC falhou ou o payload é antigo) e vale como 0 — sem chama.
+   */
+  inbound_total: number | null;
 }
 
 export type NivelDeEngajamento = "quente" | null;
@@ -33,19 +34,17 @@ export interface Engajamento {
   motivo: string | null;
 }
 
-/** Respondeu há pouco = inbound nos últimos 5 min ainda sem resposta. */
-const JANELA_QUENTE_MS = 5 * 60 * 1000;
-/** Engajando = inbound nos últimos 15 min (respondeu e segue por perto). */
-const JANELA_MORNA_MS = 15 * 60 * 1000;
-/** "Responde muito" = 3+ mensagens sem resposta. Piso INFERIDO. */
-const PISO_DE_VOLUME = 3;
+/** Dura 1h: a próxima mensagem dele renova; 1h parado apaga. */
+const JANELA_STREAK_MS = 60 * 60 * 1000;
+/** UMA mensagem sozinha nunca acende — piso do pedido do dono. */
+const PISO_DE_MENSAGENS = 2;
 
 export function engajamentoDaConversa(
   entrada: EntradaDoEngajamento,
   agora: Date = new Date(),
 ): Engajamento {
-  const naoLidas = entrada.unread_count_for_assignee ?? 0;
-  if (naoLidas <= 0) return { nivel: null, motivo: null };
+  const total = entrada.inbound_total ?? 0;
+  if (total < PISO_DE_MENSAGENS) return { nivel: null, motivo: null };
 
   const inbound = entrada.last_inbound_at ? new Date(entrada.last_inbound_at).getTime() : NaN;
   if (Number.isNaN(inbound)) return { nivel: null, motivo: null };
@@ -53,20 +52,10 @@ export function engajamentoDaConversa(
   const idade = agora.getTime() - inbound;
   // Data futura (relógio torto) não é engajamento — é dado ruim.
   if (idade < 0) return { nivel: null, motivo: null };
+  if (idade > JANELA_STREAK_MS) return { nivel: null, motivo: null };
 
-  // Volume alto segura a chama mesmo quando a última mensagem já esfriou um
-  // pouco: quem escreveu 3+ vezes sem resposta está insistindo, não passeando.
-  if (naoLidas >= PISO_DE_VOLUME && idade <= JANELA_MORNA_MS) {
-    return {
-      nivel: "quente",
-      motivo:
-        naoLidas === 1
-          ? "1 mensagem sem resposta — cliente insistindo"
-          : `${naoLidas} mensagens sem resposta — cliente insistindo`,
-    };
-  }
-  if (idade <= JANELA_QUENTE_MS) {
-    return { nivel: "quente", motivo: "Respondeu agora há pouco" };
-  }
-  return { nivel: null, motivo: null };
+  return {
+    nivel: "quente",
+    motivo: `${total} mensagens na última hora — cliente engajado`,
+  };
 }

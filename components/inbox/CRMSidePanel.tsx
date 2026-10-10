@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
-import { Tag, Receipt, Users, ArrowRight } from "@/lib/ui/icons";
+import { Tag, Receipt, Users, ArrowRight, Flame, Phone } from "@/lib/ui/icons";
 import { apiClient } from "@/lib/api/client";
 import { toast } from "sonner";
 import type { ConversationWithContact } from "@/hooks/inbox/useConversationsRealtime";
@@ -28,6 +28,7 @@ import { useEditLead } from "@/hooks/kanban/useUpdateLead";
 import { cn } from "@/lib/utils";
 import { rotuloDoContato } from "@/lib/contacts/rotulo-do-contato";
 import { phoneForDisplay } from "@/lib/channels/phone-variants";
+import { engajamentoDaConversa } from "@/lib/inbox/engajamento";
 
 interface Props {
   conversation: ConversationWithContact | null;
@@ -599,6 +600,122 @@ export function CRMSidePanel({ conversation }: Props) {
 
   return (
     <aside className="flex h-full flex-col gap-4 overflow-y-auto border-l border-border bg-background p-4">
+      {/*
+        FICHA DO MOCK (novo visual): cartão do contato no topo — ID curto,
+        avatar, canal, TEMPERATURA, telefone/local/desde-quando e etiquetas.
+        Regras de honestidade:
+        -temperatura deriva de `engajamentoDaConversa` (quente = barra cheia);
+          sem streak, a barra marca o volume (1-2 segmentos) e o tooltip diz
+          que a escala fina ainda não existe — é placeholder de produto, não
+          medida nova;
+        - `Local` não existe no contato: "—" com tooltip, até a fonte existir;
+        - etiquetas reaproveitam os chips + o MESMO `ContactTagsEditor` da
+          seção Contato (um editor, duas portas — o botão só abre o estado).
+      */}
+      {(() => {
+        const eng = engajamentoDaConversa({
+          last_inbound_at: conversation.last_inbound_at ?? null,
+          inbound_total: conversation.inbound_total ?? null,
+        });
+        const total = conversation.inbound_total ?? 0;
+        const segmentos = eng.nivel === "quente" ? 5 : total >= 2 ? 2 : total >= 1 ? 1 : 0;
+        const iniciais = displayName
+          .trim()
+          .split(/\s+/)
+          .filter(Boolean)
+          .slice(0, 2)
+          .map((p) => (p[0] ?? "").toUpperCase())
+          .join("");
+        const desdeQuando = conversation.created_at
+          ? format(new Date(conversation.created_at), "dd/MM/yyyy HH:mm", { locale: localeDaData })
+          : "—";
+        return (
+          <section aria-label={t("Ficha do contato")}>
+            <div className="flex items-center justify-end text-[11px] tabular-nums text-muted-foreground">
+              ID: {contactId ? contactId.slice(0, 6).toUpperCase() : "—"}
+            </div>
+            <div className="mt-1 flex items-center gap-3">
+              <span
+                className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-surface-elevated text-lg font-semibold text-text-muted"
+                aria-hidden
+              >
+                {iniciais || "??"}
+              </span>
+              <div className="min-w-0">
+                <div className="truncate text-sm font-semibold uppercase">{displayName}</div>
+                <div className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
+                  <Phone size={12} weight="fill" aria-hidden />
+                  {conversation.channel_sessions?.display_name ?? "WhatsApp"}
+                </div>
+              </div>
+            </div>
+            <div className="mt-3">
+              <div className="flex items-center justify-center gap-1.5 text-xs font-semibold uppercase tracking-wide">
+                <Flame size={14} weight="fill" className="text-orange-500" aria-hidden />
+                {t("Temperatura")}
+              </div>
+              <div
+                className="mt-1.5 flex justify-center gap-1"
+                role="img"
+                aria-label={eng.motivo ?? t("Sem engajamento recente")}
+                title={eng.motivo ?? t("Sem engajamento recente")}
+              >
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <span
+                    key={i}
+                    className={cn(
+                      "h-2 w-8 rounded-full",
+                      i < segmentos ? "bg-orange-500" : "bg-muted",
+                    )}
+                    aria-hidden
+                  />
+                ))}
+              </div>
+            </div>
+            <dl className="mt-3 space-y-1 text-xs">
+              <div className="flex gap-2">
+                <dt className="w-16 shrink-0 text-muted-foreground">{t("Telefone")}:</dt>
+                <dd className="min-w-0 truncate tabular-nums">
+                  {contact?.phone_number ? phoneForDisplay(contact.phone_number) : "—"}
+                </dd>
+              </div>
+              <div className="flex gap-2">
+                <dt className="w-16 shrink-0 text-muted-foreground">{t("Local")}:</dt>
+                <dd className="text-muted-foreground" title={t("Cidade do contato (em breve)")}>
+                  —
+                </dd>
+              </div>
+              <div className="flex gap-2">
+                <dt className="w-16 shrink-0 text-muted-foreground">{t("Contato")}:</dt>
+                <dd className="tabular-nums">{desdeQuando}</dd>
+              </div>
+            </dl>
+            <div className="mt-3">
+              <div className="text-center text-xs font-semibold uppercase tracking-wide">
+                {t("Etiquetas")}
+              </div>
+              {tags.length > 0 && (
+                <div className="mt-1.5 flex flex-wrap justify-center gap-1">
+                  {tags.map((tag) => (
+                    <ChipDeEtiqueta key={tag} tag={tag} className="h-5 px-2 text-[11px]" />
+                  ))}
+                </div>
+              )}
+              <Button
+                size="sm"
+                variant="outline"
+                className="mt-2 h-7 w-full px-2 text-xs"
+                disabled={readonly || !contactId}
+                aria-pressed={tagEditorOpen}
+                onClick={() => setTagEditorOpen((v) => !v)}
+              >
+                {t("Adicionar etiqueta")}
+              </Button>
+            </div>
+          </section>
+        );
+      })()}
+      <Separator />
       <section>
         <h3 className="text-xs font-semibold text-text">
           {t("Contato")}

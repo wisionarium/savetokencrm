@@ -5135,6 +5135,12 @@ export const DICIONARIO: Traducoes = {
   "Apaga esta tentativa — ela nunca chegou ao cliente": {
     es: "Borra este intento — nunca llegó al cliente",
   },
+  // ─── Inbox: ficha do contato no painel (novo visual) ───
+  Temperatura: { es: "Temperatura" },
+  "Sem engajamento recente": { es: "Sin interacción reciente" },
+  Local: { es: "Ubicación" },
+  "Cidade do contato (em breve)": { es: "Ciudad del contacto (próximamente)" },
+  "Adicionar etiqueta": { es: "Añadir etiqueta" },
   Automático: { es: "Automático" },
   Alguém: { es: "Alguien" },
   "Nota interna · só o time vê": { es: "Nota interna · solo la ve el equipo" },

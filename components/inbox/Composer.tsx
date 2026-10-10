@@ -18,7 +18,6 @@ import { ContactPickerDialog } from "@/components/inbox/composer/ContactPickerDi
 import { DispatchFlowsDialog } from "@/components/inbox/composer/DispatchFlowsDialog";
 import { SeletorDaGaleria, type GaleriaPick } from "@/components/galeria/SeletorDaGaleria";
 import { AudioRecorder } from "@/components/inbox/composer/AudioRecorder";
-import { ReplyReviewPanel } from "@/components/inbox/composer/ReplyReviewPanel";
 import { EmojiButton } from "@/components/inbox/composer/EmojiButton";
 import { resolveSlash, TemplateMenu } from "@/components/inbox/composer/TemplateMenu";
 import { useCreateNote } from "@/hooks/inbox/useCreateNote";
@@ -268,9 +267,7 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
           mode === "note" && "border-warning/40 bg-warning-bg",
         )}
       >
-        {mode === "reply" && (
-          <ReplyReviewPanel conversationId={conversationId} disabled={isDisabled} />
-        )}
+        {/* O assistente ("Sugerir resposta") mora no robô do header, em popover. */}
         <TemplateMenu
           open={menuOpen}
           query={slash.query}

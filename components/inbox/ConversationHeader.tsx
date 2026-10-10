@@ -14,6 +14,8 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ReplyReviewPanel } from "@/components/inbox/composer/ReplyReviewPanel";
 import { JanelaSelo } from "@/components/inbox/JanelaSelo";
 import {
   Archive,
@@ -23,6 +25,7 @@ import {
   DotsThreeVertical,
   IdentificationCard,
   Phone,
+  Robot,
   X,
 } from "@/lib/ui/icons";
 import { useAuth } from "@/hooks/auth/AuthProvider";
@@ -169,6 +172,15 @@ export function ConversationHeader({ conversation }: Props) {
    */
   const podePausar =
     automaticoAtivo && !encerrada && conversation.assigned_to_user_id !== null;
+  /**
+   * O assistente sugere rascunho, não envia: conversa encerrada ou contato
+   * bloqueado/anonimizado desliga a geração (mesma guarda do composer para o
+   * que SAI — aqui só há o que sugerir).
+   */
+  const assistenciaBloqueada =
+    encerrada ||
+    conversation.contacts?.is_blocked === true ||
+    conversation.contacts?.is_anonymized === true;
 
   if (user.support?.access_mode === "support_readonly") return <header className="flex items-center justify-between border-b p-4">
     <strong>{displayName}</strong><span className="text-sm text-muted-foreground">{STATUS_LABEL[status] ?? status} · Somente leitura</span>
@@ -323,6 +335,34 @@ export function ConversationHeader({ conversation }: Props) {
             {pausar.isPending ? t("Pausando...") : t("Pausar o automático")}
           </Button>
         )}
+        {/*
+          ASSISTENTE NO ROBÔ — decisão de produto (mock do dono): o painel
+          "Assistência do agente / Sugerir resposta" sai de baixo do fio e mora
+          neste popover. O COMPONENTE é o mesmo (`ReplyReviewPanel`, mesma
+          query `["reply-drafts", conversationId]`, mesmo fluxo
+          gerar→revisar→aprovar/rejeitar) — só mudou de endereço. O selo de
+          estado (`OwnerBadge`, "quem manda") continua ao lado, intocado: o
+          botão PERGUNTA, o selo INFORMA.
+        */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-8 w-8 p-0"
+              aria-label={t("Assistente do agente")}
+              title={t("Sugerir resposta com o agente")}
+            >
+              <Robot size={16} weight="duotone" aria-hidden />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-96">
+            <ReplyReviewPanel
+              conversationId={conversation.id}
+              disabled={assistenciaBloqueada}
+            />
+          </PopoverContent>
+        </Popover>
         {/*
           AÇÕES SECUNDÁRIAS NO KEBAB (⋮) — decisão de produto (mock do dono):
           `Transferir, Lembrar, Fechar, Arquivar…` saem da barra e vivem neste

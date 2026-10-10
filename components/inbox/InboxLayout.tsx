@@ -374,14 +374,18 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
   // Consertado o header, o `1fr` volta a encolher sozinho — `minmax(0,1fr)`
   // foi medido aqui e não mudou um pixel, então não entrou.
   //
-  // Duas faixas em vez de uma: compacta onde aperta, generosa onde há espaço.
-  // Em 1280 isso dá 424px de conversa em vez de 372 — 54px de folga sobre o
-  // piso do composer (370px), em vez dos 2px que a versão de uma faixa só
-  // deixava. Margem de 2px não é margem, é sorte.
+  // NOVO PISO `lg` (decisão do dono, novo visual): o painel entra já em
+  // 1024px — escala 125% do Windows e zoom do navegador derrubam a viewport
+  // CSS para baixo de 1280, e o perfil sumia justo no notebook comum. As
+  // trilhas encolhem (`232px`/`264px`) e o meio usa `minmax(0,1fr)` para
+  // NUNCA empurrar o painel para fora (a lição dos 707px). Troca assumida: em
+  // 1024 com a sidebar do app expandida o meio aperta (~290px) — o dono
+  // aceitou ("não tem problema"), e recolher a sidebar (agora com hover)
+  // devolve ~460px. Abaixo de `lg` vale a regra do celular (uma coluna + Ficha).
   return (
     <OpenConversationProvider conversationId={selectedId}>
     <div
-      className="grid h-[calc(100dvh-3.5rem-2*var(--space-6))] w-full grid-cols-1 md:grid-cols-[300px_1fr] xl:grid-cols-[272px_1fr_296px] 2xl:grid-cols-[300px_1fr_320px]"
+      className="grid h-[calc(100dvh-3.5rem-2*var(--space-6))] w-full grid-cols-1 md:grid-cols-[300px_1fr] lg:grid-cols-[232px_minmax(0,1fr)_264px] xl:grid-cols-[272px_1fr_296px] 2xl:grid-cols-[300px_1fr_320px]"
       /*
        * O ESTADO DO TEMPO REAL, LEGÍVEL DE FORA — mesmo par que o dossiê do lead
        * já publica (`LeadDossier`), e pela mesma razão: quando a entrega morre,
@@ -476,7 +480,7 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
             {selectedConversation && (
               <Sheet open={fichaAberta} onOpenChange={setFichaAberta}>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-9 gap-1 px-2 xl:hidden">
+                  <Button variant="ghost" size="sm" className="h-9 gap-1 px-2 lg:hidden">
                     <IdentificationCard size={16} />
                     {t("Ficha")}
                   </Button>
@@ -542,7 +546,7 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
         )}
       </div>
 
-      <div className="hidden h-full min-h-0 xl:block">
+      <div className="hidden h-full min-h-0 lg:block">
         <CRMSidePanel conversation={selectedConversation} />
       </div>
 

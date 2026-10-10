@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { ConversationHeader } from "@/components/inbox/ConversationHeader";
@@ -46,6 +46,15 @@ vi.mock("@/hooks/inbox/useCloseConversation", () => ({
 }));
 vi.mock("@/hooks/inbox/useReleaseConversation", () => ({
   useReleaseConversation: () => ({ mutate: vi.fn(), isPending: false }),
+}));
+// O kebab (⋮) usa `useSnoozeConversation` direto para o submenu "Lembrar" —
+// sem este dublê, o hook verdadeiro rodaria sob o provider (sem fetch
+// automático, mas acoplando o teste à rede por acidente).
+vi.mock("@/hooks/inbox/useSnoozeConversation", () => ({
+  useSnoozeConversation: () => ({
+    snooze: { mutate: vi.fn(), isPending: false },
+    cancel: { mutate: vi.fn(), isPending: false },
+  }),
 }));
 // O nome do módulo importa: a primeira versão deste arquivo mockava
 // "useResumeAi", que NÃO EXISTE — o real é `useResumeAiAttendance`. O teste
@@ -109,27 +118,45 @@ describe("header do inbox — não trava a largura da tela", () => {
     expect(acoes.className).toContain("min-w-0");
   });
 
-  it("as ações continuam TODAS no header — reorganizar não é esconder", () => {
+  it("o primário continua exposto e o secundário vive no kebab", () => {
     renderHeader();
-    // Se um dia alguém "resolver" o aperto colapsando ações num menu, este caso
-    // reprova. Esconder ação de quem atende é pior que uma segunda linha.
-    for (const rotulo of ["Assumir", "Transferir", "Fechar"]) {
-      expect(screen.getByText(rotulo), `a ação "${rotulo}" sumiu do header`).toBeTruthy();
+    // Contrato novo (decisão de produto, mock do dono): gesto de resposta
+    // (`Assumir`) nunca se esconde; `Transferir/Lembrar/Fechar` vivem no menu
+    // "Mais ações". A versão anterior deste caso proibia colapsar ação em menu
+    // — a direção mudou por pedido explícito do dono, não por aperto de layout,
+    // e este caso agora vigia o NOVO contrato em vez do antigo.
+    expect(
+      screen.getByRole("button", { name: "Assumir" }),
+      'o "Assumir" tem de ficar exposto — gesto de resposta não vai para menu',
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "Mais ações" }),
+      'o kebab "Mais ações" tem de existir no header',
+    ).toBeTruthy();
+  });
+
+  it('o kebab contém Transferir, Lembrar e Fechar (conversa aberta)', async () => {
+    renderHeader();
+    // Radix abre o menu no `pointerdown`, não no `click`.
+    const kebab = screen.getByRole("button", { name: "Mais ações" });
+    fireEvent.pointerDown(kebab, { button: 0, ctrlKey: false, pointerId: 1 });
+    for (const rotulo of ["Transferir", "Lembrar", "Fechar", "Arquivar"]) {
+      expect(
+        await screen.findByText(rotulo),
+        `a ação "${rotulo}" sumiu do kebab`,
+      ).toBeTruthy();
     }
   });
 
-  it('"Ver contato" existe no DOM e só se cala onde há outra porta', () => {
+  it('"Ver contato" vive no kebab e aponta para a ficha', async () => {
     renderHeader();
-    // Ele NÃO sai do markup: some por CSS a partir de `xl`, exatamente a largura
-    // em que o painel lateral entra na tela com um "Ver contato" próprio. A
-    // distinção importa — remover do DOM tiraria a ação de quem usa 1024px, que
-    // é onde o painel não existe e esta é a única porta para o contato.
-    const link = screen.getByText("Ver contato").closest("a, button") as HTMLElement;
-    expect(link, "o link para o contato sumiu do markup").toBeTruthy();
-    const classes = `${link.className} ${link.parentElement?.className ?? ""}`;
-    expect(
-      classes,
-      "sem `xl:hidden`, a duplicata volta e o header ganha uma segunda linha em 1280px",
-    ).toContain("xl:hidden");
+    // Saiu da barra (onde carregava `xl:hidden` contra a duplicata do painel)
+    // para o menu: no kebab a duplicata não custa linha de layout, então a
+    // condição vira só "há contato".
+    const kebab = screen.getByRole("button", { name: "Mais ações" });
+    fireEvent.pointerDown(kebab, { button: 0, ctrlKey: false, pointerId: 1 });
+    const link = (await screen.findByText("Ver contato")).closest("a") as HTMLElement;
+    expect(link, "o link para o contato sumiu do kebab").toBeTruthy();
+    expect(link.getAttribute("href")).toBe("/app/contacts/ct-1");
   });
 });

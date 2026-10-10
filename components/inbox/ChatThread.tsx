@@ -294,7 +294,15 @@ export function ChatThread({ conversationId, onResponder, dono, contatoId, dispa
 
   return (
     <div {...sinalDoCanal} className="flex h-full flex-col">
-      <div ref={scrollerRef} className="flex-1 overflow-y-auto py-2">
+      {/*
+        PAPEL DE PAREDE (novo visual): pontilhado sutil só no escuro, como no
+        mensageiro. Só `dark:` — no claro o fundo segue o da casca. Sem asset:
+        é `radial-gradient`, então não há imagem para versionar nem quebrar.
+      */}
+      <div
+        ref={scrollerRef}
+        className="flex-1 overflow-y-auto bg-background py-2 dark:bg-[#0b141a] dark:bg-[radial-gradient(rgba(255,255,255,0.045)_1px,transparent_1px)] dark:bg-[size:18px_18px]"
+      >
         {q.hasNextPage && (
           <div className="flex justify-center py-2">
             <Button

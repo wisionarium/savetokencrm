@@ -26,6 +26,7 @@ import {
   IdentificationCard,
   Phone,
   Robot,
+  Star,
   X,
 } from "@/lib/ui/icons";
 import { useAuth } from "@/hooks/auth/AuthProvider";
@@ -200,7 +201,22 @@ export function ConversationHeader({ conversation }: Props) {
     <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-background px-4 py-3">
       <div className="min-w-0">
         <div className="flex items-center gap-2">
-          <h2 className="truncate text-sm font-semibold">{displayName}</h2>
+          {/*
+            ESTRELA (placeholder, novo visual): o mock fixa conversa favorita, e
+            HOJE não há campo para isso (persistir exige migration — avisado ao
+            dono). Desabilitada com o motivo no tooltip: estrela que finge
+            funcionar e esquece no F5 é pior que estrela assumidamente futura.
+          */}
+          <span title={t("Favoritar conversa (em breve)")}>
+            <Star
+              size={16}
+              weight="fill"
+              className="shrink-0 text-muted-foreground/40"
+              aria-hidden
+            />
+          </span>
+          {/* Caixa alta por CSS, como na lista (o dado continua intacto). */}
+          <h2 className="truncate text-sm font-semibold uppercase">{displayName}</h2>
           <Badge variant="outline" className="h-4 px-1.5 text-[10px]">
             {t(STATUS_LABEL[status] ?? status)}
           </Badge>
@@ -259,8 +275,11 @@ export function ConversationHeader({ conversation }: Props) {
         {isOpen && (
           <Button
             size="sm"
-            variant="default"
             disabled={claim.isPending}
+            // Verde do mock ("Assumir serviço"): o gesto primário do header tem
+            // cor própria, fora da rampa da marca. O RÓTULO não muda ("Assumir"
+            // é contrato de teste e de dicionário — ver comentário abaixo).
+            className="bg-green-600 text-white hover:bg-green-700"
             // O rótulo NÃO muda (é contrato: `inbox-header-nao-trava` e o
             // dicionário de espanhol o citam). O que faltava era a consequência
             // dita: desde a 0173 assumir também para o atendimento automático, e
@@ -335,6 +354,17 @@ export function ConversationHeader({ conversation }: Props) {
             {pausar.isPending ? t("Pausando...") : t("Pausar o automático")}
           </Button>
         )}
+        {/*
+          TELEFONE (placeholder, novo visual): o mock tem chamada de voz, e a
+          voz nasce DESLIGADA (`WACALLS_API_BASE_URL` vazio = sem oferta).
+          Desabilitado com o motivo no tooltip — botão que finge ligar e dá
+          401 em toda chamada é pior que botão assumidamente futuro.
+        */}
+        <span title={t("Chamada de voz (em breve)")}>
+          <Button size="sm" variant="ghost" className="h-8 w-8 p-0" disabled>
+            <Phone size={16} weight="regular" aria-hidden />
+          </Button>
+        </span>
         {/*
           ASSISTENTE NO ROBÔ — decisão de produto (mock do dono): o painel
           "Assistência do agente / Sugerir resposta" sai de baixo do fio e mora

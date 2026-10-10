@@ -5141,6 +5141,9 @@ export const DICIONARIO: Traducoes = {
   Local: { es: "Ubicación" },
   "Cidade do contato (em breve)": { es: "Ciudad del contacto (próximamente)" },
   "Adicionar etiqueta": { es: "Añadir etiqueta" },
+  // ─── Inbox: header final do novo visual (estrela e telefone, placeholders) ───
+  "Favoritar conversa (em breve)": { es: "Fijar conversación (próximamente)" },
+  "Chamada de voz (em breve)": { es: "Llamada de voz (próximamente)" },
   Automático: { es: "Automático" },
   Alguém: { es: "Alguien" },
   "Nota interna · só o time vê": { es: "Nota interna · solo la ve el equipo" },

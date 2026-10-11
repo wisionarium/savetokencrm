@@ -202,6 +202,39 @@ describe("Sidebar agrupado", () => {
     expect(screen.getByRole("link", { name: /Inbox/ })).toBeTruthy();
   });
 
+  it("recolhido mostra UM ícone por grupo — o principal — e nada mais", () => {
+    comoPapel("admin");
+    render(<Sidebar collapsed />);
+    // O rail é vitrine, não inventário: o clique navega direto ao principal e
+    // o resto mora no hover (que revela o menu), no ⌘K e por URL. ~22 ícones
+    // num rail de 64px era o "confuso" que o dono mediu no print.
+    for (const [nome, href] of [
+      ["Inbox", "/app/inbox"],
+      ["Funis", "/app/kanban"],
+      ["Agentes", "/app/ai/agents"],
+      ["Fluxos", "/app/ai/fluxos"],
+      ["Desempenho", "/app/metrics"],
+    ] as const) {
+      expect(screen.getByRole("link", { name: nome })).toHaveAttribute("href", href);
+    }
+    for (const nome of [
+      "Agenda",
+      "Respostas rápidas",
+      "Galeria",
+      "Contatos",
+      "Tarefas",
+      "Produtos",
+      "Alertas",
+      "Atividades",
+      "Propostas",
+    ]) {
+      expect(
+        screen.queryByRole("link", { name: nome }),
+        `o "${nome}" vazou para o rail — ele mora no hover/⌘K, não aqui`,
+      ).toBeNull();
+    }
+  });
+
   it("marca a rota atual com aria-current", () => {
     comoPapel("admin");
     render(<Sidebar collapsed={false} />);

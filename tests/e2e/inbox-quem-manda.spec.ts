@@ -239,9 +239,11 @@ test.describe("Inbox — quem manda nesta conversa", () => {
     await captura(page, "1-automatico-no-comando");
 
     // -----------------------------------------------------------------
-    // (2) A pessoa assume — pelo botão, como ela faria.
+    // (2) A pessoa assume — pelo kebab ("Mais ações"), como ela faria.
+    // (O "Assumir" mora no ⋮ ao lado do robô desde o mock do dono.)
     // -----------------------------------------------------------------
-    await page.getByRole("button", { name: /^Assumir$/i }).click();
+    await page.getByRole("button", { name: "Mais ações" }).click();
+    await page.getByRole("menuitem", { name: /^Assumir$/i }).click();
 
     // -----------------------------------------------------------------
     // (3) A tela passa a dizer QUEM manda, e o selo explica o porquê.

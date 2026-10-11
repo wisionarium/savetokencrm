@@ -32,6 +32,13 @@ import { engajamentoDaConversa } from "@/lib/inbox/engajamento";
 
 interface Props {
   conversation: ConversationWithContact | null;
+  /**
+   * Texto do motivo da janela de 24h fechada (espelho do centro, mock do dono:
+   * a caixa laranja vive no painel direito). `null` = janela aberta, sem caixa.
+   * O bloqueio de verdade continua no centro (`JanelaFechadaAviso` + composer)
+   * — aqui é só o AVISO, nunca a porta de envio de modelo.
+   */
+  janelaFechada?: string | null;
 }
 
 interface LeadRow {
@@ -454,7 +461,7 @@ function CamposDoFunil({
   );
 }
 
-export function CRMSidePanel({ conversation }: Props) {
+export function CRMSidePanel({ conversation, janelaFechada }: Props) {
   const { user } = useAuth();
   const readonly = user.support?.access_mode === "support_readonly";
   const localeDaData = useLocaleDeData();
@@ -711,6 +718,20 @@ export function CRMSidePanel({ conversation }: Props) {
               >
                 {t("Adicionar etiqueta")}
               </Button>
+              {/*
+                CAIXA LARANJA DO MOCK: a janela de 24h explicada onde o olho do
+                dono espera. Só AVISO — quem envia modelo é o `JanelaFechadaAviso`
+                do centro; duplicar a porta aqui seria duas fontes para o mesmo
+                envio. Tokens de warning (claro/escuro), nunca cor fixa.
+              */}
+              {janelaFechada && (
+                <div
+                  role="note"
+                  className="mt-3 rounded-md border border-warning-border bg-warning-bg/40 p-2 text-[11px] leading-snug"
+                >
+                  {janelaFechada}
+                </div>
+              )}
             </div>
           </section>
         );

@@ -10,7 +10,7 @@ import {
   type ClipboardEvent,
   type KeyboardEvent,
 } from "react";
-import { PaperPlaneTilt } from "@/lib/ui/icons";
+import { ChatCircle, List, PaperPlaneTilt } from "@/lib/ui/icons";
 import { Button } from "@/components/ui/button";
 import { AttachMenu } from "@/components/inbox/composer/AttachMenu";
 import { AttachmentPreviewDialog } from "@/components/inbox/composer/AttachmentPreviewDialog";
@@ -167,6 +167,21 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
     if (!ta) return;
     ta.style.height = "auto";
     ta.style.height = `${Math.min(ta.scrollHeight, 160)}px`;
+  }
+
+  /*
+   * ABRIR O MENU DE MODELOS (💬 da barra do mock): planta "/" e foca — o
+   * `TemplateMenu` abre pelo `resolveSlash`, o mesmo caminho de digitar.
+   * Com rascunho em andamento não mexe no texto, só reabre o menu.
+   */
+  function abrirTemplates() {
+    if (respostaBarrada) return;
+    setMenuDismissed(false);
+    if (!text) setText("/");
+    requestAnimationFrame(() => {
+      taRef.current?.focus();
+      autoresize();
+    });
   }
 
   function handleSubmit() {
@@ -336,34 +351,6 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
           </div>
         )}
         <div className="flex items-end gap-2">
-          {mode === "reply" && (
-            <AttachMenu
-              disabled={respostaBarrada}
-              onPick={setPendingFile}
-              onPickContact={() => setContactPickerOpen(true)}
-              onPickFlow={() => setDispatchFlowsOpen(true)}
-              onPickGallery={() => setGaleriaOpen(true)}
-            />
-          )}
-          <EmojiButton
-            disabled={isDisabled}
-            onPick={(emoji) => {
-              const ta = taRef.current;
-              if (!ta) {
-                setText((t) => t + emoji);
-                return;
-              }
-              const start = ta.selectionStart ?? text.length;
-              const end = ta.selectionEnd ?? text.length;
-              const next = text.slice(0, start) + emoji + text.slice(end);
-              setText(next);
-              requestAnimationFrame(() => {
-                ta.focus();
-                ta.selectionStart = ta.selectionEnd = start + emoji.length;
-                autoresize();
-              });
-            }}
-          />
           <textarea
             ref={taRef}
             value={text}
@@ -400,29 +387,90 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
                 : t("Enter envia · Shift+Enter quebra linha")
             }
             className={cn(
-              "max-h-40 min-h-9 flex-1 resize-none rounded-md border border-input bg-background px-3 py-2 text-sm",
+              // Pill do mock ("Escreva uma mensagem…" + seta dentro).
+              "max-h-40 min-h-9 flex-1 resize-none rounded-full border border-input bg-background px-4 py-2 text-sm",
               "placeholder:text-muted-foreground focus:ring-1 focus:ring-ring focus:outline-hidden",
             )}
             disabled={mode === "note" ? isDisabled : respostaBarrada}
             aria-label={t("Mensagem")}
           />
-          {text.trim() || mode === "note" ? (
-            <Button
+          <Button
+            type="button"
+            size="icon"
+            className="h-9 w-9 shrink-0 rounded-full"
+            onClick={handleSubmit}
+            disabled={(mode === "note" ? isDisabled : respostaBarrada) || !text.trim()}
+            aria-label={t("Enviar")}
+          >
+            <PaperPlaneTilt size={16} weight="fill" aria-hidden />
+          </Button>
+        </div>
+        {/*
+          BARRA DO MOCK (💬 📎 🎙 ☰): os mesmos controles de antes, só mudaram
+          de andar — saíram de ao lado do campo para a fileira de baixo. Nada
+          foi removido: anexo/contato/fluxo/galeria (`AttachMenu`), emoji,
+          modelos (`/`), áudio e disparar fluxo continuam todos alcançáveis.
+          Nota interna é só texto: anexo, áudio e fluxo não aparecem nela.
+        */}
+        <div className="mt-1.5 flex items-center justify-center gap-1">
+          {mode === "reply" && (
+            <AttachMenu
+              disabled={respostaBarrada}
+              onPick={setPendingFile}
+              onPickContact={() => setContactPickerOpen(true)}
+              onPickFlow={() => setDispatchFlowsOpen(true)}
+              onPickGallery={() => setGaleriaOpen(true)}
+            />
+          )}
+          <EmojiButton
+            disabled={isDisabled}
+            onPick={(emoji) => {
+              const ta = taRef.current;
+              if (!ta) {
+                setText((t) => t + emoji);
+                return;
+              }
+              const start = ta.selectionStart ?? text.length;
+              const end = ta.selectionEnd ?? text.length;
+              const next = text.slice(0, start) + emoji + text.slice(end);
+              setText(next);
+              requestAnimationFrame(() => {
+                ta.focus();
+                ta.selectionStart = ta.selectionEnd = start + emoji.length;
+                autoresize();
+              });
+            }}
+          />
+          {mode === "reply" && (
+            <button
               type="button"
-              size="icon"
-              className="h-9 w-9 shrink-0"
-              onClick={handleSubmit}
-              disabled={(mode === "note" ? isDisabled : respostaBarrada) || !text.trim()}
-              aria-label={t("Enviar")}
+              onClick={abrirTemplates}
+              disabled={respostaBarrada}
+              aria-label={t("Modelos de mensagem")}
+              title={t("Modelos de mensagem")}
+              className="flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40"
             >
-              <PaperPlaneTilt size={16} weight="fill" aria-hidden />
-            </Button>
-          ) : (
+              <ChatCircle size={18} weight="regular" aria-hidden />
+            </button>
+          )}
+          {mode === "reply" && (
             <AudioRecorder
               conversationId={conversationId}
               disabled={respostaBarrada}
               onRecordingChange={avisarGravando}
             />
+          )}
+          {mode === "reply" && (
+            <button
+              type="button"
+              onClick={() => setDispatchFlowsOpen(true)}
+              disabled={respostaBarrada}
+              aria-label={t("Disparar fluxo")}
+              title={t("Disparar fluxo")}
+              className="flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40"
+            >
+              <List size={18} weight="regular" aria-hidden />
+            </button>
           )}
         </div>
       </div>

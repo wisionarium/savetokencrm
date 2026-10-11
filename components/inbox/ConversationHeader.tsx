@@ -21,6 +21,7 @@ import {
   Archive,
   ArrowRight,
   ArrowsClockwise,
+  CaretDown,
   Clock,
   DotsThreeVertical,
   IdentificationCard,
@@ -41,7 +42,6 @@ import {
 import { useResumeAiAttendance } from "@/hooks/inbox/useResumeAiAttendance";
 import { usePauseAiAttendance } from "@/hooks/inbox/usePauseAiAttendance";
 import { useAutomaticoAtivo } from "@/hooks/ai/useAutomaticoAtivo";
-import { OwnerBadge } from "@/components/kanban/OwnerBadge";
 import { comandoDaConversa, ROTULO_DO_MOTIVO } from "@/lib/inbox/comando-da-conversa";
 import { ReassignDialog } from "@/components/inbox/ReassignDialog";
 import type { ConversationWithContact } from "@/hooks/inbox/useConversationsRealtime";
@@ -61,8 +61,9 @@ interface Props {
  * contato nem atribuição, e o motor nunca o lê. Medido em 2026-08-30 num print
  * do dono: "Aguardando atendente" e "Automático" no mesmo cabeçalho.
  *
- * Quem responde "quem manda" é o `OwnerBadge`, que vem de `comandoDaConversa`.
- * Aqui fica só o que o status realmente sabe: o episódio está aberto ou acabou.
+ * Quem responde "quem manda" é o botão de responsável ("Sem responsável ∨"),
+ * que vem de `comandoDaConversa`. Aqui fica só o que o status realmente sabe:
+ * o episódio está aberto ou acabou.
  *
  * Cobre os SETE valores do CHECK de propósito — o call site é
  * `t(STATUS_LABEL[status] ?? status)`, e um buraco imprime o token cru em inglês
@@ -211,7 +212,7 @@ export function ConversationHeader({ conversation }: Props) {
             <Star
               size={16}
               weight="fill"
-              className="shrink-0 text-muted-foreground/40"
+              className="shrink-0 text-yellow-400"
               aria-hidden
             />
           </span>
@@ -245,21 +246,31 @@ export function ConversationHeader({ conversation }: Props) {
           )}
         </div>
 
-        {/* QUEM ESTÁ NO COMANDO, com nome e por GEOMETRIA — disco cheio para
-            pessoa, anel vazado para o automático. É o mesmo componente do card do
-            funil e do dossiê: um terceiro jeito de dizer "quem manda", por cor ou
-            por texto, faria a mesma pergunta ter três respostas diferentes na
-            mesma tela. Cor não sobrevive ao daltonismo nem ao teste do metro. */}
-        <div className="mt-1 flex items-center gap-2" data-testid="comando-da-conversa">
-          {comando.quem === "humano" ? (
-            <OwnerBadge ownerKind="user" ownerName={comando.nome ?? t("Atendente")} />
-          ) : comando.quem === "automatico" ? (
-            <OwnerBadge ownerKind="ai" ownerName={t("Automático")} />
-          ) : (
-            // `ninguem`, `aguardando` e `encerrada` sem dono caem aqui: o disco
-            // TRACEJADO do OwnerBadge, que é como o funil já desenha "ninguém".
-            <OwnerBadge ownerKind={null} ownerName={null} />
-          )}
+        {/*
+          RESPONSÁVEL (mock): "Sem responsável ∨" / nome de quem atende.
+          É o MESMO `data-testid="comando-da-conversa"` de antes — o e2e
+          `inbox-quem-manda` lê "sem respons" daqui. Abre o `ReassignDialog`
+          (transferir), que é a porta de trocar o dono sem sair do header.
+          O selo de motivo (badge-atendimento-humano) continua na linha de
+          cima, intocado: este botão DIZ o dono, o selo EXPLICA o estado.
+        */}
+        <div className="mt-1 flex items-center gap-2">
+          <button
+            type="button"
+            data-testid="comando-da-conversa"
+            onClick={() => setReassignOpen(true)}
+            className="flex min-w-0 items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+            title={t("Trocar o responsável desta conversa")}
+          >
+            <span className="truncate">
+              {comando.quem === "humano"
+                ? (comando.nome ?? t("Atendente"))
+                : comando.quem === "automatico"
+                  ? t("Automático")
+                  : t("Sem responsável")}
+            </span>
+            <CaretDown size={12} weight="bold" aria-hidden className="shrink-0" />
+          </button>
         </div>
         {phone && (
           <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
@@ -272,39 +283,6 @@ export function ConversationHeader({ conversation }: Props) {
           barra pode encolher e quebrar internamente, e os botões continuam
           todos visíveis e clicáveis — só que em duas linhas quando preciso. */}
       <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-        {isOpen && (
-          <Button
-            size="sm"
-            disabled={claim.isPending}
-            // Verde do mock ("Assumir serviço"): o gesto primário do header tem
-            // cor própria, fora da rampa da marca. O RÓTULO não muda ("Assumir"
-            // é contrato de teste e de dicionário — ver comentário abaixo).
-            className="bg-green-600 text-white hover:bg-green-700"
-            // O rótulo NÃO muda (é contrato: `inbox-header-nao-trava` e o
-            // dicionário de espanhol o citam). O que faltava era a consequência
-            // dita: desde a 0173 assumir também para o atendimento automático, e
-            // um botão que muda duas coisas precisa anunciar as duas.
-            title={t("Você passa a responder esta conversa e o atendimento automático para aqui.")}
-            onClick={() =>
-              claim.mutate({
-                conversation_id: conversation.id,
-                expected_assignee: conversation.assigned_to_user_id,
-              })
-            }
-          >
-            {t("Assumir")}
-          </Button>
-        )}
-        {isMineAssigned && (
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={release.isPending}
-            onClick={() => release.mutate({ conversation_id: conversation.id })}
-          >
-            {t("Liberar")}
-          </Button>
-        )}
         {/* O INTERRUPTOR. Um botão, dois rótulos, um slot.
             Fica ANTES de transferir/fechar porque é a ação que a pessoa procura
             quando terminou o que tinha para fazer aqui.
@@ -370,9 +348,9 @@ export function ConversationHeader({ conversation }: Props) {
           "Assistência do agente / Sugerir resposta" sai de baixo do fio e mora
           neste popover. O COMPONENTE é o mesmo (`ReplyReviewPanel`, mesma
           query `["reply-drafts", conversationId]`, mesmo fluxo
-          gerar→revisar→aprovar/rejeitar) — só mudou de endereço. O selo de
-          estado (`OwnerBadge`, "quem manda") continua ao lado, intocado: o
-          botão PERGUNTA, o selo INFORMA.
+          gerar→revisar→aprovar/rejeitar) — só mudou de endereço. O dono
+          ("Sem responsável ∨", segunda linha) continua ao lado, intocado: o
+          botão PERGUNTA, o dono INFORMA.
         */}
         <Popover>
           <PopoverTrigger asChild>
@@ -394,13 +372,14 @@ export function ConversationHeader({ conversation }: Props) {
           </PopoverContent>
         </Popover>
         {/*
-          AÇÕES SECUNDÁRIAS NO KEBAB (⋮) — decisão de produto (mock do dono):
-          `Transferir, Lembrar, Fechar, Arquivar…` saem da barra e vivem neste
-          menu. O PRIMÁRIO continua exposto (`Assumir`, `Liberar`,
-          `Devolver`/`Pausar`): gesto de resposta não se esconde. A catraca
-          `tests/unit/inbox-header-nao-trava.test.tsx` foi atualizada junto —
-          ela proibia colapsar ação em menu, e a direção mudou por pedido
-          explícito do dono, não por aperto de layout.
+          OS 5 NO KEBAB (⋮) — decisão de produto (mock do dono, refinada pelo
+          dono): `Assumir, Transferir, Lembrar, Fechar, Arquivar` vivem neste
+          menu, e NADA primário fica exposto na barra — só ícones
+          (telefone, robô, ⋮) mais o interruptor `Devolver`/`Pausar` quando
+          aplicável. A catraca `tests/unit/inbox-header-nao-trava.test.tsx`
+          vigia o NOVO contrato (os 5 no menu). O atalho de teclado de assumir
+          (`InboxKeyboardShortcuts`) continua existindo: gesto escondido do
+          mouse segue a um toque do teclado.
         */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -414,6 +393,38 @@ export function ConversationHeader({ conversation }: Props) {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="min-w-52">
+            {/*
+              OS 5 NO KEBAB (decisão do dono): Assumir, Transferir, Lembrar,
+              Fechar e Arquivar vivem neste menu, ao lado do robô. O RÓTULO
+              "Assumir" não muda (contrato de dicionário) e a mutation é a
+              mesma do botão exposto que existia aqui — inclusive calar o
+              automático junto (0173). O atalho de teclado (`InboxKeyboardShortcuts`,
+              `onClaim`) continua assumindo sem abrir o menu.
+            */}
+            {isOpen && (
+              <DropdownMenuItem
+                disabled={claim.isPending}
+                title={t("Você passa a responder esta conversa e o atendimento automático para aqui.")}
+                onClick={() =>
+                  claim.mutate({
+                    conversation_id: conversation.id,
+                    expected_assignee: conversation.assigned_to_user_id,
+                  })
+                }
+              >
+                <ArrowRight size={14} aria-hidden />
+                {claim.isPending ? t("Assumindo...") : t("Assumir")}
+              </DropdownMenuItem>
+            )}
+            {isMineAssigned && (
+              <DropdownMenuItem
+                disabled={release.isPending}
+                onClick={() => release.mutate({ conversation_id: conversation.id })}
+              >
+                <ArrowRight size={14} aria-hidden className="rotate-180" />
+                {t("Liberar")}
+              </DropdownMenuItem>
+            )}
             {!encerrada && (
               <DropdownMenuItem onClick={() => setReassignOpen(true)}>
                 <ArrowRight size={14} aria-hidden />

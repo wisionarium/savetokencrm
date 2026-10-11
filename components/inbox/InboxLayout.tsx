@@ -27,7 +27,7 @@ import { InboxKeyboardShortcuts } from "./InboxKeyboardShortcuts";
 import { ShortcutsHelpDialog } from "./ShortcutsHelpDialog";
 import { OpenConversationProvider } from "@/hooks/notifications/OpenConversationContext";
 // ADR-05: ícone de feature sai do mapa canônico, nunca do pacote direto.
-import { CaretLeft, ChatCircle, IdentificationCard } from "@/lib/ui/icons";
+import { CaretLeft, CaretRight, ChatCircle, IdentificationCard } from "@/lib/ui/icons";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -170,8 +170,18 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
    * fluxo…" no fio) é o thread — irmãos, estado do pai.
    */
   const [fluxoDisparando, setFluxoDisparando] = useState(false);
-  /** A ficha do contato como painel deslizante — só existe abaixo do `xl`. */
+  /** A ficha do contato como painel deslizante — só existe abaixo do `md`. */
   const [fichaAberta, setFichaAberta] = useState(false);
+  /**
+   * Painel direito recolhido ou aberto (decisão do dono: o perfil aparece
+   * SEMPRE, independente do zoom — função não pode depender de zoom).
+   *
+   * Antes o painel nascia em `lg` (1024px CSS) e sumia com zoom 100% + escala
+   * Windows 125% no notebook comum. Agora o piso é `md` (768px CSS) e, quando
+   * aperta, quem recolhe é a PESSOA (botão de colapso), não o breakpoint.
+   * Abaixo de `md` vale a regra do celular (uma coluna + Ficha em Sheet).
+   */
+  const [painelAberto, setPainelAberto] = useState(true);
   /**
    * A mensagem escolhida para responder "em cima".
    *
@@ -374,18 +384,25 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
   // Consertado o header, o `1fr` volta a encolher sozinho — `minmax(0,1fr)`
   // foi medido aqui e não mudou um pixel, então não entrou.
   //
-  // NOVO PISO `lg` (decisão do dono, novo visual): o painel entra já em
-  // 1024px — escala 125% do Windows e zoom do navegador derrubam a viewport
-  // CSS para baixo de 1280, e o perfil sumia justo no notebook comum. As
-  // trilhas encolhem (`232px`/`264px`) e o meio usa `minmax(0,1fr)` para
-  // NUNCA empurrar o painel para fora (a lição dos 707px). Troca assumida: em
-  // 1024 com a sidebar do app expandida o meio aperta (~290px) — o dono
-  // aceitou ("não tem problema"), e recolher a sidebar (agora com hover)
-  // devolve ~460px. Abaixo de `lg` vale a regra do celular (uma coluna + Ficha).
+  // PISO `md` (decisão do dono, mock): o painel entra já em 768px CSS e NUNCA
+  // some por zoom — escala 125% do Windows e zoom do navegador derrubavam a
+  // viewport para baixo de 1024 e o perfil sumia justo no notebook comum, e
+  // função não pode depender de zoom. As trilhas encolhem (`232px`/`264px`) e
+  // o meio usa `minmax(0,1fr)` para NUNCA empurrar o painel para fora (a lição
+  // dos 707px). Quando aperta, quem recolhe é a PESSOA (`painelAberto`), não o
+  // breakpoint — recolhido vira trilho de 32px com botão de reabrir. Troca
+  // assumida: em 768–1024 com a sidebar do app expandida o meio aperta — o
+  // dono aceitou, e recolher a sidebar ou o painel devolve o espaço. Abaixo de
+  // `md` vale a regra do celular (uma coluna + Ficha em Sheet).
   return (
     <OpenConversationProvider conversationId={selectedId}>
     <div
-      className="grid h-[calc(100dvh-3.5rem-2*var(--space-6))] w-full grid-cols-1 md:grid-cols-[300px_1fr] lg:grid-cols-[232px_minmax(0,1fr)_264px] xl:grid-cols-[272px_1fr_296px] 2xl:grid-cols-[300px_1fr_320px]"
+      className={cn(
+        "grid h-[calc(100dvh-3.5rem-2*var(--space-6))] w-full grid-cols-1",
+        painelAberto
+          ? "md:grid-cols-[232px_minmax(0,1fr)_264px] xl:grid-cols-[272px_1fr_296px] 2xl:grid-cols-[300px_1fr_320px]"
+          : "md:grid-cols-[232px_minmax(0,1fr)_32px] xl:grid-cols-[272px_1fr_32px] 2xl:grid-cols-[300px_1fr_32px]",
+      )}
       /*
        * O ESTADO DO TEMPO REAL, LEGÍVEL DE FORA — mesmo par que o dossiê do lead
        * já publica (`LeadDossier`), e pela mesma razão: quando a entrega morre,
@@ -480,14 +497,14 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
             {selectedConversation && (
               <Sheet open={fichaAberta} onOpenChange={setFichaAberta}>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-9 gap-1 px-2 lg:hidden">
+                  <Button variant="ghost" size="sm" className="h-9 gap-1 px-2 md:hidden">
                     <IdentificationCard size={16} />
                     {t("Ficha")}
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="right" className="w-[min(22rem,90vw)] overflow-y-auto p-0">
                   <SheetTitle className="sr-only">{t("Ficha do contato")}</SheetTitle>
-                  <CRMSidePanel conversation={selectedConversation} />
+                  <CRMSidePanel conversation={selectedConversation} janelaFechada={motivoDaJanela} />
                 </SheetContent>
               </Sheet>
             )}
@@ -546,8 +563,41 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
         )}
       </div>
 
-      <div className="hidden h-full min-h-0 lg:block">
-        <CRMSidePanel conversation={selectedConversation} />
+      {/*
+        PAINEL SEMPRE VISÍVEL (decisão do dono): `hidden md:block`, nunca `lg`.
+        Recolhido vira trilho de 32px com botão de reabrir — o painel continua
+        EXISTINDO no desktop em qualquer zoom; só some abaixo de `md`, onde a
+        Ficha em Sheet assume (regra do celular).
+      */}
+      <div className="hidden h-full min-h-0 md:block">
+        {painelAberto ? (
+          <div className="relative h-full">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute left-1 top-1 z-10 h-7 w-7 bg-background/80 p-0"
+              onClick={() => setPainelAberto(false)}
+              aria-label={t("Recolher painel")}
+              title={t("Recolher painel")}
+            >
+              <CaretRight size={14} weight="bold" aria-hidden />
+            </Button>
+            <CRMSidePanel conversation={selectedConversation} janelaFechada={motivoDaJanela} />
+          </div>
+        ) : (
+          <div className="flex h-full items-start justify-center border-l border-border pt-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 w-7 p-0"
+              onClick={() => setPainelAberto(true)}
+              aria-label={t("Mostrar painel")}
+              title={t("Mostrar painel do contato")}
+            >
+              <CaretLeft size={14} weight="bold" aria-hidden />
+            </Button>
+          </div>
+        )}
       </div>
 
       <InboxKeyboardShortcuts

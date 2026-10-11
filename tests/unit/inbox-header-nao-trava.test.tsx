@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { ConversationHeader } from "@/components/inbox/ConversationHeader";
@@ -68,6 +68,12 @@ vi.mock("@/hooks/auth/AuthProvider", () => ({
   usePermission: () => true,
   useAuth: () => ({ user: { id: "u-1" }, activeOrg: { orgId: "org-1", role: "manager" } }),
 }));
+// Sem automático nesta org: a conversa sem dono cai em "Sem responsável" —
+// sem este dublê o hook verdadeiro responde `undefined` (carregando) e a regra
+// trata como "assume que há automático", virando "Automático" no botão.
+vi.mock("@/hooks/ai/useAutomaticoAtivo", () => ({
+  useAutomaticoAtivo: () => ({ data: false }),
+}));
 
 const conversation = {
   id: "cv-1",
@@ -118,34 +124,48 @@ describe("header do inbox — não trava a largura da tela", () => {
     expect(acoes.className).toContain("min-w-0");
   });
 
-  it("o primário continua exposto e o secundário vive no kebab", () => {
+  it("os 5 vivem no kebab e nada primário fica exposto", () => {
     renderHeader();
-    // Contrato novo (decisão de produto, mock do dono): gesto de resposta
-    // (`Assumir`) nunca se esconde; `Transferir/Lembrar/Fechar` vivem no menu
-    // "Mais ações". A versão anterior deste caso proibia colapsar ação em menu
-    // — a direção mudou por pedido explícito do dono, não por aperto de layout,
-    // e este caso agora vigia o NOVO contrato em vez do antigo.
+    // Contrato novo (decisão do dono, refinada): `Assumir, Transferir, Lembrar,
+    // Fechar, Arquivar` vivem no menu "Mais ações" — a barra do header tem só
+    // ícones (telefone, robô, ⋮) mais o interruptor Devolver/Pausar quando
+    // aplicável. A versão anterior deste caso exigia o "Assumir" exposto — a
+    // direção mudou por pedido explícito do dono, e este caso agora vigia o
+    // NOVO contrato em vez do antigo.
     expect(
-      screen.getByRole("button", { name: "Assumir" }),
-      'o "Assumir" tem de ficar exposto — gesto de resposta não vai para menu',
-    ).toBeTruthy();
+      screen.queryByRole("button", { name: "Assumir" }),
+      'o "Assumir" NÃO pode estar exposto na barra — ele vive no kebab',
+    ).toBeNull();
     expect(
       screen.getByRole("button", { name: "Mais ações" }),
       'o kebab "Mais ações" tem de existir no header',
     ).toBeTruthy();
   });
 
-  it('o kebab contém Transferir, Lembrar e Fechar (conversa aberta)', async () => {
+  it('o kebab contém os 5: Assumir, Transferir, Lembrar, Fechar e Arquivar (conversa aberta)', async () => {
     renderHeader();
     // Radix abre o menu no `pointerdown`, não no `click`.
     const kebab = screen.getByRole("button", { name: "Mais ações" });
     fireEvent.pointerDown(kebab, { button: 0, ctrlKey: false, pointerId: 1 });
-    for (const rotulo of ["Transferir", "Lembrar", "Fechar", "Arquivar"]) {
+    // Escopo ao `menu`: sem isto, o "Assumir" exposto na barra (código velho)
+    // satisfaria a busca no documento e o caso passaria sem o item no kebab.
+    const menu = await screen.findByRole("menu");
+    for (const rotulo of ["Assumir", "Transferir", "Lembrar", "Fechar", "Arquivar"]) {
       expect(
-        await screen.findByText(rotulo),
+        within(menu).getByText(rotulo),
         `a ação "${rotulo}" sumiu do kebab`,
       ).toBeTruthy();
     }
+  });
+
+  it('o dono aparece como seletor "Sem responsável" (mock) e abre a troca', () => {
+    renderHeader();
+    // Mock do dono: segunda linha do header é o responsável clicável, não um
+    // selo estático. Sem dono mostra "Sem responsável" e o testid canônico
+    // `comando-da-conversa` continua publicado no MESMO elemento (o e2e
+    // `inbox-quem-manda` lê "sem respons" daqui).
+    const dono = screen.getByTestId("comando-da-conversa");
+    expect(dono.textContent).toMatch(/sem respons/i);
   });
 
   it('"Ver contato" vive no kebab e aponta para a ficha', async () => {

@@ -12,7 +12,7 @@ import { VersionFooter } from "@/components/shell/VersionFooter";
 import { LogotipoDoProduto, SimboloDoProduto } from "@/components/branding/MarcaDoProduto";
 import { marcaEhADoProduto } from "@/lib/branding";
 import { useMarcaDaInstalacao } from "@/lib/branding/contexto";
-import { GRUPO_NO_RODAPE, NAV_GROUPS, sidebarGroups } from "@/lib/navigation/registry";
+import { GRUPO_NO_RODAPE, NAV_GROUPS, principaisDoRail, sidebarGroups } from "@/lib/navigation/registry";
 
 interface SidebarContentProps {
   collapsed: boolean;
@@ -52,6 +52,12 @@ export function SidebarContent({
   // 1280x768, ele caía fora da dobra mesmo em telas de 1080px.
   const grupos = useMemo(() => todos.filter((g) => g.group.id !== GRUPO_NO_RODAPE), [todos]);
   const rodape = todos.find((g) => g.group.id === GRUPO_NO_RODAPE)?.group.hub;
+  /**
+   * RAIL (mock do dono): um ícone por grupo. Memoizado porque deriva dos grupos
+   * já projetados para o papel — papel sem item visível no grupo some do rail
+   * sem nenhum `if` de papel aqui.
+   */
+  const rail = useMemo(() => principaisDoRail(grupos), [grupos]);
 
   /**
    * Tudo recolhido ao abrir, sempre — o clique abre um bloco por vez e vale
@@ -166,18 +172,50 @@ export function SidebarContent({
         Sem hubs no meio — todo destino do grupo aparece no próprio bloco.
       */}
       <nav className="flex-1 space-y-2 overflow-y-auto p-2" aria-label={t("Navegação principal")}>
-        {grupos.map(({ group, items }) => {
-          const tituloId = `nav-grupo-${group.id}`;
-          // Recolhido o sidebar inteiro (rail de 64px), o grupo sempre mostra
-          // seus itens — não há onde desenhar cabeçalho nem seta para fechá-lo.
-          const aberto = collapsed || !gruposFechados.has(group.id);
-          return (
-            <div key={group.id} className="space-y-1">
-              {/* Colapsado, o sidebar tem 64px: seis rótulos ali seriam ilegíveis.
-                  Vira um filete separador, que preserva o agrupamento sem texto. */}
-              {collapsed ? (
-                <div aria-hidden className="mx-2 border-t first:hidden" />
-              ) : (
+        {/*
+          RAIL (mock do dono): recolhido, UM ícone por grupo — o principal, e o
+          clique NAVEGA direto para ele. Expandir no clique seria brigar com o
+          hover transitório (que já abre o menu com o cursor em cima e o fecha
+          ao sair): mirar clique fino num alvo que foge é o defeito que este
+          desenho existe para não ter. O resto segue a um hover de distância,
+          no ⌘K e por URL — nenhuma porta se perde, e o expandido abaixo fica
+          idêntico ao de antes.
+        */}
+        {collapsed ? (
+          <ul className="space-y-1">
+            {rail.map((item) => {
+              const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+              const Icon = item.icon;
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    title={t(item.label)}
+                    aria-label={t(item.label)}
+                    aria-current={isActive ? "page" : undefined}
+                    onClick={onNavigate}
+                    className={cn(
+                      "relative flex items-center justify-center rounded-md px-2 py-1 transition-colors",
+                      isActive
+                        ? "bg-accent text-accent-foreground"
+                        : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
+                    )}
+                  >
+                    <Icon size={18} weight={isActive ? "fill" : "regular"} aria-hidden />
+                    {item.healthDot && (
+                      <ConnectionHealthDot className="absolute top-1.5 right-1.5" />
+                    )}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          grupos.map(({ group, items }) => {
+            const tituloId = `nav-grupo-${group.id}`;
+            const aberto = !gruposFechados.has(group.id);
+            return (
+              <div key={group.id} className="space-y-1">
                 <h2 id={tituloId}>
                   <button
                     type="button"
@@ -197,47 +235,37 @@ export function SidebarContent({
                     />
                   </button>
                 </h2>
-              )}
-              {aberto && (
-                <ul
-                  aria-labelledby={collapsed ? undefined : tituloId}
-                  aria-label={collapsed ? t(group.label) : undefined}
-                  className="space-y-1"
-                >
-                  {items.map((item) => {
-                    const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
-                    const Icon = item.icon;
-                    return (
-                      <li key={item.href}>
-                        <Link
-                          href={item.href}
-                          title={collapsed ? t(item.label) : undefined}
-                          aria-current={isActive ? "page" : undefined}
-                          onClick={onNavigate}
-                          className={cn(
-                            "relative flex items-center gap-3 rounded-md px-3 py-1 text-sm transition-colors",
-                            isActive
-                              ? "bg-accent text-accent-foreground"
-                              : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
-                            collapsed && "justify-center px-2",
-                          )}
-                        >
-                          <Icon size={18} weight={isActive ? "fill" : "regular"} aria-hidden />
-                          {!collapsed && <span className="truncate">{t(item.label)}</span>}
-                          {item.healthDot && (
-                            <ConnectionHealthDot
-                              className={cn(collapsed ? "absolute top-1.5 right-1.5" : "ml-auto")}
-                            />
-                          )}
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </div>
-          );
-        })}
+                {aberto && (
+                  <ul aria-labelledby={tituloId} className="space-y-1">
+                    {items.map((item) => {
+                      const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+                      const Icon = item.icon;
+                      return (
+                        <li key={item.href}>
+                          <Link
+                            href={item.href}
+                            aria-current={isActive ? "page" : undefined}
+                            onClick={onNavigate}
+                            className={cn(
+                              "relative flex items-center gap-3 rounded-md px-3 py-1 text-sm transition-colors",
+                              isActive
+                                ? "bg-accent text-accent-foreground"
+                                : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
+                            )}
+                          >
+                            <Icon size={18} weight={isActive ? "fill" : "regular"} aria-hidden />
+                            <span className="truncate">{t(item.label)}</span>
+                            {item.healthDot && <ConnectionHealthDot className="ml-auto" />}
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+            );
+          })
+        )}
       </nav>
       <div className="border-t p-2">
         {rodape && (

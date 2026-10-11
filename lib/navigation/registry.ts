@@ -126,6 +126,22 @@ export function sidebarGroups(
 }
 
 /**
+ * RAIL ENCOLHIDO (mock do dono): um ícone por grupo — o PRIMEIRO do catálogo.
+ *
+ * O catálogo já é ordenado por uso ("grupos por objetivo, na ordem de uso"),
+ * então "o primeiro" É o principal (Inbox, Funis, Agentes, Fluxos, Desempenho)
+ * sem um segundo campo para manter em sincronia. Recebe os grupos já
+ * projetados para o papel, então papel sem item visível no grupo some do rail
+ * sozinho. Grupo sem item (só hub, como Organização) não tem principal e é
+ * pulado — o Config do rodapé é outra peça e não entra aqui.
+ */
+export function principaisDoRail(
+  grupos: Array<{ group: NavGroup; items: NavDestination[] }>,
+): NavDestination[] {
+  return grupos.flatMap(({ items }) => (items.length > 0 ? [items[0]!] : []));
+}
+
+/**
  * Projeção do hub: TODAS as telas do grupo — inclusive as que já estão no
  * sidebar. O hub é inventário, não sobra; é onde se descobre o que existe.
  *

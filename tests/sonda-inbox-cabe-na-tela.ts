@@ -33,8 +33,8 @@ const BASE = process.env.E2E_PORT ? `http://127.0.0.1:${process.env.E2E_PORT}` :
 const CONVERSA = "8b9fcd5f-252d-4f6b-9538-f7c2c538807f";
 const c = JSON.parse(readFileSync("/Users/rafaelmelgaco/DeskcommCRM/.e2e-creds.json", "utf8"));
 
-/** 1280 e 1366 são as apertadas; 1920 é o controle de que nada regrediu no largo. */
-const LARGURAS = [1280, 1366, 1440, 1536, 1920];
+/** 1024 é o piso novo (painel entra no `lg`); 1280 e 1366 são as apertadas; 1920 é o controle de que nada regrediu no largo. */
+const LARGURAS = [1024, 1280, 1366, 1440, 1536, 1920];
 
 /**
  * Piso de leitura da conversa. Abaixo disso o thread fica mais estreito que o

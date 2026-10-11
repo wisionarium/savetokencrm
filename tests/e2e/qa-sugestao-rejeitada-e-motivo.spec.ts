@@ -188,6 +188,12 @@ async function entrar(page: Page, f: Fixture) {
 }
 
 const painel = (page: Page) => page.locator('section[aria-label="Assistência do agente"]');
+// O painel mora no popover do robô do header (novo visual): garante aberto.
+async function abrirAssistente(page: Page) {
+  if ((await painel(page).count()) === 0) {
+    await page.getByRole("button", { name: "Assistente do agente" }).click();
+  }
+}
 
 test.afterAll(async () => {
   for (const org of orgs) {
@@ -213,6 +219,7 @@ test("rejeitar tira a sugestão da tela e diz que rejeitou; sem agente publicado
     const gerada = page.waitForResponse(
       (r) => r.url().endsWith("/draft-reply") && r.request().method() === "POST",
     );
+    await abrirAssistente(page);
     await painel(page).getByRole("button", { name: "Sugerir resposta", exact: true }).click();
     const resposta = await gerada;
     expect(resposta.status(), await resposta.text()).toBe(200);
@@ -283,6 +290,7 @@ test("rejeitar tira a sugestão da tela e diz que rejeitou; sem agente publicado
     const falhou = page.waitForResponse(
       (r) => r.url().endsWith("/draft-reply") && r.request().method() === "POST",
     );
+    await abrirAssistente(page);
     await painel(page).getByRole("button", { name: "Sugerir resposta", exact: true }).click();
     const recusa = await falhou;
     expect(recusa.status()).toBe(422);

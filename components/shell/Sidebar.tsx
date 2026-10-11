@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useT } from "@/hooks/i18n/useT";
 import { usePathname } from "next/navigation";
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useRef, useState, useTransition } from "react";
 import { CaretDoubleLeft, CaretDoubleRight, CaretDown, Gear } from "@/lib/ui/icons";
 import { cn } from "@/lib/utils";
 import { toggleSidebar } from "@/app/actions/shell/toggleSidebar";
@@ -284,8 +284,64 @@ export function SidebarContent({
 }
 
 export function Sidebar({ collapsed }: { collapsed: boolean }) {
+  /**
+   * HOVER TRANSITÓRIO (novo visual): com a barra desafixada (`collapsed`), o
+   * cursor em cima expande e fora recolhe. O estado persistido (`collapsed`,
+   * cookie via `toggleSidebar`) NÃO muda — hover é visor, fixar é decisão.
+   *
+   * Guardas: sem hover em touch (`matchMedia("(hover: hover)")` — no celular a
+   * barra nem existe, `hidden md:block` no `AppShell`); `focus-within` expande
+   * para teclado; `Esc` recolhe; `prefers-reduced-motion` desliga a transição.
+   */
+  const [hoverExpand, setHoverExpand] = useState(false);
+  const abrirTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fecharTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  function limparTimers() {
+    if (abrirTimer.current) clearTimeout(abrirTimer.current);
+    if (fecharTimer.current) clearTimeout(fecharTimer.current);
+    abrirTimer.current = null;
+    fecharTimer.current = null;
+  }
+  function dispositivoComHover(): boolean {
+    return (
+      typeof window !== "undefined" &&
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(hover: hover)").matches
+    );
+  }
+  function aoEntrarCursor() {
+    if (!collapsed || !dispositivoComHover()) return;
+    limparTimers();
+    abrirTimer.current = setTimeout(() => setHoverExpand(true), 180);
+  }
+  function aoSairCursor() {
+    limparTimers();
+    if (!collapsed) return;
+    fecharTimer.current = setTimeout(() => setHoverExpand(false), 300);
+  }
+  const visualmenteRecolhida = collapsed && !hoverExpand;
   return (
     <aside
+      onMouseEnter={aoEntrarCursor}
+      onMouseLeave={aoSairCursor}
+      onFocus={() => {
+        if (collapsed && dispositivoComHover()) {
+          limparTimers();
+          setHoverExpand(true);
+        }
+      }}
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+          limparTimers();
+          setHoverExpand(false);
+        }
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Escape") {
+          limparTimers();
+          setHoverExpand(false);
+        }
+      }}
       className={cn(
         // ⚠️ `sticky`, e NUNCA `fixed`.
         //
@@ -306,11 +362,11 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
         //
         // `shrink-0` porque item de flex encolhe por padrão, e uma barra de 60
         // espremida para caber é o mesmo defeito por outro caminho.
-        "sticky top-0 z-30 flex h-screen shrink-0 flex-col border-r bg-card transition-[width] duration-200",
-        collapsed ? "w-16" : "w-60",
+        "sticky top-0 z-30 flex h-screen shrink-0 flex-col border-r bg-card transition-[width] duration-200 motion-reduce:transition-none",
+        visualmenteRecolhida ? "w-16" : "w-60",
       )}
     >
-      <SidebarContent collapsed={collapsed} />
+      <SidebarContent collapsed={visualmenteRecolhida} />
     </aside>
   );
 }

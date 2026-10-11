@@ -112,6 +112,8 @@ export {
   TreeStructure,
   // misc
   DotsThree,
+  DotsThreeVertical,
+  Star,
   CaretDown,
   CaretUp,
   CaretDoubleLeft,

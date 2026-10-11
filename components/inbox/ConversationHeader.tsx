@@ -4,11 +4,36 @@ import { useT } from "@/hooks/i18n/useT";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuPortal,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ReplyReviewPanel } from "@/components/inbox/composer/ReplyReviewPanel";
 import { JanelaSelo } from "@/components/inbox/JanelaSelo";
-import { Phone, ArrowRight } from "@/lib/ui/icons";
+import {
+  Archive,
+  ArrowRight,
+  ArrowsClockwise,
+  CaretDown,
+  Clock,
+  DotsThreeVertical,
+  IdentificationCard,
+  Phone,
+  Robot,
+  Star,
+  X,
+} from "@/lib/ui/icons";
 import { useAuth } from "@/hooks/auth/AuthProvider";
 import { useClaimConversation } from "@/hooks/inbox/useClaimConversation";
 import { useReleaseConversation } from "@/hooks/inbox/useReleaseConversation";
+import { useSnoozeConversation } from "@/hooks/inbox/useSnoozeConversation";
 import {
   useArchiveConversation,
   useCloseConversation,
@@ -17,10 +42,8 @@ import {
 import { useResumeAiAttendance } from "@/hooks/inbox/useResumeAiAttendance";
 import { usePauseAiAttendance } from "@/hooks/inbox/usePauseAiAttendance";
 import { useAutomaticoAtivo } from "@/hooks/ai/useAutomaticoAtivo";
-import { OwnerBadge } from "@/components/kanban/OwnerBadge";
 import { comandoDaConversa, ROTULO_DO_MOTIVO } from "@/lib/inbox/comando-da-conversa";
 import { ReassignDialog } from "@/components/inbox/ReassignDialog";
-import { SnoozeButton } from "@/components/inbox/SnoozeButton";
 import type { ConversationWithContact } from "@/hooks/inbox/useConversationsRealtime";
 import { rotuloDoContato } from "@/lib/contacts/rotulo-do-contato";
 import { phoneForDisplay } from "@/lib/channels/phone-variants";
@@ -38,8 +61,9 @@ interface Props {
  * contato nem atribuição, e o motor nunca o lê. Medido em 2026-08-30 num print
  * do dono: "Aguardando atendente" e "Automático" no mesmo cabeçalho.
  *
- * Quem responde "quem manda" é o `OwnerBadge`, que vem de `comandoDaConversa`.
- * Aqui fica só o que o status realmente sabe: o episódio está aberto ou acabou.
+ * Quem responde "quem manda" é o botão de responsável ("Sem responsável ∨"),
+ * que vem de `comandoDaConversa`. Aqui fica só o que o status realmente sabe:
+ * o episódio está aberto ou acabou.
  *
  * Cobre os SETE valores do CHECK de propósito — o call site é
  * `t(STATUS_LABEL[status] ?? status)`, e um buraco imprime o token cru em inglês
@@ -55,6 +79,18 @@ const STATUS_LABEL: Record<string, string> = {
   archived: "Arquivada",
 };
 
+/** Mesmas durações do `SnoozeButton` — o submenu do kebab é a outra porta do mesmo gesto. */
+const LEMBRAR_DURACOES: Array<{ hours: 1 | 3 | 24; label: string }> = [
+  { hours: 1, label: "Em 1 hora" },
+  { hours: 3, label: "Em 3 horas" },
+  { hours: 24, label: "Em 24 horas" },
+];
+
+/** Mesmo predicado do `SnoozeButton` — helper fora do render (regra `react-hooks/purity`). */
+function lembreteEstaAtivo(snoozeUntil: string | null): boolean {
+  return snoozeUntil != null && new Date(snoozeUntil).getTime() > Date.now();
+}
+
 export function ConversationHeader({ conversation }: Props) {
   const t = useT();
   const { user } = useAuth();
@@ -69,6 +105,14 @@ export function ConversationHeader({ conversation }: Props) {
   // atendendo em instalação que nunca configurou agente nenhum.
   const automaticoDaOrg = useAutomaticoAtivo();
   const [reassignOpen, setReassignOpen] = useState(false);
+  /**
+   * O "Lembrar" agora vive no kebab (⋮) como submenu — mesma mutation do
+   * `SnoozeButton` (que segue existindo e testado em `snooze-button.test.tsx`),
+   * sem aninhar um DropdownMenu dentro do outro.
+   */
+  const { snooze, cancel } = useSnoozeConversation();
+  const lembreteAtivo = lembreteEstaAtivo(conversation.snooze_until ?? null);
+  const lembreteOcupado = snooze.isPending || cancel.isPending;
 
   const c = conversation.contacts ?? null;
   const displayName = rotuloDoContato(c, t);
@@ -130,6 +174,15 @@ export function ConversationHeader({ conversation }: Props) {
    */
   const podePausar =
     automaticoAtivo && !encerrada && conversation.assigned_to_user_id !== null;
+  /**
+   * O assistente sugere rascunho, não envia: conversa encerrada ou contato
+   * bloqueado/anonimizado desliga a geração (mesma guarda do composer para o
+   * que SAI — aqui só há o que sugerir).
+   */
+  const assistenciaBloqueada =
+    encerrada ||
+    conversation.contacts?.is_blocked === true ||
+    conversation.contacts?.is_anonymized === true;
 
   if (user.support?.access_mode === "support_readonly") return <header className="flex items-center justify-between border-b p-4">
     <strong>{displayName}</strong><span className="text-sm text-muted-foreground">{STATUS_LABEL[status] ?? status} · Somente leitura</span>
@@ -149,7 +202,22 @@ export function ConversationHeader({ conversation }: Props) {
     <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-background px-4 py-3">
       <div className="min-w-0">
         <div className="flex items-center gap-2">
-          <h2 className="truncate text-sm font-semibold">{displayName}</h2>
+          {/*
+            ESTRELA (placeholder, novo visual): o mock fixa conversa favorita, e
+            HOJE não há campo para isso (persistir exige migration — avisado ao
+            dono). Desabilitada com o motivo no tooltip: estrela que finge
+            funcionar e esquece no F5 é pior que estrela assumidamente futura.
+          */}
+          <span title={t("Favoritar conversa (em breve)")}>
+            <Star
+              size={16}
+              weight="fill"
+              className="shrink-0 text-yellow-400"
+              aria-hidden
+            />
+          </span>
+          {/* Caixa alta por CSS, como na lista (o dado continua intacto). */}
+          <h2 className="truncate text-sm font-semibold uppercase">{displayName}</h2>
           <Badge variant="outline" className="h-4 px-1.5 text-[10px]">
             {t(STATUS_LABEL[status] ?? status)}
           </Badge>
@@ -178,21 +246,31 @@ export function ConversationHeader({ conversation }: Props) {
           )}
         </div>
 
-        {/* QUEM ESTÁ NO COMANDO, com nome e por GEOMETRIA — disco cheio para
-            pessoa, anel vazado para o automático. É o mesmo componente do card do
-            funil e do dossiê: um terceiro jeito de dizer "quem manda", por cor ou
-            por texto, faria a mesma pergunta ter três respostas diferentes na
-            mesma tela. Cor não sobrevive ao daltonismo nem ao teste do metro. */}
-        <div className="mt-1 flex items-center gap-2" data-testid="comando-da-conversa">
-          {comando.quem === "humano" ? (
-            <OwnerBadge ownerKind="user" ownerName={comando.nome ?? t("Atendente")} />
-          ) : comando.quem === "automatico" ? (
-            <OwnerBadge ownerKind="ai" ownerName={t("Automático")} />
-          ) : (
-            // `ninguem`, `aguardando` e `encerrada` sem dono caem aqui: o disco
-            // TRACEJADO do OwnerBadge, que é como o funil já desenha "ninguém".
-            <OwnerBadge ownerKind={null} ownerName={null} />
-          )}
+        {/*
+          RESPONSÁVEL (mock): "Sem responsável ∨" / nome de quem atende.
+          É o MESMO `data-testid="comando-da-conversa"` de antes — o e2e
+          `inbox-quem-manda` lê "sem respons" daqui. Abre o `ReassignDialog`
+          (transferir), que é a porta de trocar o dono sem sair do header.
+          O selo de motivo (badge-atendimento-humano) continua na linha de
+          cima, intocado: este botão DIZ o dono, o selo EXPLICA o estado.
+        */}
+        <div className="mt-1 flex items-center gap-2">
+          <button
+            type="button"
+            data-testid="comando-da-conversa"
+            onClick={() => setReassignOpen(true)}
+            className="flex min-w-0 items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+            title={t("Trocar o responsável desta conversa")}
+          >
+            <span className="truncate">
+              {comando.quem === "humano"
+                ? (comando.nome ?? t("Atendente"))
+                : comando.quem === "automatico"
+                  ? t("Automático")
+                  : t("Sem responsável")}
+            </span>
+            <CaretDown size={12} weight="bold" aria-hidden className="shrink-0" />
+          </button>
         </div>
         {phone && (
           <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
@@ -205,36 +283,6 @@ export function ConversationHeader({ conversation }: Props) {
           barra pode encolher e quebrar internamente, e os botões continuam
           todos visíveis e clicáveis — só que em duas linhas quando preciso. */}
       <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-        {isOpen && (
-          <Button
-            size="sm"
-            variant="default"
-            disabled={claim.isPending}
-            // O rótulo NÃO muda (é contrato: `inbox-header-nao-trava` e o
-            // dicionário de espanhol o citam). O que faltava era a consequência
-            // dita: desde a 0173 assumir também para o atendimento automático, e
-            // um botão que muda duas coisas precisa anunciar as duas.
-            title={t("Você passa a responder esta conversa e o atendimento automático para aqui.")}
-            onClick={() =>
-              claim.mutate({
-                conversation_id: conversation.id,
-                expected_assignee: conversation.assigned_to_user_id,
-              })
-            }
-          >
-            {t("Assumir")}
-          </Button>
-        )}
-        {isMineAssigned && (
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={release.isPending}
-            onClick={() => release.mutate({ conversation_id: conversation.id })}
-          >
-            {t("Liberar")}
-          </Button>
-        )}
         {/* O INTERRUPTOR. Um botão, dois rótulos, um slot.
             Fica ANTES de transferir/fechar porque é a ação que a pessoa procura
             quando terminou o que tinha para fazer aqui.
@@ -284,91 +332,198 @@ export function ConversationHeader({ conversation }: Props) {
             {pausar.isPending ? t("Pausando...") : t("Pausar o automático")}
           </Button>
         )}
-        {!encerrada && (
-          <Button size="sm" variant="outline" onClick={() => setReassignOpen(true)}>
-            {t("Transferir")}
+        {/*
+          TELEFONE (placeholder, novo visual): o mock tem chamada de voz, e a
+          voz nasce DESLIGADA (`WACALLS_API_BASE_URL` vazio = sem oferta).
+          Desabilitado com o motivo no tooltip — botão que finge ligar e dá
+          401 em toda chamada é pior que botão assumidamente futuro.
+        */}
+        <span title={t("Chamada de voz (em breve)")}>
+          <Button size="sm" variant="ghost" className="h-8 w-8 p-0" disabled>
+            <Phone size={16} weight="regular" aria-hidden />
           </Button>
-        )}
-        {!encerrada && (
-          <SnoozeButton
-            conversationId={conversation.id}
-            snoozeUntil={conversation.snooze_until ?? null}
-          />
-        )}
-        {!encerrada && (
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={close.isPending}
-            onClick={() => {
-              if (confirm(t("Fechar esta conversa?"))) {
-                close.mutate({ conversation_id: conversation.id, expected_revision: conversation.service_revision });
-              }
-            }}
-          >
-            {t("Fechar")}
-          </Button>
-        )}
-        {encerrada && <Button size="sm" variant="outline" disabled={reopen.isPending}
-          onClick={() => reopen.mutate({ conversation_id: conversation.id, expected_revision: conversation.service_revision })}>
-          {t("Reabrir")}
-        </Button>}
-        {/* ARQUIVAR (#923): tira da frente sem destruir.
-            A conversa já arquivada não mostra o botão — arquivar duas vezes não
-            é um gesto que exista, e o botão só reapareceria como um clique que
-            não muda nada. Fechada E resolvida mostram: são exatamente as que se
-            quer mandar para o arquivo depois de encerradas, e é o caminho que
-            faz a aba "Arquivadas" deixar de ser uma pasta morta.
-            A permissão é a mesma de fechar (a rota `/conversations/[id]` é
-            `requireSupportWrite`): quem pode encerrar, pode arquivar. */}
-        {status !== "archived" && (
-          <Button
-            size="sm"
-            variant="ghost"
-            disabled={arquivar.isPending}
-            onClick={() => {
-              // A confirmação precisa dizer o que ACONTECE, e o que acontece
-              // depende do estado. `fn_conversation_set_status` trata
-              // `archived` como terminal: encerra o atendimento (grava
-              // `service_closed_at`, incrementa a revisão) e, com isso, desfaz
-              // a pausa do automático. Um atendente que leia "arquivar = tirar
-              // da vista, volto depois" encerraria o atendimento sem saber — e
-              // o robô voltaria a responder no próximo "oi" do cliente.
-              const aviso = encerrada
-                ? t("Arquivar esta conversa?")
-                : t(
-                    "Arquivar encerra este atendimento e guarda a conversa no histórico. Se o cliente escrever de novo, ela volta. Arquivar?",
-                  );
-              if (confirm(aviso)) {
-                arquivar.mutate({
-                  conversation_id: conversation.id,
-                  expected_revision: conversation.service_revision,
-                });
-              }
-            }}
-          >
-            {arquivar.isPending ? t("Arquivando...") : t("Arquivar")}
-          </Button>
-        )}
-        {/* `xl:hidden` porque a partir de 1280px o painel lateral de CRM entra
-            na tela — e ele já tem um "Ver contato", para o MESMO contato, a um
-            palmo de distância. Duas portas idênticas na mesma tela não são
-            redundância inofensiva: são a linha a mais que empurrava a barra de
-            ações para uma segunda fileira justo na largura mais apertada.
-            Medido: sem a duplicata, os botões voltam a caber em UMA linha em
-            1280px.
-
-            Abaixo de 1280 o painel não existe, e aí esta é a única porta para o
-            contato — por isso a condição é a mesma do painel, e não um valor
-            escolhido à parte. Não é esconder ação; é não repeti-la. */}
-        {c?.id && (
-          <Button asChild size="sm" variant="ghost" className="xl:hidden">
-            <Link href={`/app/contacts/${c.id}`} className="flex items-center gap-1">
-              {t("Ver contato")}
-              <ArrowRight size={12} weight="regular" aria-hidden />
-            </Link>
-          </Button>
-        )}
+        </span>
+        {/*
+          ASSISTENTE NO ROBÔ — decisão de produto (mock do dono): o painel
+          "Assistência do agente / Sugerir resposta" sai de baixo do fio e mora
+          neste popover. O COMPONENTE é o mesmo (`ReplyReviewPanel`, mesma
+          query `["reply-drafts", conversationId]`, mesmo fluxo
+          gerar→revisar→aprovar/rejeitar) — só mudou de endereço. O dono
+          ("Sem responsável ∨", segunda linha) continua ao lado, intocado: o
+          botão PERGUNTA, o dono INFORMA.
+        */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-8 w-8 p-0"
+              aria-label={t("Assistente do agente")}
+              title={t("Sugerir resposta com o agente")}
+            >
+              <Robot size={16} weight="duotone" aria-hidden />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-96">
+            <ReplyReviewPanel
+              conversationId={conversation.id}
+              disabled={assistenciaBloqueada}
+            />
+          </PopoverContent>
+        </Popover>
+        {/*
+          OS 5 NO KEBAB (⋮) — decisão de produto (mock do dono, refinada pelo
+          dono): `Assumir, Transferir, Lembrar, Fechar, Arquivar` vivem neste
+          menu, e NADA primário fica exposto na barra — só ícones
+          (telefone, robô, ⋮) mais o interruptor `Devolver`/`Pausar` quando
+          aplicável. A catraca `tests/unit/inbox-header-nao-trava.test.tsx`
+          vigia o NOVO contrato (os 5 no menu). O atalho de teclado de assumir
+          (`InboxKeyboardShortcuts`) continua existindo: gesto escondido do
+          mouse segue a um toque do teclado.
+        */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-8 w-8 p-0"
+              aria-label={t("Mais ações")}
+            >
+              <DotsThreeVertical size={16} weight="bold" aria-hidden />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="min-w-52">
+            {/*
+              OS 5 NO KEBAB (decisão do dono): Assumir, Transferir, Lembrar,
+              Fechar e Arquivar vivem neste menu, ao lado do robô. O RÓTULO
+              "Assumir" não muda (contrato de dicionário) e a mutation é a
+              mesma do botão exposto que existia aqui — inclusive calar o
+              automático junto (0173). O atalho de teclado (`InboxKeyboardShortcuts`,
+              `onClaim`) continua assumindo sem abrir o menu.
+            */}
+            {isOpen && (
+              <DropdownMenuItem
+                disabled={claim.isPending}
+                title={t("Você passa a responder esta conversa e o atendimento automático para aqui.")}
+                onClick={() =>
+                  claim.mutate({
+                    conversation_id: conversation.id,
+                    expected_assignee: conversation.assigned_to_user_id,
+                  })
+                }
+              >
+                <ArrowRight size={14} aria-hidden />
+                {claim.isPending ? t("Assumindo...") : t("Assumir")}
+              </DropdownMenuItem>
+            )}
+            {isMineAssigned && (
+              <DropdownMenuItem
+                disabled={release.isPending}
+                onClick={() => release.mutate({ conversation_id: conversation.id })}
+              >
+                <ArrowRight size={14} aria-hidden className="rotate-180" />
+                {t("Liberar")}
+              </DropdownMenuItem>
+            )}
+            {!encerrada && (
+              <DropdownMenuItem onClick={() => setReassignOpen(true)}>
+                <ArrowRight size={14} aria-hidden />
+                {t("Transferir")}
+              </DropdownMenuItem>
+            )}
+            {!encerrada && (
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger disabled={lembreteOcupado}>
+                  <Clock size={14} aria-hidden />
+                  {lembreteAtivo ? t("Lembrete ativo") : t("Lembrar")}
+                </DropdownMenuSubTrigger>
+                <DropdownMenuPortal>
+                  <DropdownMenuSubContent>
+                    {lembreteAtivo ? (
+                      <DropdownMenuItem
+                        onClick={() => cancel.mutate({ conversation_id: conversation.id })}
+                      >
+                        {t("Cancelar lembrete")}
+                      </DropdownMenuItem>
+                    ) : (
+                      LEMBRAR_DURACOES.map((d) => (
+                        <DropdownMenuItem
+                          key={d.hours}
+                          onClick={() =>
+                            snooze.mutate({
+                              conversation_id: conversation.id,
+                              duration_hours: d.hours,
+                            })
+                          }
+                        >
+                          {t(d.label)}
+                        </DropdownMenuItem>
+                      ))
+                    )}
+                  </DropdownMenuSubContent>
+                </DropdownMenuPortal>
+              </DropdownMenuSub>
+            )}
+            {!encerrada && (
+              <DropdownMenuItem
+                onClick={() => {
+                  if (confirm(t("Fechar esta conversa?"))) {
+                    close.mutate({
+                      conversation_id: conversation.id,
+                      expected_revision: conversation.service_revision,
+                    });
+                  }
+                }}
+              >
+                <X size={14} aria-hidden />
+                {close.isPending ? t("Fechando...") : t("Fechar")}
+              </DropdownMenuItem>
+            )}
+            {encerrada && (
+              <DropdownMenuItem
+                onClick={() =>
+                  reopen.mutate({
+                    conversation_id: conversation.id,
+                    expected_revision: conversation.service_revision,
+                  })
+                }
+              >
+                <ArrowsClockwise size={14} aria-hidden />
+                {reopen.isPending ? t("Reabrindo...") : t("Reabrir")}
+              </DropdownMenuItem>
+            )}
+            {/* ARQUIVAR (#923): tira da frente sem destruir. Mesma regra de
+                antes — só mudou de lugar (barra → kebab). */}
+            {status !== "archived" && (
+              <DropdownMenuItem
+                onClick={() => {
+                  const aviso = encerrada
+                    ? t("Arquivar esta conversa?")
+                    : t(
+                        "Arquivar encerra este atendimento e guarda a conversa no histórico. Se o cliente escrever de novo, ela volta. Arquivar?",
+                      );
+                  if (confirm(aviso)) {
+                    arquivar.mutate({
+                      conversation_id: conversation.id,
+                      expected_revision: conversation.service_revision,
+                    });
+                  }
+                }}
+              >
+                <Archive size={14} aria-hidden />
+                {arquivar.isPending ? t("Arquivando...") : t("Arquivar")}
+              </DropdownMenuItem>
+            )}
+            {c?.id && (
+              <DropdownMenuItem asChild>
+                <Link href={`/app/contacts/${c.id}`} className="flex items-center gap-2">
+                  <IdentificationCard size={14} aria-hidden />
+                  {t("Ver contato")}
+                </Link>
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
       <ReassignDialog
         conversationId={conversation.id}

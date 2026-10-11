@@ -208,6 +208,10 @@ async function receiver() {
 }
 const panel = (page: Page) => page.locator('section[aria-label="Assistência do agente"]');
 async function generate(page: Page) {
+  // O painel mora no popover do robô do header (novo visual): garante aberto.
+  if ((await panel(page).count()) === 0) {
+    await page.getByRole("button", { name: "Assistente do agente" }).click();
+  }
   const response = page.waitForResponse(
     (r) => r.url().endsWith("/draft-reply") && r.request().method() === "POST",
   );

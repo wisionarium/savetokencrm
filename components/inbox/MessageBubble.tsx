@@ -166,10 +166,14 @@ export const MessageBubble = memo(function MessageBubble({
           isBareSticker
             ? "px-0 py-0"
             : cn(
+                // Visual WhatsApp (novo visual): saída verde, entrada clara.
+                // Tons fixos de conversa (não da marca): a bolha imita o
+                // mensageiro onde a conversa acontece, e a marca segue na
+                // casca (accent). `dark:` cobre o modo escuro do mock.
                 "rounded-2xl px-3 py-2 shadow-sm",
                 isOutbound
-                  ? "rounded-br-sm bg-primary text-primary-foreground"
-                  : "rounded-bl-sm bg-muted text-foreground",
+                  ? "rounded-br-sm bg-[#d9fdd3] text-[#111b21] dark:bg-[#005c4b] dark:text-[#e9edef]"
+                  : "rounded-bl-sm bg-white text-[#111b21] dark:bg-[#1f2c34] dark:text-[#e9edef]",
               ),
           isFailed && "border border-destructive",
         )}
@@ -185,8 +189,8 @@ export const MessageBubble = memo(function MessageBubble({
             className={cn(
               "mb-1 rounded-md border-l-2 px-2 py-1 text-xs",
               isOutbound
-                ? "border-primary-foreground/50 bg-primary-foreground/10"
-                : "border-primary bg-background/60",
+                ? "border-[#111b21]/25 bg-black/5 dark:border-white/30 dark:bg-white/10"
+                : "border-accent bg-black/5 dark:bg-white/10",
             )}
           >
             <div className="font-medium opacity-80">
@@ -248,7 +252,8 @@ export const MessageBubble = memo(function MessageBubble({
         <div
           className={cn(
             "mt-1 flex items-center justify-end gap-1 text-[10px]",
-            isOutbound ? "text-primary-foreground" : "text-muted-foreground",
+            // Cinza do mensageiro nas duas direções (a hora não é marca).
+            "text-[#667781] dark:text-[#aebac1]",
           )}
         >
           {editada && (

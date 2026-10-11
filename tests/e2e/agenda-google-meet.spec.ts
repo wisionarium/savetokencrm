@@ -483,7 +483,9 @@ test("marca Meet, copia link, autoriza em atendimento humano e entrega novamente
     expect(oldJob[0]).toMatchObject({ id: firstJob, organization_id: f.org, contact_id: f.contact, kind: "transactional_delivery", status: "done" });
     await page.goto(`/app/inbox/${f.conversation}`);
     page.on("dialog", (dialog) => dialog.accept());
-    await page.getByRole("button", { name: "Fechar", exact: true }).click();
+    // O "Fechar" mora no kebab do header ("Mais ações") desde o novo visual.
+    await page.getByRole("button", { name: "Mais ações" }).click();
+    await page.getByRole("menuitem", { name: "Fechar", exact: true }).click();
     await expect
       .poll(
         async () =>

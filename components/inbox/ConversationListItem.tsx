@@ -163,7 +163,6 @@ export const ConversationListItem = memo(function ConversationListItem({
   const horaDaOrdem = naFila
     ? esperaDaConversa(conversation)
     : conversation.last_message_at;
-  const time = relativeTime(horaDaOrdem, localeDaData);
   const unread = conversation.unread_count_for_assignee ?? 0;
 
 
@@ -229,7 +228,7 @@ export const ConversationListItem = memo(function ConversationListItem({
         <span className="absolute inset-y-0 left-0 w-0.5 bg-accent" aria-hidden />
       )}
       <div className="relative shrink-0">
-        <Avatar className="h-10 w-10">
+        <Avatar className="h-14 w-14">
           {/* Só monta a <img> quando existe arquivo: sem isso o browser pediria
               a rota para TODO contato da lista e levaria 404 em cada um sem
               foto — que é a maioria. O AvatarFallback do Radix já cobre o caso
@@ -241,7 +240,7 @@ export const ConversationListItem = memo(function ConversationListItem({
               className="object-cover"
             />
           ) : null}
-          <AvatarFallback className="bg-surface-elevated text-xs font-medium text-text-muted">
+          <AvatarFallback className="bg-surface-elevated text-sm font-medium text-text-muted">
             {initials(displayName, phoneFallback)}
           </AvatarFallback>
         </Avatar>
@@ -252,6 +251,33 @@ export const ConversationListItem = memo(function ConversationListItem({
           )}
           aria-hidden
         />
+        {/*
+          SELO DE CANAL (novo visual): o número DA EMPRESA por onde a conversa
+          chegou, como emblema do avatar. Só quando há canal resolvido — sem
+          dado, sem selo (emblema sem fonte seria enfeite). Todos os providers
+          de mensagem do produto são WhatsApp (`meta_cloud`, `zernio`, `waha`
+          legado), então o emblema é único; se um dia entrar outro mensageiro,
+          este ponto vira mapa provider→ícone.
+        */}
+        {canal && (
+          <span
+            className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-background bg-[#25d366] text-white"
+            title={rotuloCanal ?? t("WhatsApp")}
+            aria-hidden
+          >
+            <Phone size={10} weight="fill" aria-hidden />
+          </span>
+        )}
+        {/*
+          CHAMA NO AVATAR (novo visual): lead quente ganha a chama no canto do
+          avatar, como no mock. A linha de selos continua existindo (tags,
+          dono, bloqueio) — a chama aqui é o ALERTA, lá é o contexto.
+        */}
+        {engajamento.nivel === "quente" && engajamento.motivo && (
+          <span className="absolute -left-1 -top-1" title={engajamento.motivo}>
+            <ChamaDeEngajamento motivo={engajamento.motivo} />
+          </span>
+        )}
       </div>
 
       <div className="min-w-0 flex-1">
@@ -270,26 +296,50 @@ export const ConversationListItem = memo(function ConversationListItem({
             </span>
           </div>
         )}
+        {/*
+          PRESENÇA (placeholder, novo visual): o mock mostra Online/offline por
+          linha, e HOJE não há fonte de presença (sem heartbeat, sem realtime
+          presence). O ponto cinza marca o LUGAR — "desconhecido", nunca um
+          estado inventado — com o motivo no tooltip. Quando a fonte existir,
+          este ponto vira verde/cinza pelos dados.
+        */}
+        <div className="flex items-baseline justify-between gap-2">
+          <span
+            className="min-w-0 truncate text-[11px] text-text-muted"
+            // O mesmo lugar da tela mostra duas coisas diferentes conforme a aba:
+            // na Fila é "desde quando o cliente ESPERA" (a mensagem mais antiga sem
+            // resposta — #990), nas outras é "há quanto tempo a conversa mexeu". O
+            // rótulo existe só onde a leitura muda. É a DATA da espera (a pílula
+            // acima já diz o "há quanto tempo") — mesma régua da ordenação.
+            title={naFila ? t("Desde quando o cliente espera resposta") : undefined}
+          >
+            {horaDaOrdem ? relativeTime(horaDaOrdem, localeDaData) : ""}
+          </span>
+          <span
+            className="flex shrink-0 items-center gap-1 text-[11px] text-text-subtle"
+            title={t("Presença (em breve)")}
+            aria-label={t("Presença desconhecida")}
+          >
+            <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40" aria-hidden />
+            {t("offline")}
+          </span>
+        </div>
         <div className="flex items-baseline justify-between gap-2">
           <span
             className={cn(
-              "truncate text-sm",
+              // Caixa alta por CSS (o dado continua intacto — é só o desenho do mock).
+              "truncate text-sm uppercase",
               unread > 0 ? "font-semibold text-text" : "font-medium text-text",
-              c?.is_anonymized && "font-normal italic text-text-muted",
+              c?.is_anonymized && "font-normal normal-case italic text-text-muted",
             )}
           >
             {displayName}
           </span>
-          <span
-            className="shrink-0 text-[11px] tabular-nums text-text-subtle"
-            // O mesmo lugar da tela mostra duas coisas diferentes conforme a aba:
-            // na Fila é "desde quando o cliente ESPERA" (a mensagem mais antiga sem
-            // resposta — #990), nas outras é "há quanto tempo a conversa mexeu". O
-            // rótulo existe só onde a leitura muda.
-            title={naFila ? t("Desde quando o cliente espera resposta") : undefined}
-          >
-            {time}
-          </span>
+          {unread > 0 && (
+            <span className="inline-flex min-h-[18px] min-w-[18px] shrink-0 items-center justify-center rounded-full bg-accent px-1.5 text-[10px] font-semibold tabular-nums text-accent-foreground">
+              {unread}
+            </span>
+          )}
         </div>
 
         <div className="mt-0.5 flex items-center justify-between gap-2">
@@ -304,11 +354,6 @@ export const ConversationListItem = memo(function ConversationListItem({
             ) : null}
             {truncated}
           </p>
-          {unread > 0 && (
-            <span className="inline-flex min-h-[18px] min-w-[18px] shrink-0 items-center justify-center rounded-full bg-accent px-1.5 text-[10px] font-semibold tabular-nums text-accent-foreground">
-              {unread}
-            </span>
-          )}
         </div>
 
         {(temSelos || engajamento.nivel === "quente") && (

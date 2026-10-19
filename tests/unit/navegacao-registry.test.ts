@@ -118,26 +118,31 @@ describe("sidebarGroups", () => {
     expect(hrefs).not.toContain("/app/integrations/nuvemshop");
   });
 
-  it("Etapas do funil é CRM, não Configurações — o achado que originou esta mudança", () => {
-    // A porta agora é o próprio bloco do CRM no sidebar (sem hub no meio).
-    //
-    // O que NÃO pode voltar é o destino trocar de grupo: é isso que a primeira
-    // asserção prende, e ela não depende de onde o item é desenhado.
+  it("Funil e Etapas do funil saíram do menu, mas seguem destinos do CRM", () => {
+    // Decisão do dono: os dois saíram do bloco CRM no sidebar. Saem do MENU, não
+    // do produto — o grupo continua sendo "crm", o ⌘K continua achando e os
+    // links de dentro do produto (conversões, webhook, evolução) continuam de
+    // pé. O que NÃO pode voltar é o destino trocar de grupo nem virar destino
+    // morto; é isso que as duas primeiras asserções prendem.
     expect(dest("/app/settings/tenant/pipelines").group).toBe("crm");
+    expect(dest("/app/kanban").group).toBe("crm");
     const sidebar = sidebarGroups(true, null)
       .find((g) => g.group.id === "crm")
       ?.items.map((i) => i.href);
-    expect(sidebar).toContain("/app/settings/tenant/pipelines");
+    expect(sidebar).not.toContain("/app/settings/tenant/pipelines");
+    expect(sidebar).not.toContain("/app/kanban");
+    // Seguem vivos e pesquisáveis no ⌘K.
+    const buscaveis = searchable(true, null).map((d) => d.href);
+    expect(buscaveis).toContain("/app/settings/tenant/pipelines");
+    expect(buscaveis).toContain("/app/kanban");
   });
 
-  it("o CRM não tem hub: o sidebar traz as cinco telas do grupo", () => {
+  it("o CRM não tem hub: o sidebar traz as telas do dia a dia do grupo", () => {
     const crm = sidebarGroups(true, null).find((g) => g.group.id === "crm");
     expect(crm?.items.map((i) => i.href)).toEqual([
-      "/app/kanban",
       "/app/contacts",
       "/app/tasks",
       "/app/products",
-      "/app/settings/tenant/pipelines",
     ]);
     expect(NAV_GROUPS.find((g) => g.id === "crm")?.hub).toBeUndefined();
   });

@@ -95,9 +95,8 @@ test.describe("navegação agrupada", () => {
     await expect(titulos).toHaveText([
       "Atendimento",
       "CRM",
-      "Agente de IA",
+      "Ferramentas",
       "Fluxos",
-      "Análise",
     ]);
 
     await page.screenshot({
@@ -106,24 +105,20 @@ test.describe("navegação agrupada", () => {
     });
   });
 
-  test("chega nas Etapas do funil pelo CRM, sem passar por Configurações", async ({ page }) => {
+  test("Funis e Etapas do funil saíram do menu do CRM (decisão do dono)", async ({ page }) => {
     await loginAdmin(page);
 
-    // O caso que originou tudo: o usuário não sabia que esta tela existia.
-    //
-    // ⚠️ O ITEM MUDOU DE NOME, e o nome antigo ("Funis") passou para o VIZINHO —
-    // a lista de funis, em /app/kanban. Um teste que continuasse clicando em
-    // "Funis" seguiria verde medindo a outra tela; por isso a asserção de URL
-    // abaixo é específica (`settings/tenant/pipelines`) e não o antigo
-    // /pipelines/, que casa com as duas.
-    //
-    // ⚠️ E O CAMINHO: sem hubs no meio, a tela mora no próprio bloco do CRM —
-    // que nasce recolhido (bandeja). Este teste percorre o caminho INTEIRO em
-    // vez de checar um link: expandir o bloco → tela.
+    // Saem do MENU, não do produto. O bloco do CRM nasce recolhido (bandeja);
+    // este teste o abre e mede o que sobrou dentro dele.
     await sidebar(page).getByRole("button", { name: "CRM" }).click();
-    await sidebar(page).getByRole("link", { name: /Etapas do funil/ }).click();
-    await page.waitForURL(/settings\/tenant\/pipelines/);
-    await expect(page.getByRole("heading", { name: "Etapas do funil", level: 1 })).toBeVisible();
+
+    await expect(sidebar(page).getByRole("link", { name: "Funis", exact: true })).toHaveCount(0);
+    await expect(sidebar(page).getByRole("link", { name: /Etapas do funil/ })).toHaveCount(0);
+
+    // O dia a dia do grupo permanece.
+    await expect(sidebar(page).getByRole("link", { name: "Contatos" })).toBeVisible();
+    await expect(sidebar(page).getByRole("link", { name: "Tarefas" })).toBeVisible();
+    await expect(sidebar(page).getByRole("link", { name: "Produtos" })).toBeVisible();
   });
 
   test("e Produtos está no mesmo bloco, sem hub no meio", async ({ page }) => {
@@ -137,12 +132,16 @@ test.describe("navegação agrupada", () => {
     await page.waitForURL(/\/app\/products/);
   });
 
-  test("e a lista de funis é o item vizinho, com nome próprio", async ({ page }) => {
+  test("e as duas telas de funil seguem de pé — por URL direta", async ({ page }) => {
+    // A perda de porta no menu não pode virar tela morta: os links de dentro do
+    // produto (conversões, webhook, evolução) e o ⌘K continuam chegando nelas.
     await loginAdmin(page);
-    await sidebar(page).getByRole("button", { name: "CRM" }).click();
-    await sidebar(page).getByRole("link", { name: "Funis", exact: true }).click();
-    await page.waitForURL(/\/app\/kanban/);
+
+    await page.goto("/app/kanban");
     await expect(page.getByRole("heading", { name: "Funis", level: 1 })).toBeVisible();
+
+    await page.goto("/app/settings/tenant/pipelines");
+    await expect(page.getByRole("heading", { name: "Etapas do funil", level: 1 })).toBeVisible();
   });
 
   test("chega em Fluxos pela bandeja própria, fora de Agentes", async ({ page }) => {

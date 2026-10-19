@@ -117,7 +117,7 @@ export function sidebarGroups(
  * RAIL ENCOLHIDO (mock do dono): um ícone por grupo — o PRIMEIRO do catálogo.
  *
  * O catálogo já é ordenado por uso ("grupos por objetivo, na ordem de uso"),
- * então "o primeiro" É o principal (Inbox, Funis, Agentes, Fluxos, Desempenho)
+ * então "o primeiro" É o principal (Inbox, Contatos, Respostas rápidas, Fluxos)
  * sem um segundo campo para manter em sincronia. Recebe os grupos já
  * projetados para o papel, então papel sem item visível no grupo some do rail
  * sozinho. Grupo sem item (só hub, como Organização) não tem principal e é

@@ -99,21 +99,17 @@ async function login(page: Page, email: string, senha: string): Promise<void> {
   await page.waitForURL(/\/app/, { timeout: 60_000 });
 }
 
-const sidebar = (page: Page) => page.getByRole("navigation", { name: "Navegação principal" });
-
 /**
- * O caminho do leigo até a tela: o item do menu, não a URL digitada.
+ * O caminho até a tela de Funis.
  *
- * Quem tem um funil arquivado não sabe que a tela dele mora em `/app/kanban` —
- * ele clica em "Funis". O bloco nasce recolhido (bandeja), então o caminho é
- * expandir o CRM e clicar. `navegacao.spec.ts` prende que a porta existe no
- * grupo certo; percorrê-la aqui é o que garante que a gaveta seja alcançável
- * pelo mesmo gesto, e não só por quem já sabe o endereço.
+ * ⚠️ ERA o item do menu, e não é mais: "Funis" SAIU do bloco CRM (decisão do
+ * dono) — a tela continua de pé e no ⌘K, mas não há mais porta no sidebar. O
+ * que esta spec mede é a gaveta de funis arquivados, não a navegação; por isso
+ * o caminho agora é a URL, e `navegacao.spec.ts` é quem prende que a tela segue
+ * viva (por URL direta) e fora do menu.
  */
 async function irParaFunis(page: Page): Promise<void> {
-  await sidebar(page).getByRole("button", { name: "CRM" }).click();
-  await sidebar(page).getByRole("link", { name: "Funis", exact: true }).click();
-  await page.waitForURL(/\/app\/kanban/);
+  await page.goto("/app/kanban");
   await expect(page.getByRole("heading", { name: "Funis", level: 1 })).toBeVisible();
 }
 

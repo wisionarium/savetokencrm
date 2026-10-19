@@ -59,6 +59,9 @@ export {
   Trash,
   PencilSimple,
   MagnifyingGlass,
+  // zoom do fio da conversa (pílula no topo do fio, abaixo dos ícones do cabeçalho)
+  MagnifyingGlassPlus,
+  MagnifyingGlassMinus,
   Pause,
   Play,
   SkipForward,

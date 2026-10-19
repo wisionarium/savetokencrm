@@ -659,6 +659,51 @@
   font-size: 16px;
 }
 
+/* ─────────────────────────────────────────────────────────────────────────
+   ZOOM DO FIO DA CONVERSA (`components/inbox/ZoomDoFio.tsx`).
+
+   O `--zoom-fio` é escrito inline pelo wrapper do `ChatThread` como FATOR
+   unitário (0.8–1.4), e este bloco o multiplica contra a escala acima. O fator
+   e não o px: os degraus vivem no `@theme` e reprogramá-los aqui dentro seria
+   uma segunda fonte de verdade que envelhece sozinha — a cada ajuste da escala
+   global alguém teria de lembrar de mexer nos dois lugares.
+
+   Por que a variável e não `transform: scale()`/`zoom`: nenhum dos dois mexe no
+   layout, só na pintura. O texto cresceria por cima da bolha e o scroll do fio
+   calcularia altura errada. Aqui a `font-size` muda de fato, as bolhas crescem
+   junto e o fio continua rolando na altura certa.
+
+   Escopo SELETIVO: só o fio carrega `[data-zoom-do-fio]`; cabeçalho, pílula de
+   zoom e compositor ficam intocados.
+
+   Sem `@layer`, de propósito — como o bloco de cima: fora de qualquer camada
+   vence a utility `text-sm` da mesma especificidade, e a variante de
+   `text-[10px]` (0,2,0) vence a regra global homônima (0,1,0) por
+   especificidade, não por ordem. */
+[data-zoom-do-fio] {
+  --text-xs: calc(15px * var(--zoom-fio, 0.9));
+  --text-xs--line-height: calc(1.5rem * var(--zoom-fio, 0.9));
+  --text-sm: calc(17px * var(--zoom-fio, 0.9));
+  --text-sm--line-height: calc(1.75rem * var(--zoom-fio, 0.9));
+  --text-base: calc(19px * var(--zoom-fio, 0.9));
+  --text-base--line-height: calc(2rem * var(--zoom-fio, 0.9));
+  --text-lg: calc(21px * var(--zoom-fio, 0.9));
+  --text-lg--line-height: calc(2rem * var(--zoom-fio, 0.9));
+  --text-xl: calc(23px * var(--zoom-fio, 0.9));
+  --text-xl--line-height: calc(2.25rem * var(--zoom-fio, 0.9));
+  --text-2xl: calc(27px * var(--zoom-fio, 0.9));
+  --text-2xl--line-height: calc(2.5rem * var(--zoom-fio, 0.9));
+}
+[data-zoom-do-fio] .text-\[10px\] {
+  font-size: calc(13px * var(--zoom-fio, 0.9));
+}
+[data-zoom-do-fio] .text-\[11px\] {
+  font-size: calc(14px * var(--zoom-fio, 0.9));
+}
+[data-zoom-do-fio] .text-\[13px\] {
+  font-size: calc(16px * var(--zoom-fio, 0.9));
+}
+
 
 @layer base {
   /* O preflight do v4 não pinta mais borda por padrão (`border: 0 solid`, cor

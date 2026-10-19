@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useT } from "@/hooks/i18n/useT";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/auth/AuthProvider";
@@ -19,6 +19,7 @@ import { InboxFilters, type InboxFiltersValue, type InboxTab } from "./InboxFilt
 import { ChatThread } from "./ChatThread";
 import { Composer, type ComposerHandle } from "./Composer";
 import { ConversationHeader } from "./ConversationHeader";
+import { ZoomDoFio } from "./ZoomDoFio";
 import { RetentionNotice } from "./RetentionNotice";
 import { CRMSidePanel } from "./CRMSidePanel";
 import type { Message as ConversationMensagem } from "@/lib/types/messaging";
@@ -34,6 +35,7 @@ import { cn } from "@/lib/utils";
 import { comandosDaFila } from "@/lib/inbox/comando-da-conversa";
 import { montarFiltrosDaLista } from "@/lib/inbox/montar-filtros";
 import { useAutomaticoAtivo } from "@/hooks/ai/useAutomaticoAtivo";
+import { useZoomDoFio } from "@/lib/inbox/zoom-do-fio";
 
 /**
  * QUAL COLUNA APARECE NO CELULAR — as duas saem da MESMA pergunta.
@@ -128,6 +130,7 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
   const { activeOrg, user } = useAuth();
   const supportReadonly = user.support?.access_mode === "support_readonly";
   const orgId = activeOrg?.orgId ?? null;
+  const { zoom: zoomDoFio } = useZoomDoFio(user.id ?? null);
 
   const router = useRouter();
   const pathname = usePathname();
@@ -513,21 +516,35 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
         {selectedConversation ? (
           <>
             <ConversationHeader conversation={selectedConversation} />
-            <div className="min-h-0 flex-1 overflow-hidden">
-              <ChatThread
-                conversationId={selectedConversation.id}
-                onResponder={setRespondendo}
-                disparandoFluxo={fluxoDisparando}
-                // O cartão da passagem escolhe o gesto a partir de quem é o dono
-                // da conversa: sem dono convida a assumir, com outro dono diz
-                // quem atende. Sem estes dois campos ele cairia no estado mais
-                // conservador e ficaria mudo justamente para quem mais precisa.
-                dono={{
-                  userId: selectedConversation.assigned_to_user_id ?? null,
-                  nome: selectedConversation.assigned_to_user_name ?? null,
-                }}
-                contatoId={selectedConversation.contacts?.id ?? null}
-              />
+            <div className="relative min-h-0 flex-1 overflow-hidden">
+              {/*
+                O zoom do fio é o `data-zoom-do-fio` + `--zoom-fio` daqui
+                (regras em `app/globals.css`): o atributo acompanha o wrapper do
+                `ChatThread`, e não o contêiner relativo, para a pílula de zoom
+                (`ZoomDoFio`, irmã) NÃO escalar junto — alvo de clique que muda
+                de tamanho enquanto se ajusta o texto é o defeito a evitar.
+              */}
+              <div
+                className="h-full"
+                data-zoom-do-fio
+                style={{ "--zoom-fio": zoomDoFio / 100 } as CSSProperties}
+              >
+                <ChatThread
+                  conversationId={selectedConversation.id}
+                  onResponder={setRespondendo}
+                  disparandoFluxo={fluxoDisparando}
+                  // O cartão da passagem escolhe o gesto a partir de quem é o dono
+                  // da conversa: sem dono convida a assumir, com outro dono diz
+                  // quem atende. Sem estes dois campos ele cairia no estado mais
+                  // conservador e ficaria mudo justamente para quem mais precisa.
+                  dono={{
+                    userId: selectedConversation.assigned_to_user_id ?? null,
+                    nome: selectedConversation.assigned_to_user_name ?? null,
+                  }}
+                  contatoId={selectedConversation.contacts?.id ?? null}
+                />
+              </div>
+              <ZoomDoFio userId={user.id ?? null} />
             </div>
             <RetentionNotice conversationId={selectedConversation.id} />
             {motivoDaJanela && (

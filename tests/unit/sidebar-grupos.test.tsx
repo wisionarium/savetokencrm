@@ -109,23 +109,19 @@ describe("Sidebar agrupado", () => {
     );
   });
 
-  it("leva às Etapas do funil pelo CRM, e não por Configurações", () => {
+  it("o CRM no menu traz o dia a dia — Funis e Etapas do funil saíram do bloco", () => {
     comoPapel("admin");
     render(<Sidebar collapsed={false} />);
-    // O CRM nasce recolhido: a porta existe no grupo certo, a um clique.
     expect(screen.queryByRole("link", { name: "Etapas do funil" })).toBeNull();
     expandirGrupo("CRM");
-    expect(screen.getByRole("link", { name: "Etapas do funil" })).toHaveAttribute(
+    // Saem do MENU, não do produto (ver catalogo.ts): o ⌘K e os links internos
+    // seguem levando às duas telas, mas o bloco do CRM fica com o dia a dia.
+    expect(screen.queryByRole("link", { name: "Etapas do funil" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Funis" })).toBeNull();
+    expect(screen.getByRole("link", { name: "Contatos" })).toHaveAttribute(
       "href",
-      "/app/settings/tenant/pipelines",
+      "/app/contacts",
     );
-  });
-
-  it("e os dois itens de funil não disputam o mesmo nome", () => {
-    comoPapel("admin");
-    render(<Sidebar collapsed={false} />);
-    expandirGrupo("CRM");
-    expect(screen.getByRole("link", { name: "Funis" })).toHaveAttribute("href", "/app/kanban");
   });
 
   it("Audit Log foi para Configurações — e Canais saiu do menu, com Nuvemshop só no ⌘K", () => {
@@ -210,7 +206,7 @@ describe("Sidebar agrupado", () => {
     // num rail de 64px era o "confuso" que o dono mediu no print.
     for (const [nome, href] of [
       ["Inbox", "/app/inbox"],
-      ["Funis", "/app/kanban"],
+      ["Contatos", "/app/contacts"],
       ["Respostas rápidas", "/app/templates"],
       ["Fluxos", "/app/ai/fluxos"],
     ] as const) {
@@ -218,9 +214,9 @@ describe("Sidebar agrupado", () => {
     }
     for (const nome of [
       "Galeria",
-      "Contatos",
       "Tarefas",
       "Produtos",
+      "Funis",
       "Agentes",
       "Desempenho",
     ]) {
@@ -236,8 +232,9 @@ describe("Sidebar agrupado", () => {
     render(<Sidebar collapsed={false} />);
     expandirGrupo("Atendimento");
     expect(screen.getByRole("link", { name: /Inbox/ })).toHaveAttribute("aria-current", "page");
-    // "Kanban" saiu da interface; o item da mesma URL agora se chama "Funis".
+    // "Kanban" saiu da interface e "Funis" saiu do menu; o bloco do CRM abre em
+    // Contatos, que não é a rota atual.
     expandirGrupo("CRM");
-    expect(screen.getByRole("link", { name: "Funis" })).not.toHaveAttribute("aria-current");
+    expect(screen.getByRole("link", { name: "Contatos" })).not.toHaveAttribute("aria-current");
   });
 });

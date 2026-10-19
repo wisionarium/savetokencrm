@@ -142,6 +142,14 @@ export const NAV_CATALOG = [
   },
 
   // ---- CRM — o funil ----
+  //
+  // ⚠️ FUNIS E ETAPAS DO FUNIL SAÍRAM DO MENU (decisão do dono). Os dois
+  // destinos seguem no registro, vivos: saem do MENU, não do produto (mesmo
+  // critério de Canais e Nuvemshop, mais abaixo). Continuam alcançáveis pelo
+  // ⌘K e por links de dentro do produto — conversões de formulário, detalhe de
+  // webhook, avisos do CRM e onboarding apontam para eles. O bloco do CRM no
+  // menu fica com Contatos, Tarefas e Produtos; o rail passa a usar Contatos
+  // como principal do grupo.
   {
     // ⚠️ ERA "Kanban", e a URL continua sendo. O nome saiu da interface porque o
     // produto tinha CINCO vocabulários para a mesma coisa — "Kanban" no menu,
@@ -159,7 +167,6 @@ export const NAV_CATALOG = [
     icon: "Kanban",
     group: "crm",
     section: "O dia a dia da venda",
-    sidebar: true,
   },
   {
     href: "/app/contacts",
@@ -238,6 +245,10 @@ export const NAV_CATALOG = [
     // com nomes que não diziam qual servia para quê. A diferença real é o VERBO,
     // e é ela que o nome carrega agora: lá se ABRE o funil, aqui se CONFIGURA o
     // que ele significa.
+    //
+    // Fora do MENU desde a mesma decisão que tirou "Funis" (ver o comentário do
+    // bloco CRM): continua no registro, no ⌘K (com o `minRole` de sempre) e no
+    // link de dentro de Evolução do agente.
     href: "/app/settings/tenant/pipelines",
     label: "Etapas do funil",
     description: "As colunas de cada funil, o vocabulário do negócio e os motivos de perda.",
@@ -245,7 +256,6 @@ export const NAV_CATALOG = [
     group: "crm",
     section: "Preparar a venda",
     minRole: "manager",
-    sidebar: true,
   },
 
   // ---- Fluxos — follow-up, disparo e automação ----

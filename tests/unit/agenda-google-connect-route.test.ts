@@ -99,7 +99,7 @@ describe("GET /api/v1/agenda/google/connect", () => {
     const { GET } = await rotaComEnv({ ...CONFIGURADO, GOOGLE_CALENDAR_CLIENT_ID: "" });
     const res = await GET(pedido());
     expect(res.status).toBe(307);
-    expect(res.headers.get("location")).toBe("https://crm.exemplo/app/agenda?erro=google_nao_configurado");
+    expect(res.headers.get("location")).toBe("https://crm.exemplo/app/tasks/agenda?erro=google_nao_configurado");
   });
 
   it("instalação sem chave NÃO enche o audit log", async () => {
@@ -116,7 +116,7 @@ describe("GET /api/v1/agenda/google/connect", () => {
     // outro — o sintoma seria "conectei e deu erro", intermitente e sem rastro.
     const { GET } = await rotaComEnv({ ...CONFIGURADO, INTERNAL_SECRET: "curto" });
     const res = await GET(pedido());
-    expect(res.headers.get("location")).toBe("https://crm.exemplo/app/agenda?erro=segredo_indisponivel");
+    expect(res.headers.get("location")).toBe("https://crm.exemplo/app/tasks/agenda?erro=segredo_indisponivel");
     expect(audit).toHaveBeenCalledWith(
       expect.objectContaining({ action: "agenda.google.conexao_falhou" }),
     );

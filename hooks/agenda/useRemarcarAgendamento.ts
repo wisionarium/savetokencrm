@@ -13,7 +13,7 @@ import { apiClient } from "@/lib/api/client";
  * ═══ O defeito que estes hooks fecham ═══
  *
  * `HistoricoDaAgenda` aceita `onRemarcar` e `onCancelar` desde que nasceu, com
- * `disabled={!onRemarcar}` nos botões — e `app/app/agenda/_client.tsx` montava o
+ * `disabled={!onRemarcar}` nos botões — e `app/app/tasks/agenda/_client.tsx` montava o
  * componente **sem nenhuma callback**. Resultado: os dois botões nasciam CINZAS
  * em toda linha, de toda organização, para sempre. Controle decorativo, que é um
  * defeito que esta base já pagou uma vez (PR #295, cinco deles).

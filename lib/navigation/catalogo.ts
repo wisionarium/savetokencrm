@@ -15,7 +15,7 @@ import type { Role } from "@/lib/auth/types";
  * Doutrina: docs/doctrine/sistema-vivo.md — "por qual porta se chega até mim?"
  */
 
-export type NavGroupId = "atendimento" | "crm" | "ia" | "fluxos" | "canais" | "analise" | "organizacao";
+export type NavGroupId = "atendimento" | "crm" | "ferramentas" | "fluxos" | "canais" | "organizacao";
 
 export interface NavGroup {
   id: NavGroupId;
@@ -47,10 +47,8 @@ export interface NavMetadata {
  * Grupos por OBJETIVO, na ordem de uso: o que se abre toda hora primeiro, o que
  * se ajusta uma vez por mês por último.
  *
- * "Análise" e não "Observabilidade": quem instala isto numa VPS é dono de PME,
- * não engenheiro. E configurar o sistema (grupo IA) é atividade diferente de
- * observar o sistema funcionando (grupo Análise) — por isso Evolução da IA mora
- * aqui, e não junto dos agentes.
+ * "Ferramentas" é onde ficam os insumos de quem atende — respostas rápidas e
+ * galeria — em vez de disputarem o bloco de Atendimento, que é o dia a dia.
  *
  * Sem hubs no meio (só Organização mantém o seu, no rodapé): todo destino do
  * grupo aparece clicando no bloco, e os grupos nascem todos recolhidos.
@@ -58,13 +56,12 @@ export interface NavMetadata {
 export const NAV_GROUPS: NavGroup[] = [
   { id: "atendimento", label: "Atendimento" },
   { id: "crm", label: "CRM" },
-  { id: "ia", label: "Agente de IA" },
+  { id: "ferramentas", label: "Ferramentas" },
   // Bandeja própria dos fluxos desde 2026-10-06 (decisão do dono): os fluxos
-  // saíram de dentro de Agente de IA e têm bloco só deles — follow-up,
-  // disparo e automação, na página /app/ai/fluxos.
+  // têm bloco só deles — follow-up, disparo e automação, na página
+  // /app/ai/fluxos.
   { id: "fluxos", label: "Fluxos" },
   { id: "canais", label: "Canais" },
-  { id: "analise", label: "Análise" },
   {
     id: "organizacao",
     label: "Organização",
@@ -123,26 +120,6 @@ export const NAV_CATALOG = [
     sidebar: true,
   },
   {
-    // Entra em "atendimento", e não em "organizacao", porque a Agenda é onde o
-    // dia acontece e não onde ele se configura: quem atende abre isto de manhã
-    // junto com o Inbox. Os TIPOS de agendamento — que são configuração de
-    // verdade — foram para Configurações, como este comentário previa: ver
-    // `/app/settings/tenant/agenda` no grupo "organizacao".
-    //
-    // ⚠️ ESTA FRASE ESTAVA VENCIDA: dizia "a disponibilidade ainda não tem tela",
-    // e tem — é a aba "Atendimento" de `/app/team`, com editor de fuso e janelas
-    // (`app/app/team/_components/AttendantsClient.tsx`). Ela chegou a custar uma
-    // investigação inteira: quem leu isto aqui concluiu que faltava construir a
-    // tela, quando o que faltava era o CAMINHO até ela. O aviso da Agenda agora
-    // aponta para `/app/team?aba=atendimento`.
-    href: "/app/agenda",
-    label: "Agenda",
-    description: "O que está marcado, com quem, e quem atende — seu e da equipe.",
-    icon: "CalendarBlank",
-    group: "atendimento",
-    sidebar: true,
-  },
-  {
     // Renomeado de "Templates": estes são scripts do atendente, consumidos pelo
     // Composer do inbox. O nome "Templates" fica livre para os da Meta (HSM),
     // onde é o termo técnico correto.
@@ -150,7 +127,7 @@ export const NAV_CATALOG = [
     label: "Respostas rápidas",
     description: "Scripts salvos para responder mais rápido, seus ou da equipe.",
     icon: "FileText",
-    group: "atendimento",
+    group: "ferramentas",
     sidebar: true,
   },
   {
@@ -160,7 +137,7 @@ export const NAV_CATALOG = [
     label: "Galeria",
     description: "As imagens do time: do chat, dos fluxos e as suas pastas.",
     icon: "ImageSquare",
-    group: "atendimento",
+    group: "ferramentas",
     sidebar: true,
   },
 
@@ -271,17 +248,7 @@ export const NAV_CATALOG = [
     sidebar: true,
   },
 
-  // ---- Agente de IA — montar, ensinar, acompanhar ----
-  {
-    href: "/app/ai/agents",
-    label: "Agentes",
-    description: "Quem atende por você: instruções, modelo, ferramentas e publicação.",
-    icon: "Robot",
-    group: "ia",
-    section: "Montar o agente",
-    minRole: "manager",
-    sidebar: true,
-  },
+  // ---- Fluxos — follow-up, disparo e automação ----
   {
     // Bloco próprio desde 2026-10-06 (decisão do dono): os 3 fluxos moram
     // aqui, FORA de Agente de IA — follow-up, disparo e automação. As rotas
@@ -303,7 +270,6 @@ export const NAV_CATALOG = [
     description: "Como o agente retoma uma conversa que esfriou, para nenhuma morrer no silêncio.",
     icon: "FlowArrow",
     group: "fluxos",
-    section: "Montar o agente",
     minRole: "manager",
   },
   {
@@ -314,7 +280,6 @@ export const NAV_CATALOG = [
     description: "Criar imagem + texto para os atendentes dispararem no chat.",
     icon: "FlowArrow",
     group: "fluxos",
-    section: "Montar o agente",
     minRole: "manager",
   },
   {
@@ -351,32 +316,6 @@ export const NAV_CATALOG = [
     group: "organizacao",
     section: "Sua empresa",
     minRole: "manager",
-  },
-  {
-    href: "/app/ai/inbox",
-    label: "Alertas",
-    description: "O que a IA encontrou e precisa de uma decisão sua.",
-    icon: "Flag",
-    group: "ia",
-    section: "Acompanhar o agente",
-    sidebar: true,
-  },
-  {
-    // "Aviso no WhatsApp", NUNCA "Avisos": a vizinha de cima chama-se "Alertas"
-    // e É a central de avisos — todo o vocabulário interno dela é "aviso"
-    // (POLITICAS_DE_AVISO, REFERENCIAS_DE_AVISO). Duas entradas com a mesma
-    // palavra, na mesma seção, é a tela ficando ilegível para quem não
-    // programa. O rótulo nomeia o CANAL e o destinatário.
-    href: "/app/ai/cases/avisos",
-    label: "Aviso no WhatsApp",
-    description: "Receber no WhatsApp quando o assistente abrir um caso.",
-    icon: "PaperPlaneTilt",
-    group: "ia",
-    section: "Acompanhar o agente",
-    // `admin` porque escolhe um número conectado e manda dado de cliente para um
-    // celular — o mesmo gate da rota e da RLS de `config_aviso_de_caso`.
-    minRole: "admin",
-    sidebar: true,
   },
   // ---- Canais — por onde as mensagens entram e saem ----
   //
@@ -438,114 +377,6 @@ export const NAV_CATALOG = [
     group: "organizacao",
     section: "Dados e acesso",
     minRole: "manager",
-  },
-
-  // ---- Análise — olhar o sistema funcionando ----
-  // Os grupos nascem todos recolhidos, entao o menu inicial e
-  // curto de qualquer jeito. A ordem abaixo segue a frequencia: primeiro o que
-  // se pergunta toda semana, por ultimo o que se visita de proposito.
-  {
-    href: "/app/metrics",
-    label: "Desempenho",
-    description: "Funil e performance por atendente nos últimos 30 dias.",
-    icon: "ChartBar",
-    group: "analise",
-    section: "Os números do período",
-    sidebar: true,
-  },
-  {
-    // Logo abaixo de Desempenho porque responde a metade da MESMA pergunta: lá
-    // está o que aconteceu depois que a pessoa chegou; aqui, quanto custou
-    // trazê-la. Ler as duas juntas é o que fecha a conta do custo por cliente.
-    href: "/app/ads/meta",
-    label: "Meta Ads",
-    description: "Quanto custou cada resultado das campanhas que trazem gente para cá.",
-    icon: "Megaphone",
-    group: "analise",
-    section: "Os números do período",
-    // `manager`, e não o `viewer` de Desempenho: aqui não há recorte por
-    // pessoa — orçamento e criativo são da empresa inteira. Mesmo grau dos
-    // outros dois vizinhos do grupo.
-    minRole: "manager",
-    sidebar: true,
-  },
-  {
-    // Irmã de "Desempenho", não a mesma coisa: lá é DESFECHO (funil agora,
-    // ganho/perdido por atendente); aqui é o TRABALHO que aconteceu no
-    // período, com quem fez cada coisa. Um mês inteiro atendido pela IA e um
-    // mês inteiro atendido pela equipe têm o mesmo desfecho e histórias
-    // opostas — só esta tela distingue as duas.
-    href: "/app/activities",
-    label: "Atividades",
-    description:
-      "Relatório do que a equipe e os agentes fizeram no período: quanto, quem e de que tipo.",
-    icon: "ClockCounterClockwise",
-    group: "analise",
-    section: "Os números do período",
-    sidebar: true,
-  },
-  {
-    // Observabilidade, não configuração: por isso não fica junto dos agentes.
-    href: "/app/ai/evolution",
-    label: "Evolução da IA",
-    description: "Se o agente está melhorando, onde ele erra e o que falta ensinar.",
-    icon: "ChartLineUp",
-    group: "analise",
-    section: "O histórico que se consulta",
-    minRole: "manager",
-    sidebar: true,
-  },
-  {
-    href: "/app/audit",
-    label: "Audit Log",
-    description: "Quem fez o quê, quando — o histórico que não se apaga.",
-    icon: "ClockCounterClockwise",
-    group: "analise",
-    section: "O histórico que se consulta",
-    minRole: "manager",
-    sidebar: true,
-  },
-  {
-    // No grupo Análise desde 2026-10-06 (decisão do dono): no bloco de
-    // Agentes ficam SÓ Agentes, Alertas e Aviso no WhatsApp. Propostas,
-    // Execuções e Uso e orçamento são observar o sistema funcionando — a
-    // mesma razão que já mantinha Evolução da IA na Análise, e não junto
-    // dos agentes.
-    //
-    // Órfã um dia: nenhum lugar do app linkava para Propostas. O flywheel
-    // gerava propostas de melhoria do agente e a fila só era vista por quem
-    // soubesse a URL.
-    href: "/app/ai/proposals",
-    label: "Propostas",
-    description: "Melhorias que a IA sugere para si mesma, esperando sua decisão.",
-    icon: "Lightbulb",
-    group: "analise",
-    section: "Acompanhar o agente",
-    sidebar: true,
-  },
-  {
-    // A tela de Uso responde "quanto gastei". Esta responde a pergunta que não
-    // tinha lugar nenhum: "o agente parou de responder, o que aconteceu?".
-    // Antes da migration 0128 ela seria impossível de construir com honestidade
-    // — llm_calls só registrava sucesso.
-    href: "/app/ai/runs",
-    label: "Execuções",
-    description: "O que a IA fez — e, quando falhou, o que aconteceu e o que fazer.",
-    icon: "ListChecks",
-    group: "analise",
-    section: "Acompanhar o agente",
-    minRole: "manager",
-    sidebar: true,
-  },
-  {
-    href: "/app/ai/usage",
-    label: "Uso e orçamento",
-    description: "Quanto a IA consumiu e qual é o teto de gasto do mês.",
-    icon: "Gauge",
-    group: "analise",
-    section: "Acompanhar o agente",
-    minRole: "manager",
-    sidebar: true,
   },
 
   // ---- Organização — conta, empresa, acesso ----
@@ -701,6 +532,19 @@ export const NAV_CATALOG = [
     group: "organizacao",
     section: "Dados e acesso",
     minRole: "admin",
+  },
+  {
+    // No grupo Organização desde a simplificação (decisão do dono): o que ele
+    // responde é auditoria e acesso — "quem fez o quê, quando" —, ao lado de
+    // LGPD e API Tokens. SEM `sidebar`: o grupo tem hub, e a porta é
+    // "Configurações".
+    href: "/app/audit",
+    label: "Audit Log",
+    description: "Quem fez o quê, quando — o histórico que não se apaga.",
+    icon: "ClockCounterClockwise",
+    group: "organizacao",
+    section: "Dados e acesso",
+    minRole: "manager",
   },
   {
     href: "/app/extensions",

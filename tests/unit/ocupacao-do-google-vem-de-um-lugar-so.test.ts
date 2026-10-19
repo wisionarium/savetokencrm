@@ -4,7 +4,7 @@
  * ─── Por que este arquivo existe ────────────────────────────────────────────
  *
  * A premissa inteira do conserto da #525 é "uma leitura só": a semente do
- * servidor (`app/app/agenda/page.tsx`) e a rota
+ * servidor (`app/app/tasks/agenda/page.tsx`) e a rota
  * (`app/api/v1/agenda/agendamentos/route.ts`) liam a MESMA ocupação com a MESMA
  * consulta copiada, e foi só uma das cópias mudar para a tela passar a mostrar
  * livre um horário que o motor recusa.
@@ -42,7 +42,7 @@ const VIEW = "calendar_selected_external_events";
 const DONO = "lib/agenda/ocupacao-externa.ts";
 
 /** Os consumidores que precisam continuar chamando a leitura única. */
-const CONSUMIDORES = ["app/app/agenda/page.tsx", "app/api/v1/agenda/agendamentos/route.ts"];
+const CONSUMIDORES = ["app/app/tasks/agenda/page.tsx", "app/api/v1/agenda/agendamentos/route.ts"];
 
 const raiz = process.cwd();
 

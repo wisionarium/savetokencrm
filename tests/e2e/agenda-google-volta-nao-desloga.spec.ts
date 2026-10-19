@@ -15,7 +15,7 @@ import { test, expect, type Page } from "@playwright/test";
  * Medido: não há `signOut` em caminho nenhum do callback, e o cookie de sessão
  * tem `maxAge` de 400 dias. O que acontece é o SEGUNDO SALTO:
  *
- *   1. o callback é público, faz o trabalho, e responde 307 para `/app/agenda`;
+ *   1. o callback é público, faz o trabalho, e responde 307 para `/app/tasks/agenda`;
  *   2. essa navegação ainda pertence à cadeia iniciada em `accounts.google.com`;
  *   3. o cookie de sessão é `SameSite=Strict` — com initiator cross-site ele não
  *      viaja;
@@ -101,7 +101,7 @@ test("voltar do consentimento não manda a pessoa para o /login", async ({ page,
 
   // A sessão existe ANTES do salto — o controle positivo. Sem ele, um /login no
   // fim poderia significar "nunca esteve logado" em vez de "perdeu no salto".
-  await page.goto("/app/agenda");
+  await page.goto("/app/tasks/agenda");
   await expect(page, "não cheguei logado na Agenda — o cenário não está montado").toHaveURL(
     /\/app\/agenda/,
     { timeout: 20_000 },
@@ -131,7 +131,7 @@ test("voltar do consentimento não manda a pessoa para o /login", async ({ page,
         "acontece é o cookie SameSite=Strict não viajar num salto iniciado de fora. " +
         "Para quem usa, isso se lê como 'o sistema me deslogou'.",
     ).not.toContain("/login");
-    expect(url).toContain("/app/agenda");
+    expect(url).toContain("/app/tasks/agenda");
 
     // E continua logada de verdade, não só na URL: a Agenda é rota protegida, e
     // renderizá-la já prova a sessão — mas asserto um elemento dela para o caso

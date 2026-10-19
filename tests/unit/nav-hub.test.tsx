@@ -56,10 +56,12 @@ describe("NavHub", () => {
     },
   };
 
-  it("apresenta a IA nas etapas da jornada, na ordem", () => {
-    render(<NavHub group="ia" isPlatformAdmin role={null} title="Agente de IA" subtitle="" />);
+  it("apresenta as seções do hub na ordem de primeira aparição", () => {
+    render(
+      <NavHub group="organizacao" isPlatformAdmin role={null} title="Configurações" subtitle="" />,
+    );
     const secoes = screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent?.trim());
-    expect(secoes).toEqual(["Montar o agente", "Acompanhar o agente"]);
+    expect(secoes).toEqual(["Sua empresa", "Dados e acesso", "Sua conta"]);
   });
 
   it("desenterra Provedores no hub Configurações", () => {
@@ -78,11 +80,6 @@ describe("NavHub", () => {
     expect(link.textContent).toMatch(/o que acontece se ela falhar/i);
   });
 
-  it("mostra também o que já está no sidebar — é inventário, não sobra", () => {
-    render(<NavHub group="ia" isPlatformAdmin role={null} title="Agente de IA" subtitle="" />);
-    expect(screen.getByRole("link", { name: /Agentes/ })).toBeTruthy();
-  });
-
   it("Extensões fica em Sua empresa, visível ao viewer; Dados e acesso continua sumindo sem destino", () => {
     render(
       <NavHub group="organizacao" isPlatformAdmin={false} role="viewer" title="Org" subtitle="" />,
@@ -99,41 +96,16 @@ describe("NavHub", () => {
   });
 
   it("agrupa os cards sob a própria seção, não numa lista solta", () => {
-    render(<NavHub group="ia" isPlatformAdmin role={null} title="Agente de IA" subtitle="" />);
-    const acompanhar = screen.getByRole("region", { name: "Acompanhar o agente" });
-    expect(within(acompanhar).getByRole("link", { name: /Alertas/ })).toBeTruthy();
-    expect(within(acompanhar).queryByRole("link", { name: /Credenciais/ })).toBeNull();
-  });
-
-  it("traduz o conteúdo do hub quando a página entrega o idioma", () => {
     render(
-      <NavHub
-        group="ia"
-        isPlatformAdmin
-        role={null}
-        title="Agente de IA"
-        subtitle="Tudo que define quem atende por você — e como acompanhar o que ele faz."
-        locale="es"
-      />,
+      <NavHub group="organizacao" isPlatformAdmin role={null} title="Configurações" subtitle="" />,
     );
-
-    expect(
-      screen.getByText("Todo lo que define quién atiende por ti — y cómo seguir lo que hace."),
-    ).toBeTruthy();
-    expect(screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent?.trim())).toEqual([
-      "Configurar el agente",
-      "Acompañar al agente",
-    ]);
-    expect(
-      screen.getByRole("link", { name: /Alertas/ }),
-    ).toBeTruthy();
-    // Uso e orçamento saiu do grupo IA para a Análise (decisão do dono,
-    // 2026-10-06) — não há mais link dele neste hub.
-    expect(screen.queryByRole("link", { name: /Uso y presupuesto/ })).toBeNull();
+    const dados = screen.getByRole("region", { name: "Dados e acesso" });
+    expect(within(dados).getByRole("link", { name: /Audit Log/ })).toBeTruthy();
+    expect(within(dados).queryByRole("link", { name: /Provedores/ })).toBeNull();
   });
 
-  it("todo texto registrado no hub de IA tem tradução em espanhol", () => {
-    const textos = hubSections("ia", true, "admin").flatMap(({ section, items }) => [
+  it("todo texto registrado no hub de Configurações tem tradução em espanhol", () => {
+    const textos = hubSections("organizacao", true, "admin").flatMap(({ section, items }) => [
       section,
       ...items.flatMap((item) => [item.label, item.description]),
     ]);

@@ -13,7 +13,7 @@ import { lerCreds, loginComoAdmin } from "./helpers/login-admin";
  * abre. Medido pelo maestro: dez dos dez itens do pedido, parciais, por essa
  * única razão. Esta spec é a outra metade — o que o dono do produto realmente vê.
  *
- * A diferença que mais importa está no primeiro caso: chegar em `/app/agenda`
+ * A diferença que mais importa está no primeiro caso: chegar em `/app/tasks/agenda`
  * **clicando no menu**, não por `goto`. `goto` prova que a rota responde;
  * clicar prova que a tela é ALCANÇÁVEL, que é outra coisa e é a que o usuário
  * exercita. Ter tela e ter porta são propriedades diferentes — o repo já tem um
@@ -59,7 +59,7 @@ test.describe("a Agenda como o dono do produto a usa", () => {
     // tela do produto passava lista vazia, o filtro existia, estava provado na
     // vitrine, e NINGUÉM o via aqui. Componente provado e não montado é o mesmo
     // que componente ausente, do ponto de vista de quem usa.
-    await page.goto("/app/agenda");
+    await page.goto("/app/tasks/agenda");
     await expect(page.getByTestId("tela-agenda")).toBeVisible({ timeout: ESPERA });
 
     const filtro = page.getByTestId("filtro-de-pessoas");
@@ -243,7 +243,7 @@ test.describe("a Agenda como o dono do produto a usa", () => {
     // As três fotos que existiam eram todas da VITRINE. Esta é a primeira da
     // tela que o cliente abre.
     await page.setViewportSize({ width: 1440, height: 1000 });
-    await page.goto("/app/agenda");
+    await page.goto("/app/tasks/agenda");
     await expect(page.getByTestId("tela-agenda")).toBeVisible({ timeout: ESPERA });
     await page.screenshot({ path: "evidence/calendario/tela-do-produto-claro.png", fullPage: true });
 

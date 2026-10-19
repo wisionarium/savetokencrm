@@ -26,7 +26,6 @@ describe("interface por vínculo é apresentação", () => {
     expect(hrefs(simplified)).toEqual(
       expect.arrayContaining([
         "/app/inbox",
-        "/app/agenda",
         "/app/contacts",
         "/app/kanban",
         "/app/tasks",

@@ -97,7 +97,7 @@ async function entrar(page: Page, creds: Creds) {
  * existe depois disso (`data-aberta`), e é ela que transborda.
  */
 async function abrirPainelComDiaEscolhido(page: Page, nomeDoTipo: string): Promise<void> {
-  await page.goto("/app/agenda");
+  await page.goto("/app/tasks/agenda");
   await page.getByRole("button", { name: /Novo agendamento/i }).click();
   const painel = page.getByTestId("painel-de-marcacao");
   await expect(painel).toBeVisible({ timeout: 20_000 });

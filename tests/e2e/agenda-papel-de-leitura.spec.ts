@@ -9,7 +9,7 @@ import { expect, test, type Page } from "@playwright/test";
  *
  * O piso da rota que cria compromisso é `requireRole("agent")`
  * (`app/api/v1/agenda/agendamentos/route.ts`). Antes do #1013 a TELA não sabia
- * disso: `app/app/agenda/_client.tsx` renderizava o botão "Novo agendamento"
+ * disso: `app/app/tasks/agenda/_client.tsx` renderizava o botão "Novo agendamento"
  * sem gate nenhum (só `disabled={!tipo}`) e passava `onMarcarEm` sempre, então
  * o `viewer` — e o acompanhamento só-de-leitura, que `resolveActiveOrg` resolve
  * como `viewer` — via as três portas de escrita e levava **403 depois do
@@ -20,7 +20,7 @@ import { expect, test, type Page } from "@playwright/test";
  *
  * `tests/unit/agenda-viewer-nao-ganha-novo-agendamento.test.tsx` monta o
  * `AgendaClient` com `podeMarcar={false}` e prova o COMPONENTE. Ele não prova
- * que `app/app/agenda/page.tsx` calcula a prop a partir do papel REAL da sessão
+ * que `app/app/tasks/agenda/page.tsx` calcula a prop a partir do papel REAL da sessão
  * (`ROLE_RANK[activeOrg.role] >= ROLE_RANK.agent`) — que é a metade que um
  * usuário exercita ao logar. É por isso que o caso do `agent` está aqui junto:
  * um gate que esconde de TODO MUNDO também passaria no teste do viewer, e só o
@@ -88,7 +88,7 @@ test("quem só lê abre a Agenda e não encontra nenhuma porta de escrita", asyn
   if (!viewer) throw new Error(".e2e-creds.json sem o usuário `viewer`");
 
   await entrar(page, viewer.email, creds.password);
-  await page.goto("/app/agenda");
+  await page.goto("/app/tasks/agenda");
 
   // A tela é DELE — o papel de leitura VÊ a agenda; o que ele não tem é o gesto.
   // Sem esta asserção, um 403 na página inteira faria as contagens abaixo darem
@@ -140,7 +140,7 @@ test("o atendente abre a MESMA tela e as portas estão lá — o controle do cas
   if (!agente) throw new Error(".e2e-creds.json sem o usuário `agent`");
 
   await entrar(page, agente.email, creds.password);
-  await page.goto("/app/agenda");
+  await page.goto("/app/tasks/agenda");
 
   await expect(page.getByTestId("tela-agenda")).toBeVisible({ timeout: ESPERA });
   await expect(page.getByRole("heading", { name: "Agenda", exact: true })).toBeVisible();

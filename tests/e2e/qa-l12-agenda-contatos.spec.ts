@@ -37,7 +37,7 @@ test.describe("Lote 12 — #931/#933 a ida ao Google", () => {
   }) => {
     test.skip(TEM_GOOGLE, "esta rodada tem GOOGLE_CALENDAR_CLIENT_ID — é a rodada do caso configurado");
     await login(page, c.users.manager!.email, c.password);
-    await page.goto("/app/agenda");
+    await page.goto("/app/tasks/agenda");
     await page.waitForLoadState("networkidle").catch(() => {});
     const retorno = page.locator('[data-testid="endereco-de-retorno"]');
     const temBotao = await page.locator('[data-testid="conectar-google"]').count();
@@ -53,7 +53,7 @@ test.describe("Lote 12 — #931/#933 a ida ao Google", () => {
   }) => {
     test.skip(!TEM_GOOGLE, "sem GOOGLE_CALENDAR_CLIENT_ID no ambiente desta rodada");
     await login(page, c.users.manager!.email, c.password);
-    await page.goto("/app/agenda");
+    await page.goto("/app/tasks/agenda");
     const botao = page.locator('[data-testid="conectar-google"]');
     await expect(botao).toBeVisible({ timeout: 60_000 });
     const href = await botao.getAttribute("href");
@@ -181,7 +181,7 @@ test.describe("Lote 12 — #915 compromisso que cruza a borda da janela", () => 
     // A rota que a tela consome, medida pelo corpo.
     const resposta = page.waitForResponse((r) => r.url().includes("/api/v1/agenda/agendamentos"));
     let janela = "";
-    await page.goto("/app/agenda");
+    await page.goto("/app/tasks/agenda");
     await page.waitForLoadState("networkidle").catch(() => {});
 
     let corpoRota = "";

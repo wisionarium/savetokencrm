@@ -158,7 +158,7 @@ async function chamar(
 /**
  * O destino da volta — lido do CORPO da página-ponte, e não do header.
  *
- * ⚠️ A VOLTA DEIXOU DE SER UM 307. Um redirect daqui para `/app/agenda` herda a
+ * ⚠️ A VOLTA DEIXOU DE SER UM 307. Um redirect daqui para `/app/tasks/agenda` herda a
  * cadeia iniciada em `accounts.google.com`, o cookie `SameSite=Strict` não
  * viaja, e a pessoa cai no `/login` achando que foi deslogada — o relato do dono
  * na v1.9.0, reproduzido em navegador. Agora `voltar()` responde 200 com uma
@@ -179,7 +179,7 @@ describe("GET /api/v1/agenda/google/callback", () => {
     googleRespondendoBem();
     const res = await chamar({ code: "o-codigo", state: estadoValido() });
 
-    expect(await destino(res)).toBe("https://crm.exemplo/app/agenda?ok=agenda_conectada");
+    expect(await destino(res)).toBe("https://crm.exemplo/app/tasks/agenda?ok=agenda_conectada");
     expect(upsertRecebido).toMatchObject({
       organization_id: ORG,
       user_id: ANA,
@@ -306,7 +306,7 @@ describe("GET /api/v1/agenda/google/callback", () => {
       .mockResolvedValueOnce(respostaHttp({ id: "ana@clinica.com.br", timeZone: "America/Sao_Paulo" }));
 
     const res = await chamar({ code: "c", state: estadoValido() });
-    expect(await destino(res)).toBe("https://crm.exemplo/app/agenda?erro=sem_token_de_renovacao");
+    expect(await destino(res)).toBe("https://crm.exemplo/app/tasks/agenda?erro=sem_token_de_renovacao");
     expect(upsertRecebido).toBeNull();
   });
 
@@ -322,7 +322,7 @@ describe("GET /api/v1/agenda/google/callback", () => {
       .mockResolvedValueOnce(respostaHttp({ id: "ana@clinica.com.br", timeZone: "America/Sao_Paulo" }));
 
     const res = await chamar({ code: "c", state: estadoValido() });
-    expect(await destino(res)).toBe("https://crm.exemplo/app/agenda?ok=agenda_conectada");
+    expect(await destino(res)).toBe("https://crm.exemplo/app/tasks/agenda?ok=agenda_conectada");
     expect(upsertRecebido).not.toHaveProperty("oauth_refresh_token_encrypted");
     // Controle positivo: a linha FOI montada, então a ausência acima é omissão
     // deliberada e não objeto vazio.
@@ -347,7 +347,7 @@ describe("GET /api/v1/agenda/google/callback", () => {
 
   it("quem clicou Cancelar volta sem erro no log — não é falha, é desistência", async () => {
     const res = await chamar({ error: "access_denied", state: estadoValido() });
-    expect(await destino(res)).toBe("https://crm.exemplo/app/agenda?erro=conexao_cancelada");
+    expect(await destino(res)).toBe("https://crm.exemplo/app/tasks/agenda?erro=conexao_cancelada");
     expect(audit).not.toHaveBeenCalled();
   });
 
@@ -365,7 +365,7 @@ describe("GET /api/v1/agenda/google/callback", () => {
     googleRespondendoBem();
 
     const res = await chamar({ code: "c", state: estadoValido() }, "de-outro");
-    expect(await destino(res)).toBe("https://crm.exemplo/app/agenda?erro=retorno_nao_verificavel");
+    expect(await destino(res)).toBe("https://crm.exemplo/app/tasks/agenda?erro=retorno_nao_verificavel");
     expect(upsertRecebido).toBeNull();
     expect(audit).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -382,7 +382,7 @@ describe("GET /api/v1/agenda/google/callback", () => {
     googleRespondendoBem();
 
     const res = await chamar({ code: "c", state: estadoValido() }, "ausente");
-    expect(await destino(res)).toBe("https://crm.exemplo/app/agenda?erro=retorno_nao_verificavel");
+    expect(await destino(res)).toBe("https://crm.exemplo/app/tasks/agenda?erro=retorno_nao_verificavel");
     expect(upsertRecebido).toBeNull();
   });
 
@@ -394,7 +394,7 @@ describe("GET /api/v1/agenda/google/callback", () => {
     erroDoNonce = { code: "23505", message: "duplicate key value" };
 
     const res = await chamar({ code: "c", state: estadoValido() });
-    expect(await destino(res)).toBe("https://crm.exemplo/app/agenda?erro=retorno_nao_verificavel");
+    expect(await destino(res)).toBe("https://crm.exemplo/app/tasks/agenda?erro=retorno_nao_verificavel");
     expect(upsertRecebido).toBeNull();
     expect(audit).toHaveBeenCalledWith(
       expect.objectContaining({ metadata: expect.objectContaining({ reason: "state_reutilizado" }) }),
@@ -426,13 +426,13 @@ describe("GET /api/v1/agenda/google/callback", () => {
     googleRespondendoBem();
     erroDoNonce = { code: "08006", message: "connection failure" };
     const res = await chamar({ code: "c", state: estadoValido() });
-    expect(await destino(res)).toBe("https://crm.exemplo/app/agenda?erro=retorno_nao_verificavel");
+    expect(await destino(res)).toBe("https://crm.exemplo/app/tasks/agenda?erro=retorno_nao_verificavel");
     expect(upsertRecebido).toBeNull();
   });
 
   it("state inválido dá UM motivo só — distinguir na URL ajudaria um atacante", async () => {
     const res = await chamar({ code: "c", state: "forjado.zzz" });
-    expect(await destino(res)).toBe("https://crm.exemplo/app/agenda?erro=retorno_nao_verificavel");
+    expect(await destino(res)).toBe("https://crm.exemplo/app/tasks/agenda?erro=retorno_nao_verificavel");
     expect(audit).toHaveBeenCalledWith(
       expect.objectContaining({ action: "agenda.google.conexao_falhou" }),
     );
@@ -452,7 +452,7 @@ describe("GET /api/v1/agenda/google/callback", () => {
       }),
     );
     const res = await chamar({ code: "c", state: estadoValido() });
-    expect(await destino(res)).toBe("https://crm.exemplo/app/agenda?erro=permissao_incompleta");
+    expect(await destino(res)).toBe("https://crm.exemplo/app/tasks/agenda?erro=permissao_incompleta");
     expect(upsertRecebido).toBeNull();
   });
 
@@ -460,7 +460,7 @@ describe("GET /api/v1/agenda/google/callback", () => {
     googleRespondendoBem();
     vi.mocked(encryptWebhookSecret).mockResolvedValue(null);
     const res = await chamar({ code: "c", state: estadoValido() });
-    expect(await destino(res)).toBe("https://crm.exemplo/app/agenda?erro=cifra_indisponivel");
+    expect(await destino(res)).toBe("https://crm.exemplo/app/tasks/agenda?erro=cifra_indisponivel");
     expect((await destino(res)).toLowerCase()).not.toContain("nuvemshop");
     expect(upsertRecebido).toBeNull();
   });
@@ -469,14 +469,14 @@ describe("GET /api/v1/agenda/google/callback", () => {
     vi.mocked(fetch).mockResolvedValueOnce(respostaHttp({ error: "invalid_grant" }, 400));
     const res = await chamar({ code: "usado-duas-vezes", state: estadoValido() });
     expect(res.status).toBe(200);
-    expect(await destino(res)).toBe("https://crm.exemplo/app/agenda?erro=troca_de_codigo_falhou");
+    expect(await destino(res)).toBe("https://crm.exemplo/app/tasks/agenda?erro=troca_de_codigo_falhou");
   });
 
   it("falha ao gravar volta com motivo, em vez de dizer que conectou", async () => {
     googleRespondendoBem();
     erroDoUpsert = { message: "duplicate key" };
     const res = await chamar({ code: "c", state: estadoValido() });
-    expect(await destino(res)).toBe("https://crm.exemplo/app/agenda?erro=nao_consegui_guardar");
+    expect(await destino(res)).toBe("https://crm.exemplo/app/tasks/agenda?erro=nao_consegui_guardar");
     expect(audit).not.toHaveBeenCalledWith(
       expect.objectContaining({ action: "agenda.google.conexao_concluida" }),
     );
@@ -491,7 +491,7 @@ describe("GET /api/v1/agenda/google/callback", () => {
     for (const q of casos) {
       const res = await chamar(q);
       expect(res.status).toBe(200);
-      expect(await destino(res)).toContain("/app/agenda?");
+      expect(await destino(res)).toContain("/app/tasks/agenda?");
     }
   });
 });

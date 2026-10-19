@@ -30,7 +30,7 @@ export function EntradaDaAgenda({
       key={params.get("compromisso")}
       podeEditar={podeEditar}
       id={params.get("compromisso")}
-      onClose={() => router.replace("/app/agenda")}
+      onClose={() => router.replace("/app/tasks/agenda")}
     />
   );
 }

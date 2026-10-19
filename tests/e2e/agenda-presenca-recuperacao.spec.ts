@@ -146,7 +146,7 @@ async function login(page: Page, email: string) {
   await page.waitForURL(/\/app(?:\/|$)/, { timeout: 60000 });
 }
 async function detail(page: Page, id: string, title: string) {
-  await page.goto(`/app/agenda?compromisso=${id}`);
+  await page.goto(`/app/tasks/agenda?compromisso=${id}`);
   await expect(
     page.getByRole("dialog").getByRole("heading", { name: title, exact: true }),
   ).toBeVisible();
@@ -474,7 +474,7 @@ test("ir para a Agenda pelo menu apaga o cliente da conversa — \"Novo agendame
   //
   // ⚠️ O gesto tem de ser a NAVEGAÇÃO PELO MENU, não `page.goto`: recarregar a
   // página remonta o componente e zeraria o estado por acidente, verdejando o
-  // teste com o defeito de pé. `/app/agenda?contato=…` e `/app/agenda` são a
+  // teste com o defeito de pé. `/app/tasks/agenda?contato=…` e `/app/tasks/agenda` são a
   // MESMA rota do App Router — só a query muda, e é por isso que o cliente
   // sobrevivia.
   //

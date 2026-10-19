@@ -71,9 +71,9 @@ export function urlPublicaUsavel(bruto: string | null | undefined): boolean {
  * no dia em que o destino mudasse de lugar.
  *
  * Sem conversa (não deveria acontecer — `agent_cases.conversation_id` é
- * NOT NULL), cai na Central de avisos em vez de inventar um destino.
+ * NOT NULL), cai no Inbox em vez de inventar um destino.
  */
 export function linkDoCaso(base: string, conversationId: string | null): string {
   const raiz = base.replace(/\/+$/, "");
-  return conversationId ? `${raiz}/app/inbox/${conversationId}` : `${raiz}/app/ai/inbox`;
+  return conversationId ? `${raiz}/app/inbox/${conversationId}` : `${raiz}/app/inbox`;
 }

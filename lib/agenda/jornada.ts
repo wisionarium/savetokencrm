@@ -141,7 +141,7 @@ export function lerJornadaDoBanco(scheduleDoBanco: unknown): LeituraDaJornada {
   // não erra, mas não diz ao operador ONDE resolver, justamente o vício que o
   // resto desta função evita em toda outra recusa (ver `onde` abaixo). É o
   // estado documentado como "o que uma instalação fresca produz"
-  // (`app/app/agenda/_client.tsx`) — comum, não exceção — e por isso merece
+  // (`app/app/tasks/agenda/_client.tsx`) — comum, não exceção — e por isso merece
   // nome próprio em vez do fallback genérico do Zod.
   if (scheduleDoBanco === null || scheduleDoBanco === undefined) {
     return {

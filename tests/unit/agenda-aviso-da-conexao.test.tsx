@@ -2,7 +2,7 @@
  * O TRADUTOR DO RETORNO DO GOOGLE — e o silêncio que ele existe para acabar.
  *
  * Todo desfecho do OAuth do Google (o sucesso e as dez falhas) termina com um
- * redirect para `/app/agenda?erro=<código>` ou `?ok=agenda_conectada`. Os
+ * redirect para `/app/tasks/agenda?erro=<código>` ou `?ok=agenda_conectada`. Os
  * sítios de escrita se medem assim:
  *
  *     grep -rn 'voltar("erro=\|voltarComErro("' app/api/v1/agenda/google/
@@ -50,7 +50,7 @@ vi.mock("sonner", () => ({ toast: toastFalso }));
 import {
   AvisoDaConexaoGoogle,
   CODIGOS_CONHECIDOS,
-} from "@/app/app/agenda/_components/AvisoDaConexaoGoogle";
+} from "@/app/app/tasks/agenda/_components/AvisoDaConexaoGoogle";
 
 /** Mock de módulo acumula chamada entre casos; limpar ANTES de configurar. */
 beforeEach(() => {
@@ -341,7 +341,7 @@ describe("aviso da conexão do Google — a URL não repete o aviso", () => {
         replace,
         "com o parâmetro na URL, um F5 (ou o voltar do navegador) ressuscita o " +
           "aviso de uma falha que já passou, e a pessoa acha que falhou de novo",
-      ).toHaveBeenCalledWith("/app/agenda"),
+      ).toHaveBeenCalledWith("/app/tasks/agenda"),
     );
   });
 

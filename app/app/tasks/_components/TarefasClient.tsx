@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { useTasks } from "@/hooks/tasks/useTasks";
 import type { NovaTarefa, SituacaoDaTarefa, Tarefa } from "@/lib/tarefas/tipos";
 
+import { AbasDeTarefas } from "./AbasDeTarefas";
 import { CalendarioDeTarefas } from "./CalendarioDeTarefas";
 import { FormularioDeTarefa } from "./FormularioDeTarefa";
 import { ListaDeTarefas } from "./ListaDeTarefas";
@@ -78,6 +79,9 @@ export function TarefasClient({ podeEditar }: { podeEditar: boolean }) {
               "O que ficou combinado, com prazo. Tarefa presa a um negócio aparece na linha do tempo dele.",
             )}
           </p>
+          <div className="mt-3">
+            <AbasDeTarefas />
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">

@@ -3,7 +3,7 @@
  *
  * ## O defeito, e por que ele é pior do que soa
  *
- * A tela da Agenda (`app/app/agenda/_client.tsx`) nasceu importando
+ * A tela da Agenda (`app/app/tasks/agenda/_client.tsx`) nasceu importando
  * `components/agenda/dados-de-mentira` — deliberadamente, porque a API ainda não
  * existia e o maestro autorizou começar pelo que não depende do banco. O
  * problema não era existir; era estar ALCANÇÁVEL: a rota tinha porta no

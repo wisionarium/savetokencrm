@@ -65,7 +65,7 @@ async function entrar(page: Page, creds: Creds) {
   await page.getByLabel(/senha/i).fill(creds.password);
   await page.getByRole("button", { name: /entrar/i }).click();
   await page.waitForURL(/\/app(\/|$)/, { timeout: 20_000 });
-  await page.goto("/app/agenda");
+  await page.goto("/app/tasks/agenda");
   await expect(page.getByTestId("tela-agenda")).toBeVisible({ timeout: 20_000 });
 }
 

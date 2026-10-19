@@ -66,7 +66,7 @@ test("marcar, clicar em 'Ver na agenda', e ENCONTRAR o compromisso na grade", as
   await page.setViewportSize({ width: 1280, height: 800 });
   await entrar(page, creds);
 
-  await page.goto("/app/agenda");
+  await page.goto("/app/tasks/agenda");
   await expect(page.getByTestId("tela-agenda")).toBeVisible({ timeout: 20_000 });
 
   await page.getByRole("button", { name: /Novo agendamento/i }).click();

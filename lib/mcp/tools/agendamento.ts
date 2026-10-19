@@ -953,7 +953,7 @@ export const crmSetAppointmentOutcome: McpToolDefinition<typeof desfechoShape> =
     semDerrubarOTurno("registrado", async () => {
       if (ctx.actor.type !== "user") return { registrado: false, requer_confirmacao_humana: true,
         orientacao: "Peça à equipe para abrir o compromisso na Agenda e confirmar a presença.",
-        href: `/app/agenda?compromisso=${input.appointment_id}` };
+        href: `/app/tasks/agenda?compromisso=${input.appointment_id}` };
       const r = await alterarAgendamentoHandler(
         ctx.supabase,
         { organization_id: ctx.organizationId, actor: ctx.actor, requestId: ctx.requestId },

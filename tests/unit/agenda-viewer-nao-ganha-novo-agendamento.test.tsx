@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 
-import { AgendaClient } from "@/app/app/agenda/_client";
+import { AgendaClient } from "@/app/app/tasks/agenda/_client";
 
 /**
  * #885 — o papel de leitura não ganha porta de escrita na Agenda.
@@ -55,7 +55,7 @@ vi.mock("next/navigation", () => ({
     prefetch: vi.fn(),
   }),
   useSearchParams: () => new URLSearchParams(),
-  usePathname: () => "/app/agenda",
+  usePathname: () => "/app/tasks/agenda",
 }));
 
 vi.mock("@/hooks/auth/AuthProvider", () => ({

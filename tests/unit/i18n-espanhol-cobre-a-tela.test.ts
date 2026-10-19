@@ -566,12 +566,6 @@ const COMO_CONSERTAR_CHAVE_DINAMICA =
  */
 const DIVIDA_CONGELADA: { arquivo: string; chave: string; motivo: string }[] = [
   {
-    arquivo: "app/app/ai/inbox/_components/AgentInboxList.tsx",
-    chave: "informativo",
-    motivo:
-      "valor de SEVERITY_LABEL (lib/ai/agent-inbox-copy.ts): a chave ainda não tem linha no dicionário",
-  },
-  {
     arquivo: "app/app/webhooks/_components/RuleEditor.tsx",
     chave: "Iniciar fluxo de mensagem",
     motivo:

@@ -246,7 +246,7 @@ test.describe("o agente marca consulta", () => {
     // Timeout explícito: o padrão do Playwright é curto para um login que sobe sessão.
     await page.waitForURL(/\/app(\/|$)/, { timeout: 20_000 });
 
-    await page.goto(`${APP_URL}/app/agenda`);
+    await page.goto(`${APP_URL}/app/tasks/agenda`);
 
     // ⚠️ A GRADE DESENHA UMA SEMANA SÓ, e quem marca por API não escolhe qual.
     //

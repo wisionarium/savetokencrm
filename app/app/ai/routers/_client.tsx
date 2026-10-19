@@ -28,7 +28,7 @@ import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { Signpost, Plus } from "@/lib/ui/icons";
 import { usePermission } from "@/hooks/auth/AuthProvider";
 import { useRouters, useCreateRouter, type RouterListItem } from "@/hooks/ai/useRouters";
-import type { ChannelSessionLite } from "../agents/[id]/_components/AgentForm";
+import type { SelectableChannel as ChannelSessionLite } from "@/lib/channels/selectable";
 import { rotuloDoEstadoDoCanal } from "@/lib/channels/estado";
 import { useT } from "@/hooks/i18n/useT";
 

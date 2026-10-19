@@ -146,7 +146,7 @@ describe("confirmar um pedido de horário pela tela", () => {
  * importa cabe numa leitura do arquivo.
  */
 describe("a página liga o botão ao PATCH certo", () => {
-  const fonte = readFileSync("app/app/agenda/_client.tsx", "utf8");
+  const fonte = readFileSync("app/app/tasks/agenda/_client.tsx", "utf8");
 
   it("onConfirmar manda status confirmed com a revision da linha", () => {
     // Recorta o bloco do Confirmar até o botão seguinte: `onConfirmar` é

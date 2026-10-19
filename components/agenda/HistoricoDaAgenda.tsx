@@ -225,7 +225,7 @@ export function HistoricoDaAgenda({
                         esse traduz. */}
                     <Link
                       className="block truncate text-sm underline"
-                      href={`/app/agenda?compromisso=${a.id}`}
+                      href={`/app/tasks/agenda?compromisso=${a.id}`}
                     >
                       {a.quemSeraAtendido ?? a.titulo}
                     </Link>

@@ -13,7 +13,7 @@ import { test, expect } from "@playwright/test";
  * "Tipo de agendamento não encontrado. ID: <uuid>".
  *
  * Não havia duplicata nenhuma no banco. Ele é admin de DUAS organizações na
- * mesma instalação, e `app/app/agenda/page.tsx` consultava `calendar_event_types`
+ * mesma instalação, e `app/app/tasks/agenda/page.tsx` consultava `calendar_event_types`
  * e `calendar_appointments` sem filtrar `organization_id`, confiando só na RLS.
  * A `fn_user_org_ids()` que as policies usam devolve TODAS as organizações do
  * usuário: ela é PISO (impede vazamento entre inquilinos), não ESCOPO (não
@@ -73,7 +73,7 @@ async function entrar(page: import("@playwright/test").Page, creds: Creds) {
 
 /** Os nomes dos chips de tipo, como quem olha a tela os leria. */
 async function tiposOferecidos(page: import("@playwright/test").Page): Promise<string[]> {
-  await page.goto("/app/agenda");
+  await page.goto("/app/tasks/agenda");
   await page.getByRole("button", { name: /Novo agendamento/i }).click();
   const lista = page.getByTestId("tipos-de-agendamento");
   await expect(lista, "o painel de marcação não ofereceu tipo nenhum").toBeVisible({ timeout: 20_000 });

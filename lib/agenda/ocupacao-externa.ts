@@ -4,7 +4,7 @@
  * ─── Por que este módulo existe ─────────────────────────────────────────────
  *
  * A mesma ocupação era lida em DOIS lugares, com a MESMA consulta copiada: a
- * semente do servidor (`app/app/agenda/page.tsx`) e a resposta da rota
+ * semente do servidor (`app/app/tasks/agenda/page.tsx`) e a resposta da rota
  * (`app/api/v1/agenda/agendamentos/route.ts`). Duas cópias da mesma regra
  * divergem no dia em que só uma delas muda — é o defeito da issue #525.
  *

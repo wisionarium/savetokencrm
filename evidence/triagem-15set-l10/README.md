@@ -142,7 +142,7 @@ detached próprio, removido ao fim.
 1. **A Atendente abre "Novo agendamento" e a tela diz que ela não tem permissão, e que
    o compromisso é com "Você".** `GET /api/v1/team` responde `403` para o papel
    `agent`; a lista de pessoas da Agenda fica vazia e o painel cai no reserva
-   `{ nome: "Você" }` (`app/app/agenda/_client.tsx:670-671`). O toast "Você não tem
+   `{ nome: "Você" }` (`app/app/tasks/agenda/_client.tsx:670-671`). O toast "Você não tem
    permissão para esta ação." aparece ao abrir a Agenda. A marcação vai para a agenda
    da dona (a rota resolve o dono pelo tipo) — só a tela mente sobre com quem. Igual
    na `main`. Visível em `883-02-atendente-segunda-21-sem-10h.png` e
@@ -150,7 +150,7 @@ detached próprio, removido ao fim.
 2. **A grade da Atendente não desenha a ocupação do Google da dona, e explica o bloco
    travado com a frase errada** (item acima, `892-03-atendente-grade-segunda-21-10h.png`).
    É a mesma causa do #879 em dois leitores que o lote não tocou: a semente de
-   `app/app/agenda/page.tsx` e `GET /api/v1/agenda/agendamentos`
+   `app/app/tasks/agenda/page.tsx` e `GET /api/v1/agenda/agendamentos`
    (`app/api/v1/agenda/agendamentos/route.ts`) ainda chegam aos eventos pelo embed
    `calendar_connections!inner`, que a RLS esconde de `agent`. Consertar é decidir o
    que a Atendente pode ver da agenda pessoal da dona — a pergunta do #892 —, então

@@ -37,7 +37,7 @@ Evidência visual: `kit-visual-claro.png`, `kit-visual-escuro.png`,
 ## O que esta frente NÃO prova, e depende da frente 1
 
 Marcar, remarcar, cancelar, registrar desfecho e filtrar **com dado real**, mais o
-histórico alimentado pelo banco. Até lá `/app/agenda` cai no estado vazio
+histórico alimentado pelo banco. Até lá `/app/tasks/agenda` cai no estado vazio
 (decisão 18) e todo controle que dependeria da API nasce desabilitado **com o
 motivo à vista** — nunca habilitado e inerte.
 

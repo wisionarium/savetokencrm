@@ -46,7 +46,7 @@ export const dynamic = "force-dynamic";
 /** Volta para a Agenda com um código que a tela sabe traduzir. */
 function voltarComErro(codigo: string): NextResponse {
   const base = env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-  return NextResponse.redirect(new URL(`/app/agenda?erro=${codigo}`, base));
+  return NextResponse.redirect(new URL(`/app/tasks/agenda?erro=${codigo}`, base));
 }
 
 export async function GET(req: NextRequest): Promise<NextResponse> {

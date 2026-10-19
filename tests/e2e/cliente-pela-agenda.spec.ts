@@ -146,7 +146,7 @@ test("ligar 'Clientes pela agenda' transforma quem tem horário marcado em clien
   await entrar(page, f.email);
 
   // ── 1 · marca o horário PELA TELA, com a regra desligada ─────────────────
-  await page.goto("/app/agenda");
+  await page.goto("/app/tasks/agenda");
   await expect(page.getByTestId("tela-agenda")).toBeVisible({ timeout: 30_000 });
   const dias = await irParaASemanaSeguinte(page);
   await page.getByRole("button", { name: /novo agendamento/i }).click();

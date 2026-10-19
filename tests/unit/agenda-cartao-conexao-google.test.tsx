@@ -17,7 +17,7 @@
 import { render, screen, cleanup } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { CartaoDaConexaoGoogle } from "@/app/app/agenda/_components/CartaoDaConexaoGoogle";
+import { CartaoDaConexaoGoogle } from "@/app/app/tasks/agenda/_components/CartaoDaConexaoGoogle";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 

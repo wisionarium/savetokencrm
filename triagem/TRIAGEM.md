@@ -816,12 +816,12 @@ escopo velho. E nada avisa, porque uma guarda de ausência não sabe distinguir 
 
 Medido na triagem do PR #474 (2026-09-03). `tests/unit/ocupacao-do-google-nao-expoe-titulo.test.ts`
 guarda que o nome de um evento pessoal do Google não chegue à tela da Agenda, e o recorte dele era
-`app/app/agenda/**`. O PR acrescentou a rota `app/api/v1/agenda/agendamentos` como segunda fonte da
+`app/app/tasks/agenda/**`. O PR acrescentou a rota `app/api/v1/agenda/agendamentos` como segunda fonte da
 mesma ocupação — a que substitui a semente do servidor no primeiro refetch. A **mesma** sabotagem
 (`title` acrescentado ao `select`) nos dois caminhos:
 
 ```
-em app/app/agenda/page.tsx                  → exit 1   (a guarda pega)
+em app/app/tasks/agenda/page.tsx                  → exit 1   (a guarda pega)
 em app/api/v1/agenda/agendamentos/route.ts  → exit 0   (a guarda passa)
 ```
 

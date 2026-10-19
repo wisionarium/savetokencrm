@@ -47,8 +47,8 @@ const chipDoGoogleNoMes = (page: Page) =>
  *
  * ─── O defeito que esta spec fecha ───────────────────────────────────────────
  *
- * `app/app/agenda/page.tsx` SEMEAVA os eventos externos na primeira pintura, e
- * `app/app/agenda/_client.tsx` os descartava assim que o GET respondia
+ * `app/app/tasks/agenda/page.tsx` SEMEAVA os eventos externos na primeira pintura, e
+ * `app/app/tasks/agenda/_client.tsx` os descartava assim que o GET respondia
  * (`agendamentosVivos ?? semente`) — porque
  * `GET /api/v1/agenda/agendamentos` nunca devolveu ocupação. Em visão Mês nem a
  * semente sobrevivia: o recorte muda, `naJanelaDoServidor` vira falso e o
@@ -118,7 +118,7 @@ async function entrar(page: Page, creds: Creds) {
   await page.getByLabel(/senha/i).fill(creds.password);
   await page.getByRole("button", { name: /entrar/i }).click();
   await page.waitForURL(/\/app(\/|$)/, { timeout: 20_000 });
-  await page.goto("/app/agenda");
+  await page.goto("/app/tasks/agenda");
   await expect(page.getByTestId("tela-agenda")).toBeVisible({ timeout: 25_000 });
 }
 

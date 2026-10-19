@@ -209,7 +209,7 @@ export async function GET(req: NextRequest): Promise<Response> {
   // O defeito, medido em produção em 2026-09-01: 114 eventos vindos do Google no
   // banco, 1 deles na semana desenhada, e a tela mostrando a agenda vazia.
   //
-  // O servidor SEMEAVA os externos (`app/app/agenda/page.tsx`), e o cliente os
+  // O servidor SEMEAVA os externos (`app/app/tasks/agenda/page.tsx`), e o cliente os
   // jogava fora: `agendamentosVivos ?? semente` — assim que este GET responde,
   // ele SUBSTITUI a semente inteira, e esta rota nunca devolveu ocupação. Em
   // visão Mês nem a semente sobrevive, porque o recorte muda e o fallback é `[]`.

@@ -68,7 +68,7 @@ describe("o painel de marcação e o cliente que ele mostra", () => {
   });
 
   it("⛔ (c) o DEFEITO RELATADO: ir para a Agenda pelo menu apaga o cliente da conversa", () => {
-    // A rota é a mesma (`/app/agenda`), só a query muda — o componente não
+    // A rota é a mesma (`/app/tasks/agenda`), só a query muda — o componente não
     // remonta e o estado sobrevivia. É exatamente aqui que o "Novo
     // agendamento" vinha com o cliente de outra pessoa já selecionado.
     const { result } = renderHook(() => useVinculoDaMarcacao());

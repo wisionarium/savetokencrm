@@ -98,7 +98,7 @@ export function PainelDeMarcacao({
    * ⚠️ SEM DEFAULT, e isto é o conserto.
    *
    * Era `local = "Presencial · Sala 2"` e `fuso = "America/Sao_Paulo"`, defaults
-   * de PARÂMETRO — e `app/app/agenda/_client.tsx` não passava nenhum dos dois.
+   * de PARÂMETRO — e `app/app/tasks/agenda/_client.tsx` não passava nenhum dos dois.
    * Os defaults venciam em 100% das marcações do produto: toda clínica, de toda
    * instalação, via "Sala 2" numa tela real.
    *

@@ -92,7 +92,7 @@ test.describe("a volta do consentimento do Google chega ao sistema", () => {
     // mede — "recusar não vira erro de API, vira volta para a Agenda com o
     // motivo" — continua igual; mudou onde o destino é lido.
     expect(r.status()).toBe(200);
-    expect(await destinoDaPonte(r)).toContain("/app/agenda?erro=conexao_cancelada");
+    expect(await destinoDaPonte(r)).toContain("/app/tasks/agenda?erro=conexao_cancelada");
   });
 
   test("a ida emite o vínculo, e a volta com ele é reconhecida", async ({ page, context }) => {

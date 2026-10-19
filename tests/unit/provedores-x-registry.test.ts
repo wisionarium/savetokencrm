@@ -263,22 +263,4 @@ describe("a corrente inteira: lista × execução × tela", () => {
     const { buildModel } = await import("@/lib/ai/runtime/agent");
     expect(() => buildModel("provedor-que-nao-existe", "k", "m")).toThrow(/unsupported_provider/);
   });
-
-  it("a tela do agente DERIVA a lista, em vez de repetir os provedores à mão", async () => {
-    // Guarda de construção: enquanto o seletor for montado a partir de
-    // PROVEDORES, "a tela oferece todos" é verdade por construção e o
-    // invariante do topo deste arquivo passa a valer para o que se vê.
-    const { readFileSync } = await import("node:fs");
-    const fonte = readFileSync("app/app/ai/agents/[id]/_components/AgentForm.tsx", "utf8");
-
-    const literais = [...fonte.matchAll(/<SelectItem\s+value="([^"]+)"/g)]
-      .map((m) => m[1])
-      .filter((v): v is string => typeof v === "string" && ehProvedorSuportado(v));
-
-    expect(
-      literais,
-      "o seletor voltou a listar provedores à mão — o próximo provedor da lista nasce invisível na tela",
-    ).toEqual([]);
-    expect(fonte).toMatch(/from "@\/lib\/ai\/pontos\/provedores"/);
-  });
 });

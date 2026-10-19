@@ -12,7 +12,7 @@ import { useT } from "@/hooks/i18n/useT";
  * O LEITOR que faltava.
  *
  * As rotas de OAuth do Google terminam TODOS os desfechos — sucesso e as nove
- * falhas — voltando para `/app/agenda` com `?erro=<código>` ou `?ok=`. Doze
+ * falhas — voltando para `/app/tasks/agenda` com `?erro=<código>` ou `?ok=`. Doze
  * sítios de escrita, dez códigos distintos, e **zero leitores** no repositório
  * inteiro até este arquivo.
  *
@@ -211,7 +211,7 @@ export function AvisoDaConexaoGoogle() {
 
     // Limpa a query para o reload não repetir o aviso — mesma razão do
     // precedente da casa.
-    router.replace("/app/agenda");
+    router.replace("/app/tasks/agenda");
   }, [params, router, t]);
 
   if (!faixa) return null;

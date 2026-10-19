@@ -202,7 +202,7 @@
       "lane": "humano",
       "col": 6,
       "type": "frontend",
-      "label": "DetalheDoCompromisso · /app/agenda?compromisso=id",
+      "label": "DetalheDoCompromisso · /app/tasks/agenda?compromisso=id",
       "sublabel": "presença humana · revisão do rascunho · conflito pede revisão explícita · idioma da interface + fuso do compromisso"
     },
     {

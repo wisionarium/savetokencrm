@@ -15,7 +15,7 @@ interface Alvo { tabela: string; papel: Role; rotulo: string; href: (id: string,
 /** Apenas entidades que têm produtor e superfície atual; agenda nasce com a Task 6. */
 export const REFERENCIAS_DE_AVISO = {
   ai_agent: { tabela: "ai_agents", papel: "admin", rotulo: "Revisar agente", href: (id: string) => `/app/ai/agents/${id}`, ativo: true },
-  appointment: {tabela:"calendar_appointments",papel:"agent",rotulo:"Abrir compromisso",href:(id:string)=>`/app/agenda?compromisso=${id}`},
+  appointment: {tabela:"calendar_appointments",papel:"agent",rotulo:"Abrir compromisso",href:(id:string)=>`/app/tasks/agenda?compromisso=${id}`},
   conversation: { tabela: "conversations", papel: "agent", rotulo: "Abrir conversa", href: (id: string) => `/app/inbox/${id}` },
   contact: { tabela: "contacts", papel: "agent", rotulo: "Ver contato", href: (id: string) => `/app/contacts/${id}` },
   lead: { tabela: "crm_leads", papel: "agent", rotulo: "Abrir negócio", href: (id: string, pipelineId?: string) => `/app/pipelines/${pipelineId}?lead=${id}` },

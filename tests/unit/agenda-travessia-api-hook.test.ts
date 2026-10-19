@@ -13,7 +13,7 @@
  * Não é hipótese: `quemSeraAtendido` JÁ se perdeu uma vez nesta entrega — o
  * `contact_id` vinha no select do servidor e morria no `.map`, e como
  * `dados-de-mentira.ts` preenche o campo nos 11 cards, a tela pareceu pronta o
- * tempo todo (ver o comentário longo em `app/app/agenda/page.tsx`).
+ * tempo todo (ver o comentário longo em `app/app/tasks/agenda/page.tsx`).
  *
  * ─── Como a cerca prende, em duas camadas ────────────────────────────────────
  *

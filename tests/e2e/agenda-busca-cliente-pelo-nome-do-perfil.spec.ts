@@ -116,7 +116,7 @@ async function semearContatos(orgId: string): Promise<void> {
 
 /** Abre "Novo agendamento" e devolve o `<select>` de "Quem será atendido". */
 async function abrirONovoAgendamento(page: Page): Promise<Locator> {
-  await page.goto("/app/agenda");
+  await page.goto("/app/tasks/agenda");
   await expect(page.getByTestId("tela-agenda")).toBeVisible({ timeout: ESPERA });
   await page.getByTestId("novo-agendamento").click();
   // Antes eram DOIS controles — um campo "Buscar cliente" e um `select`

@@ -4,7 +4,7 @@ import { supportCallbackWriteAllowed } from "@/lib/impersonate/support";
  *
  * Confere o `state`, troca o código por tokens, descobre de quem é a agenda,
  * cifra e grava a conexão. É retorno de NAVEGADOR: todo desfecho — inclusive
- * cada falha — volta para `/app/agenda` com `?erro=<código>` ou `?ok=1`, nunca
+ * cada falha — volta para `/app/tasks/agenda` com `?erro=<código>` ou `?ok=1`, nunca
  * JSON. É o mesmo contrato do callback da Nuvemshop, que é o precedente da casa.
  *
  * ─── Onde este arquivo se AFASTA do molde da Nuvemshop, de propósito ──────
@@ -71,7 +71,7 @@ export const dynamic = "force-dynamic";
  * minha conta, e ELE DESLOGA DA MINHA CONTA". A sessão nunca foi tocada — não há
  * `signOut` em caminho nenhum desta rota, e o cookie de sessão tem 400 dias.
  *
- * O que acontecia é o SEGUNDO SALTO: um 307 daqui para `/app/agenda` ainda
+ * O que acontecia é o SEGUNDO SALTO: um 307 daqui para `/app/tasks/agenda` ainda
  * pertence à cadeia de navegação iniciada em `accounts.google.com`. O cookie de
  * sessão é `SameSite=Strict` e não viaja com initiator cross-site, então o
  * `proxy.ts` não enxergava usuário e mandava para `/login`.
@@ -92,14 +92,14 @@ export const dynamic = "force-dynamic";
  *   - rota pública intermediária: quebra no mesmo ponto e cobra entrada nova em
  *     `PUBLIC_PATHS` — superfície pública nova para o que a rota já pública
  *     resolve;
- *   - tratar no proxy: não bastaria. `app/app/agenda/page.tsx` chama
+ *   - tratar no proxy: não bastaria. `app/app/tasks/agenda/page.tsx` chama
  *     `requireAuth()`, que redireciona por conta própria — seria furar dois.
  *
  * As 14 saídas herdam de graça, porque todas passam por aqui.
  */
 function voltar(parametro: string): NextResponse {
   const base = env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-  const destino = new URL(`/app/agenda?${parametro}`, base).toString();
+  const destino = new URL(`/app/tasks/agenda?${parametro}`, base).toString();
   // Escapado mesmo o valor vindo de literais nossos: a ponte é genérica, e o
   // dia em que alguém passar algo de fora por aqui não deve ser o dia em que
   // isto vira injeção.

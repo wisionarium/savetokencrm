@@ -714,7 +714,7 @@ as duas.
    agenda de destino.** Com o seletor de volta, escolher a conta errada virou um
    clique. A saída existe: "Desconectar" some com ela, e a tela devolve o botão
    "Conectar Google" porque só lista conexão com `status` diferente de
-   `disconnected` (`app/app/agenda/page.tsx`). Só que `fn_google_catalog` marca o
+   `disconnected` (`app/app/tasks/agenda/page.tsx`). Só que `fn_google_catalog` marca o
    calendário primário como destino apenas quando a pessoa tem UMA linha em
    `calendar_connections` — e a desconectada continua contando. Resultado: o
    compromisso seguinte não é reservado no Google e grava "Escolha uma agenda de

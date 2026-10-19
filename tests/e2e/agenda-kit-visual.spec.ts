@@ -426,7 +426,7 @@ test.describe("kit visual da Agenda", () => {
     //
     // A regra que ele guarda é a do produto, não a do meu botão: todo controle
     // com cor de ação ou faz alguma coisa, ou se declara indisponível.
-    await page.goto("/app/agenda");
+    await page.goto("/app/tasks/agenda");
     const novo = page.getByRole("button", { name: /novo agendamento/i });
     await expect(novo).toBeVisible({ timeout: ESPERA });
 

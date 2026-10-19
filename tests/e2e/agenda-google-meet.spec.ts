@@ -204,7 +204,7 @@ async function book(page: Page, f: Fixture) {
 }
 const meet = (page: Page) => page.locator('section[aria-label="Google Meet"]');
 async function detail(page: Page, id: string) {
-  await page.goto(`/app/agenda?compromisso=${id}`);
+  await page.goto(`/app/tasks/agenda?compromisso=${id}`);
   await expect(
     page.getByRole("dialog").getByRole("heading", { name: "Consulta Meet", exact: true }),
   ).toBeVisible();
@@ -547,7 +547,7 @@ test("falha chega à Central, navegação conserva aviso e retry humano mantém 
     await page.goto("/app/ai/inbox");
     // A Central resolve o destino no servidor e não liquida o aviso ao navegar.
     const destination = page.getByRole("link", { name: "Abrir compromisso", exact: true });
-    await expect(destination).toHaveAttribute("href", `/app/agenda?compromisso=${id}`);
+    await expect(destination).toHaveAttribute("href", `/app/tasks/agenda?compromisso=${id}`);
     await destination.click();
     await expect(
       meet(page).getByText("O Google não conseguiu criar o link. Tente criar novamente."),

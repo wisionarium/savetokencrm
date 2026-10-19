@@ -36,7 +36,7 @@ import type { Database } from "@/lib/database.types";
  *
  * ⚠️ O RECORTE PRECISOU CRESCER, e o motivo foi MEDIDO — não é zelo.
  *
- * Ele era `app/app/agenda/**` e mais nada. Isso bastava enquanto a ocupação
+ * Ele era `app/app/tasks/agenda/**` e mais nada. Isso bastava enquanto a ocupação
  * chegava à tela por UM caminho: a semente que o servidor monta em `page.tsx`.
  * O PR #474 (@Clalber) acrescentou o segundo — a rota
  * `app/api/v1/agenda/agendamentos`, que substitui a semente no primeiro
@@ -45,7 +45,7 @@ import type { Database } from "@/lib/database.types";
  * A guarda ficou cega para o caminho novo. Medido na triagem do #474, a mesma
  * sabotagem (`title` acrescentado ao `select`) nos dois lados:
  *
- *   em `app/app/agenda/page.tsx`                 → exit 1  (a guarda pega)
+ *   em `app/app/tasks/agenda/page.tsx`                 → exit 1  (a guarda pega)
  *   em `app/api/v1/agenda/agendamentos/route.ts` → exit 0  (a guarda passa)
  *
  * O recorte de uma guarda de privacidade não é a PASTA onde a tela mora: é o
@@ -73,7 +73,7 @@ import type { Database } from "@/lib/database.types";
  * nenhuma, e o caso "nenhuma delas pede `title`" passou a ficar verde por
  * VACUIDADE — exatamente o desfecho que o controle existe para negar. Medido na
  * integração do lote 12 (778d1dcb2): `Tests 2 failed | 9 passed`, com o
- * controle acusando `["app/app/agenda", "app/api/v1/agenda"]` sem leitura.
+ * controle acusando `["app/app/tasks/agenda", "app/api/v1/agenda"]` sem leitura.
  *
  * Antes de seguir a consulta, a pergunta na ordem certa — a privacidade
  * continua valendo no caminho novo? Continua, e por três medidas: o `select` do

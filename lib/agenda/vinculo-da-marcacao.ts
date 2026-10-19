@@ -27,7 +27,7 @@ import * as React from "react";
  * ## A distinção que resolve os dois: DE ONDE veio, não QUANDO limpar
  *
  * O contexto do Inbox não é estado do painel — ele é da ROTA. O link "Marcar
- * compromisso" leva a `/app/agenda?contato=…&conversa=…`, e enquanto a pessoa
+ * compromisso" leva a `/app/tasks/agenda?contato=…&conversa=…`, e enquanto a pessoa
  * está NESSA página o cliente é o contexto dela, não sobra de uma vez anterior.
  * Quando ela vai para a Agenda pelo menu, a rota perde os parâmetros — e é
  * exatamente aí que o cliente tinha de sumir e não sumia, porque o componente

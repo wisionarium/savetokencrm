@@ -36,7 +36,7 @@ describe("destinos da Central", () => {
       const l = leitor([...rows], failure);
       const [item] = await resolverDestinosDosAvisos(l.client, ORG, role, [aviso("other", "appointment")]);
       expect(item?.destination.estado).toBe(state);
-      if (state === "disponivel") expect(item?.destination).toMatchObject({ href: `/app/agenda?compromisso=${ID}`, rotulo: "Abrir compromisso" });
+      if (state === "disponivel") expect(item?.destination).toMatchObject({ href: `/app/tasks/agenda?compromisso=${ID}`, rotulo: "Abrir compromisso" });
       else expect(item?.destination).not.toHaveProperty("href");
       expect(l.queries).toEqual(role === "viewer" ? [] : [{ table: "calendar_appointments", org: ORG, ids: [ID] }]);
     }

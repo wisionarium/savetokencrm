@@ -14,6 +14,7 @@ import * as React from "react";
 
 import { AvisoDaConexaoGoogle } from "./_components/AvisoDaConexaoGoogle";
 import { CartaoDaConexaoGoogle } from "./_components/CartaoDaConexaoGoogle";
+import { AbasDeTarefas } from "../_components/AbasDeTarefas";
 
 import { AgendaInterativa } from "@/components/agenda/AgendaInterativa";
 import { FiltroDePessoas } from "@/components/agenda/FiltroDePessoas";
@@ -403,6 +404,9 @@ export function AgendaClient({
           <p className="text-sm text-muted-foreground">
             {t("O que está marcado, com quem, e quem atende — seu e da equipe.")}
           </p>
+          <div className="mt-3">
+            <AbasDeTarefas />
+          </div>
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => setAncora(new Date())}>
@@ -1074,7 +1078,7 @@ export function AgendaClient({
            linkavam. Reusa o MESMO parâmetro que `EntradaDaAgenda` já lê — e `push`,
            não `replace`, porque é o que o Histórico faz com `<Link>` e é o que faz
            o botão voltar do celular fechar o detalhe. */
-        onAbrirAgendamento={(id) => router.push(`/app/agenda?compromisso=${id}`)}
+        onAbrirAgendamento={(id) => router.push(`/app/tasks/agenda?compromisso=${id}`)}
         className="min-h-0 flex-1"
       />
     </div>

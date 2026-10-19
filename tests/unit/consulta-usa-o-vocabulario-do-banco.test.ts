@@ -11,7 +11,7 @@ import { PROVEDORES_DE_AGENDA } from "@/lib/agenda/tipos";
  * `calendar_connections.provider` tem `check (provider in ('google_calendar'))`,
  * e o callback grava exatamente isso. Três leituras filtravam por `"google"`:
  *
- *   app/app/agenda/page.tsx                        → o cartão da conexão
+ *   app/app/tasks/agenda/page.tsx                        → o cartão da conexão
  *   app/api/v1/cron/agenda-google-push/route.ts    → o worker da ida
  *   app/api/v1/agenda/google/desconectar/route.ts  → a rota de desconectar
  *

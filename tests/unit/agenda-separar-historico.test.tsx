@@ -265,7 +265,7 @@ describe("histórico da agenda — a repartição nas quatro abas", () => {
    *     npx vitest run tests/unit/agenda-separar-historico.test.tsx
    *     # antes deste caso: 10 passed | 1 expected fail — verde de ponta a ponta
    *
-   * E é alcançável de verdade: `app/app/agenda/_client.tsx` passa
+   * E é alcançável de verdade: `app/app/tasks/agenda/_client.tsx` passa
    * `agora={new Date()}`, instante novo a cada render. Com a dependência
    * faltando, a repartição congela no instante em que `agendamentos` mudou pela
    * última vez — e a consulta das 15h fica em "Próximos" às 15h30, prometendo

@@ -38,7 +38,7 @@ import { describe, expect, it } from "vitest";
 const RAIZ = join(__dirname, "..", "..");
 
 /** A superfície onde a `Agendamento` pode ser renderizada. */
-const AREAS = ["components/agenda", "app/app/agenda", "app/app/settings/tenant/agenda"];
+const AREAS = ["components/agenda", "app/app/tasks/agenda", "app/app/settings/tenant/agenda"];
 
 /**
  * Dentro dessas áreas, só os arquivos que MEXEM com `Agendamento`.

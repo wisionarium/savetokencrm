@@ -529,10 +529,7 @@ function CartaoDoPonto({
 
       {ponto.mandadoPeloAgente && (
         <p className="mt-2 text-xs text-muted-foreground">
-          {t("Este ponto usa o modelo definido na versão publicada do agente.")}{" "}
-          <Link className="underline underline-offset-4" href="/app/ai/agents">
-            {t("Configurar no agente")}
-          </Link>
+          {t("Este ponto usa o modelo definido na versão publicada do agente.")}
         </p>
       )}
 

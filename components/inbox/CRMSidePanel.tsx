@@ -754,7 +754,7 @@ export function CRMSidePanel({ conversation, janelaFechada }: Props) {
             </div>
           )}
           <div className="flex flex-wrap gap-2 pt-1">
-            {contactId&&conversation?<Link className="underline" href={`/app/agenda?contato=${contactId}&conversa=${conversation.id}`}>{t("Marcar compromisso")}</Link>:null}
+            {contactId&&conversation?<Link className="underline" href={`/app/tasks/agenda?contato=${contactId}&conversa=${conversation.id}`}>{t("Marcar compromisso")}</Link>:null}
             <Button
               size="sm"
               variant="outline"

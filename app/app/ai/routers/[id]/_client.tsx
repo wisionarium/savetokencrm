@@ -42,7 +42,7 @@ import {
   type RouterMemberInput,
 } from "@/hooks/ai/useRouters";
 import type { ClassifierModelOption } from "@/lib/ai/classifier-models";
-import type { ChannelSessionLite } from "../../agents/[id]/_components/AgentForm";
+import type { SelectableChannel as ChannelSessionLite } from "@/lib/channels/selectable";
 import { useT } from "@/hooks/i18n/useT";
 
 interface AgentLite {

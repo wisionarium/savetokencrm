@@ -190,7 +190,7 @@ async function evidence(
   await page.screenshot({ path: `${dir}/loaded.png`, fullPage: true });
 }
 async function detail(page: Page, id: string) {
-  await page.goto(`/app/agenda?compromisso=${id}`);
+  await page.goto(`/app/tasks/agenda?compromisso=${id}`);
   await expect(
     page.getByRole("dialog").getByRole("heading", { name: "Consulta sincronizada", exact: true }),
   ).toBeVisible();
@@ -231,7 +231,7 @@ test("fontes e destino entre duas contas, somente leitura e ocupação imediatam
 }, info) => {
   const f = await fixture();
   await login(page, f.email);
-  await page.goto("/app/agenda");
+  await page.goto("/app/tasks/agenda");
   const days = await irParaASemanaSeguinte(page);
   const day = days[2]!;
   const start = new Date(`${day}T10:00:00-03:00`).toISOString();
@@ -249,7 +249,7 @@ test("fontes e destino entre duas contas, somente leitura e ocupação imediatam
     transparency: "opaque",
   });
   expect(externalId, "o evento externo da fixture não ganhou id").toBeTruthy();
-  await page.goto("/app/agenda");
+  await page.goto("/app/tasks/agenda");
   await irParaASemanaDoCompromisso(page, start);
   const card = page.locator('[data-origem="google_sync"]');
   await card.scrollIntoViewIfNeeded();
@@ -334,7 +334,7 @@ test("fontes e destino entre duas contas, somente leitura e ocupação imediatam
   await page.setViewportSize({ width: 390, height: 844 });
   await evidence(page, info, "selecao-mobile", "section[aria-label='Suas agendas Google']");
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await page.goto("/app/agenda");
+  await page.goto("/app/tasks/agenda");
   await irParaASemanaDoCompromisso(page, start);
   await expect(card).toHaveCount(0);
   await block.scrollIntoViewIfNeeded();

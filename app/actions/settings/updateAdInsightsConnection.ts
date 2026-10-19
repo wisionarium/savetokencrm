@@ -181,7 +181,6 @@ export async function updateAdInsightsConnection(
   });
 
   revalidatePath("/app/settings/meta-ads");
-  revalidatePath("/app/ads/meta");
   return { ok: true };
 }
 
@@ -228,6 +227,5 @@ export async function disconnectAdInsights(): Promise<UpdateAdInsightsConnection
   });
 
   revalidatePath("/app/settings/meta-ads");
-  revalidatePath("/app/ads/meta");
   return { ok: true };
 }

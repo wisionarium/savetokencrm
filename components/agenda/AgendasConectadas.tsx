@@ -90,7 +90,7 @@ export function AgendasConectadas() {
         </div>
       )}
       {data?.connections.length === 0 && (
-        <Link className="text-sm underline" href="/app/agenda">
+        <Link className="text-sm underline" href="/app/tasks/agenda">
           {t("Conecte sua conta pela Agenda")}
         </Link>
       )}

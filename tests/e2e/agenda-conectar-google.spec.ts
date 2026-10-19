@@ -107,7 +107,7 @@ test.describe("conectar a agenda do Google", () => {
   });
 
   test("sem chave do Google, a Agenda abre e explica o que falta", async () => {
-    await page.goto("/app/agenda");
+    await page.goto("/app/tasks/agenda");
 
     // 1. A TELA ABRE INTEIRA. Env opcional ausente degrada com explicação, não
     //    derruba o módulo — é o que `configuracaoDoGoogle()` devolvendo `null`

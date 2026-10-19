@@ -970,6 +970,10 @@ export const DICIONARIO: Traducoes = {
   "Quem recebe cada cliente novo, e o que cada atendente enxerga.": {
     es: "Quién recibe cada cliente nuevo y qué ve cada agente.",
   },
+  "O vocabulário de etiquetas da empresa: onde cada uma é usada e como renomear, juntar ou excluir.":
+    {
+      es: "El vocabulario de etiquetas de la empresa: dónde se usa cada una y cómo renombrar, unir o eliminar.",
+    },
   "Dados da empresa, retenção de dados e encarregado de LGPD.": {
     es: "Datos de la empresa, retención de datos y encargado de LGPD.",
   },

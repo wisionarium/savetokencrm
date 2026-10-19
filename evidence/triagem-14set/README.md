@@ -12,7 +12,7 @@ clica e entende. É a Doutrina de QA Visual com Recursos Reais (DoD 12 do `CLAUD
 
 ### #716 — o botão "Reativar" de tipo de agendamento
 - `716-reativado-volta-a-ser-marcavel.png` — o tipo desativado volta a ativo, e a
-  volta é lida numa **navegação nova** (`/app/agenda`), não em estado local: o que
+  volta é lida numa **navegação nova** (`/app/tasks/agenda`), não em estado local: o que
   sobrevive à navegação foi gravado. Na `main` este botão **nunca** funcionou — o
   Zod descartava `is_active` em silêncio.
 

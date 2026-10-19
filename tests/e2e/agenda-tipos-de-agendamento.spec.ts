@@ -132,7 +132,7 @@ test("crio um tipo COM responsável, e ele passa a ser marcável na Agenda", asy
   ).toHaveCount(0);
 
   // ── O laço: o tipo novo chega na tela de marcar ───────────────────────
-  await page.goto("/app/agenda");
+  await page.goto("/app/tasks/agenda");
   await expect(page.getByTestId("tela-agenda")).toBeVisible({ timeout: 20_000 });
   await page.getByRole("button", { name: /novo agendamento/i }).click();
   await expect(page.getByTestId("tipos-de-agendamento")).toBeVisible({ timeout: 15_000 });
@@ -251,7 +251,7 @@ test("desativar tira o tipo da tela de marcar, e reativar o traz de volta", asyn
    *
    * Ver que o controle está DESENHADO não é ver que ele ABRE. O caso agora
    * clica, e cobra o efeito nos dois lugares: o rótulo "desativado" sai da lista
-   * e o tipo volta a ser oferecido em /app/agenda.
+   * e o tipo volta a ser oferecido em /app/tasks/agenda.
    */
   const creds = lerCreds();
   await entrar(page, creds);
@@ -281,7 +281,7 @@ test("desativar tira o tipo da tela de marcar, e reativar o traz de volta", asyn
   ).toBeVisible();
 
   // E some de onde importa: da tela de marcar.
-  await page.goto("/app/agenda");
+  await page.goto("/app/tasks/agenda");
   await page.getByRole("button", { name: /novo agendamento/i }).click();
   await expect(page.getByTestId("tipos-de-agendamento")).toBeVisible({ timeout: 15_000 });
   await expect(
@@ -308,7 +308,7 @@ test("desativar tira o tipo da tela de marcar, e reativar o traz de volta", asyn
   ).toBeVisible();
 
   // E volta a aparecer onde importa — o mesmo lugar de onde saiu.
-  await page.goto("/app/agenda");
+  await page.goto("/app/tasks/agenda");
   await page.getByRole("button", { name: /novo agendamento/i }).click();
   await expect(page.getByTestId("tipos-de-agendamento")).toBeVisible({ timeout: 15_000 });
   await expect(

@@ -65,7 +65,9 @@ describe("Sidebar agrupado", () => {
     // Canais não tem título desde 2026-10-06: Conexões e Webhooks foram para o
     // hub Configurações e a Nuvemshop segue só no ⌘K — grupo sem item no menu
     // é omitido, não órfão. Fluxos tem bandeja própria desde 2026-10-06.
-    expect(titulos).toEqual(["Atendimento", "CRM", "Agente de IA", "Fluxos", "Análise"]);
+    // Agente de IA e Análise saíram inteiros do produto (decisão do dono):
+    // Ferramentas entra no lugar dos insumos de quem atende.
+    expect(titulos).toEqual(["Atendimento", "CRM", "Ferramentas", "Fluxos"]);
   });
 
   it("tudo nasce recolhido ao abrir — um bloco por vez, sem exceção", () => {
@@ -73,31 +75,27 @@ describe("Sidebar agrupado", () => {
     render(<Sidebar collapsed={false} />);
     // Nem o Inbox aparece de cara: bandeja cheia é o que se quer evitar.
     expect(screen.queryByRole("link", { name: /Inbox/ })).toBeNull();
-    expect(screen.queryByRole("link", { name: "Agentes" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Respostas rápidas" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Funis" })).toBeNull();
     expect(screen.queryByRole("link", { name: /Audit Log/ })).toBeNull();
   });
 
-  it("no bloco de IA ficam SÓ Agentes, Alertas e Aviso — Fluxos tem bandeja própria", () => {
+  it("Ferramentas reúne Respostas rápidas e Galeria — e Agente de IA não existe mais", () => {
     comoPapel("admin");
     render(<Sidebar collapsed={false} />);
-    expandirGrupo("Agente de IA");
-    expect(screen.getByRole("link", { name: "Agentes" })).toHaveAttribute(
+    expect(screen.queryByRole("button", { name: "Agente de IA" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Análise" })).toBeNull();
+    expandirGrupo("Ferramentas");
+    expect(screen.getByRole("link", { name: "Respostas rápidas" })).toHaveAttribute(
       "href",
-      "/app/ai/agents",
+      "/app/templates",
     );
-    expect(screen.getByRole("link", { name: "Alertas" })).toHaveAttribute(
-      "href",
-      "/app/ai/inbox",
-    );
-    // Fluxos saiu para a bandeja própria; Propostas, Execuções e Uso foram
-    // para a Análise; Roteadores e Provedores, para Configurações.
-    expect(screen.queryByRole("link", { name: "Fluxos" })).toBeNull();
-    expect(screen.queryByRole("link", { name: "Follow-ups" })).toBeNull();
-    expect(screen.queryByRole("link", { name: "Propostas" })).toBeNull();
-    expect(screen.queryByRole("link", { name: "Roteadores" })).toBeNull();
-    expect(screen.queryByRole("link", { name: "Provedores" })).toBeNull();
-    expect(screen.queryByRole("link", { name: "Conhecimento" })).toBeNull();
+    expect(screen.getByRole("link", { name: "Galeria" })).toHaveAttribute("href", "/app/galeria");
+    // As telas do bloco antigo não existem em lugar nenhum do menu.
+    expect(screen.queryByRole("link", { name: "Agentes" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Alertas" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Desempenho" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Atividades" })).toBeNull();
   });
 
   it("a bandeja Fluxos leva à página dos 3 fluxos", () => {
@@ -130,13 +128,14 @@ describe("Sidebar agrupado", () => {
     expect(screen.getByRole("link", { name: "Funis" })).toHaveAttribute("href", "/app/kanban");
   });
 
-  it("Análise traz Audit Log — e Canais saiu do menu, com Nuvemshop só no ⌘K", () => {
+  it("Audit Log foi para Configurações — e Canais saiu do menu, com Nuvemshop só no ⌘K", () => {
     comoPapel("admin");
     render(<Sidebar collapsed={false} />);
-    // O que esta linha sempre prendeu é que Audit Log não mora em
-    // Configurações. A porta é o próprio bloco de Análise expandido.
-    expandirGrupo("Análise");
-    expect(screen.getByRole("link", { name: /Audit Log/ })).toHaveAttribute("href", "/app/audit");
+    // Análise saiu inteira do produto: o Audit Log foi para o hub Organização,
+    // na seção "Dados e acesso", ao lado de LGPD e API Tokens — a porta é
+    // "Configurações", no rodapé do sidebar (não um bloco navegável).
+    expect(screen.queryByRole("button", { name: "Análise" })).toBeNull();
+    expect(screen.queryByRole("link", { name: /Audit Log/ })).toBeNull();
 
     // CANAIS SAIU do menu em 2026-10-06 (decisão do dono): Conexões e Webhooks
     // foram para o hub Configurações, e a Nuvemshop segue só no ⌘K.
@@ -159,14 +158,15 @@ describe("Sidebar agrupado", () => {
   });
 
   it("não deixa cabeçalho órfão quando a permissão esvazia o grupo", () => {
-    // CANAIS é todo manager+/admin. Um agent não pode ver o título sozinho.
-    // Fluxos também é manager+ — mesma regra.
+    // CANAIS é todo manager+/admin. Um agent não pode ver o título sozinho —
+    // Fluxos também é manager+, mesma regra.
     comoPapel("agent");
     render(<Sidebar collapsed={false} />);
     const titulos = screen.getAllByRole("heading").map((el) => el.textContent?.trim());
     expect(titulos).not.toContain("Canais");
     expect(titulos).not.toContain("Fluxos");
     expect(titulos).toContain("Atendimento");
+    expect(titulos).toContain("Ferramentas");
   });
 
   it("sem botões Ver tudo: todo destino do menu se alcança expandindo o bloco", () => {
@@ -174,14 +174,14 @@ describe("Sidebar agrupado", () => {
     render(<Sidebar collapsed={false} />);
     // Nenhum grupo oferece atalho cumulativo — o bloco É o caminho.
     expect(screen.queryByRole("link", { name: /Ver tudo/ })).toBeNull();
-    for (const grupo of ["CRM", "Agente de IA", "Fluxos", "Análise"]) expandirGrupo(grupo);
+    for (const grupo of ["CRM", "Ferramentas", "Fluxos"]) expandirGrupo(grupo);
     expect(screen.getByRole("link", { name: "Produtos" })).toHaveAttribute(
       "href",
       "/app/products",
     );
-    expect(screen.getByRole("link", { name: "Evolução da IA" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Galeria" })).toHaveAttribute(
       "href",
-      "/app/ai/evolution",
+      "/app/galeria",
     );
     expect(screen.getByRole("link", { name: "Fluxos" })).toHaveAttribute(
       "href",
@@ -211,22 +211,18 @@ describe("Sidebar agrupado", () => {
     for (const [nome, href] of [
       ["Inbox", "/app/inbox"],
       ["Funis", "/app/kanban"],
-      ["Agentes", "/app/ai/agents"],
+      ["Respostas rápidas", "/app/templates"],
       ["Fluxos", "/app/ai/fluxos"],
-      ["Desempenho", "/app/metrics"],
     ] as const) {
       expect(screen.getByRole("link", { name: nome })).toHaveAttribute("href", href);
     }
     for (const nome of [
-      "Agenda",
-      "Respostas rápidas",
       "Galeria",
       "Contatos",
       "Tarefas",
       "Produtos",
-      "Alertas",
-      "Atividades",
-      "Propostas",
+      "Agentes",
+      "Desempenho",
     ]) {
       expect(
         screen.queryByRole("link", { name: nome }),

@@ -32,8 +32,10 @@ const BASE = path.join(RAIZ, "app", "app");
  */
 const NAV_ALLOWLIST: Record<string, string> = {
   "/app": "redirect para /app/inbox — não é tela, é o ponto de entrada",
-  "/app/ai/agents/new":
-    "sub-fluxo de criar agente, alcançado pelo botão dentro da lista de Agentes",
+  "/app/tasks/agenda":
+    "aba Agenda da página Tarefas, alcançada pela barra de abas de /app/tasks — não é destino de menu próprio",
+  "/app/agenda":
+    "redirect para /app/tasks/agenda — a Agenda virou aba de Tarefas; mantido por links salvos e pelo retorno do OAuth do Google",
   "/app/team/invite": "sub-fluxo de convite, alcançado de dentro de Equipe",
   "/app/settings/tenant/whatsapp": "redirect legado para /app/connections; mantido por links salvos",
   "/app/settings/canal-oficial":

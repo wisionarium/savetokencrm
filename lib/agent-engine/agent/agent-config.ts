@@ -1,6 +1,6 @@
 /**
- * Config do agente por PONTEIRO PUBLICADO (Fase 2B da fusão) — a tela
- * app/app/ai/agents/[id] é a fonte de verdade da config do agente.
+ * Config do agente por PONTEIRO PUBLICADO (Fase 2B da fusão) — a versão
+ * publicada (`ai_agent_versions`) é a fonte de verdade da config do agente.
  *
  * Contrato:
  *   - resolvida no início de CADA turno (zero cache de processo): publicar na

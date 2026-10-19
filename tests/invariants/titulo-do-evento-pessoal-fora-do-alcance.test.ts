@@ -212,7 +212,7 @@ const GESTOR_NA_ORG = `
 const COMO_GESTOR = como(GESTOR);
 
 /**
- * A leitura que a tela da Agenda do dono faz (`app/app/agenda/page.tsx`), com o
+ * A leitura que a tela da Agenda do dono faz (`app/app/tasks/agenda/page.tsx`), com o
  * embed `calendar_connections!inner(user_id)` escrito como a junção que o
  * PostgREST monta. É o que "o dono continua vendo a própria agenda" quer dizer.
  */
@@ -423,7 +423,7 @@ describe("migration 0261 — o título do evento pessoal fora do alcance do memb
   it("sobre a v1.26.0, o bloco da 0261 deixa de pé quem mostra a ocupação: a leitura da tela para o dono e o gestor, e a função da 0260 para o colega — cuja tela já não trazia a ocupação do dono", () => {
     // A versão anterior deste caso exigia que o colega Somente leitura seguisse
     // lendo a ocupação do dono DIRETO na tabela e na view, "senão a grade da
-    // equipe esvaziaria". A grade não lê assim. `app/app/agenda/page.tsx` e
+    // equipe esvaziaria". A grade não lê assim. `app/app/tasks/agenda/page.tsx` e
     // `app/api/v1/agenda/agendamentos/route.ts` pedem a view com a sessão do
     // usuário e o embed `calendar_connections!inner(user_id)` — a
     // `LEITURA_DA_TELA` —, e a RLS de `calendar_connections` (dono OU gestor)

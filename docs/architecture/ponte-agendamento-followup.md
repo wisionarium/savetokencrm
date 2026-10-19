@@ -42,7 +42,7 @@ Inline e daemon usam `lib/agent-engine/edge/crm/send-ledger.ts`: a intenção `(
 
 ## Superfícies e autorização
 
-Agenda, entrada contextual pelo Inbox, aviso da Central e Radar abrem `/app/agenda?compromisso=id`, inclusive fora da semana atual. `DetalheDoCompromisso` mostra presença, evidência, snooze, resultado/impedimento e interrupção; o acompanhamento abre o dossiê existente. A revisão é capturada ao iniciar o rascunho ou decidir. Polling pode mostrar o resultado assíncrono, mas mudança de revisão bloqueia a edição antiga até descarte e revisão explícitos. CAS recusado também preserva o bloqueio. Configuração do gatilho fica no editor de follow-up existente e a ausência de configuração é explicada na tela.
+Agenda, entrada contextual pelo Inbox, aviso da Central e Radar abrem `/app/tasks/agenda?compromisso=id`, inclusive fora da semana atual. `DetalheDoCompromisso` mostra presença, evidência, snooze, resultado/impedimento e interrupção; o acompanhamento abre o dossiê existente. A revisão é capturada ao iniciar o rascunho ou decidir. Polling pode mostrar o resultado assíncrono, mas mudança de revisão bloqueia a edição antiga até descarte e revisão explícitos. CAS recusado também preserva o bloqueio. Configuração do gatilho fica no editor de follow-up existente e a ausência de configuração é explicada na tela.
 
 O GET do detalhe projeta o `time_zone` existente no compromisso. O período e o registro da presença usam esse fuso e o idioma canônico da interface (`useTagDeIdioma` → `tagDeIdioma`); `formatRange` preserva o dia final quando o intervalo atravessa a meia-noite. Trocar o idioma não altera os instantes, a autoria nem a revisão. A prova frontend usa navegador inglês/Honolulu, compromisso São Paulo e troca real PT→ES.
 

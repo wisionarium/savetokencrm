@@ -1197,3 +1197,31 @@
 [data-sonner-toast]:not([data-type]) [data-icon] {
   color: var(--color-info);
 }
+
+/* ---- Casca do celular: rodapé e respiro -----------------------------------
+   Abaixo de `md` (768px CSS) a navegação do app desce para o rodapé
+   (`MobileTabBar`). Ele é `fixed`: sai do fluxo e não ocupa altura — então o
+   conteúdo precisa do próprio respiro para a última linha não nascer atrás da
+   barra. É este bloco que dá o respiro, e só para as telas comuns
+   (`data-conteudo="app"`); o inbox é `data-conteudo="inbox"` porque a grade
+   dele se mede sozinha e a barra deve FLUTUAR sobre a lista, como no
+   mensageiro (o respiro de lá é o `padding-bottom` do fio da lista).
+
+   `:has()` e não estado em JavaScript: a pergunta "esta tela tem conversa
+   aberta?" já está escrita no DOM (`data-conversa-aberta`, marcado pelo
+   `InboxLayout`). Resolver por CSS evita um segundo render e, sobretudo, a
+   piscada de quem decide a visibilidade DEPOIS da hidratação: no fio, o
+   rodapé some e o composer volta a encostar na borda.
+
+   `env(safe-area-inset-bottom)`: no iPhone a barra de gestos cobre o rodapé.
+   A própria barra soma a área segura no padding; aqui o conteúdo soma o mesmo
+   tanto para nada nascer embaixo do dedo. */
+@media (max-width: 767px) {
+  [data-conteudo="app"] {
+    padding-bottom: calc(3.5rem + env(safe-area-inset-bottom) + var(--space-3));
+  }
+  html:has([data-conversa-aberta]) [data-barra-movel] {
+    display: none;
+  }
+}
+

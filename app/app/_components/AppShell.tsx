@@ -1,12 +1,15 @@
 "use client";
 import type { ReactNode } from "react";
+import { usePathname } from "next/navigation";
 import { Sidebar } from "@/components/shell/Sidebar";
 import { TopBar } from "@/components/shell/TopBar";
+import { MobileTabBar } from "@/components/shell/MobileTabBar";
 import { BarraDeProgressoNavegacao } from "@/components/shell/BarraDeProgressoNavegacao";
 import { useSinalDePresenca } from "@/hooks/atendimento/useSinalDePresenca";
 import { useInboundMessageAlerts } from "@/hooks/notifications/useInboundMessageAlerts";
 import { useCrmAlerts } from "@/hooks/notifications/useCrmAlerts";
 import { useNotifyOpenFromServiceWorker } from "@/lib/notifications/notify_open";
+import { cn } from "@/lib/utils";
 
 interface AppShellProps {
   sidebarCollapsed: boolean;
@@ -31,6 +34,15 @@ export function AppShell({ sidebarCollapsed, podeAtender, children }: AppShellPr
   // no Inbox e na Agenda; um emissor amarrado à tela de gestão diria que só o
   // gerente está presente.
   useSinalDePresenca(podeAtender);
+  /**
+   * O inbox é a única tela que se mede sozinha: o `InboxLayout` calcula a
+   * própria altura em `100dvh` menos a TopBar, e por isso NÃO pode receber o
+   * padding do `<main>` no celular — o padding entraria na conta uma segunda
+   * vez e o composer nasceria abaixo da borda. A partir de `md` volta o `p-6`
+   * de sempre.
+   */
+  const pathname = usePathname();
+  const ehInbox = pathname?.startsWith("/app/inbox") ?? false;
   return (
     <div className="flex min-h-screen w-full bg-background">
       <BarraDeProgressoNavegacao />
@@ -58,8 +70,24 @@ export function AppShell({ sidebarCollapsed, podeAtender, children }: AppShellPr
       */}
       <div className="flex min-h-screen min-w-0 flex-1 flex-col">
         <TopBar />
-        <main className="flex-1 overflow-auto p-6">{children}</main>
+        {/*
+          `p-3` no celular e `p-6` do `md` para cima: no telefone o conteúdo
+          encosta mais na borda (o desenho do mensageiro é denso) e a barra de
+          baixo (`MobileTabBar`, `md:hidden`) cobra o espaço dela por CSS —
+          `[data-conteudo="app"]` em `app/globals.css`, que some quando há
+          conversa aberta (`:has`). No inbox o padding do celular é ZERO e o
+          `data-conteudo` muda de valor: a grade se mede sozinha (ver acima) e a
+          barra flutua SOBRE a lista, como no mensageiro. O desktop segue
+          exatamente `p-6`.
+        */}
+        <main
+          data-conteudo={ehInbox ? "inbox" : "app"}
+          className={cn("flex-1 overflow-auto", ehInbox ? "p-0 md:p-6" : "p-3 md:p-6")}
+        >
+          {children}
+        </main>
       </div>
+      <MobileTabBar />
     </div>
   );
 }

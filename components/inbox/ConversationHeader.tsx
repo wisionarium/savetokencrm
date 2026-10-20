@@ -199,7 +199,11 @@ export function ConversationHeader({ conversation }: Props) {
     // de antes (uma linha), e quando aperta a barra desce para a linha de baixo.
     // Nenhuma ação some — um menu "mais" esconderia o "Lembrar" que a spec
     // `canais-baseline` clica, e, pior, esconderia ação de quem atende.
-    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-background px-4 py-3">
+    //
+    // NO CELULAR o padding encolhe (`px-3 py-2`): a coluna de 360px não pode
+    // gastar 32px de margem em cada lado para caber a mesma identidade que o
+    // desktop mostra folgada. Do `md` para cima, intocado.
+    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-background px-3 py-2 md:px-4 md:py-3">
       <div className="min-w-0">
         <div className="flex items-center gap-2">
           {/*
@@ -208,7 +212,7 @@ export function ConversationHeader({ conversation }: Props) {
             dono). Desabilitada com o motivo no tooltip: estrela que finge
             funcionar e esquece no F5 é pior que estrela assumidamente futura.
           */}
-          <span title={t("Favoritar conversa (em breve)")}>
+          <span className="hidden md:inline" title={t("Favoritar conversa (em breve)")}>
             <Star
               size={16}
               weight="fill"
@@ -338,7 +342,7 @@ export function ConversationHeader({ conversation }: Props) {
           Desabilitado com o motivo no tooltip — botão que finge ligar e dá
           401 em toda chamada é pior que botão assumidamente futuro.
         */}
-        <span title={t("Chamada de voz (em breve)")}>
+        <span className="hidden md:block" title={t("Chamada de voz (em breve)")}>
           <Button size="sm" variant="ghost" className="h-8 w-8 p-0" disabled>
             <Phone size={16} weight="regular" aria-hidden />
           </Button>

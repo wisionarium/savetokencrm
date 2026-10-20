@@ -61,9 +61,29 @@ function purposesDoTexto(texto: string, arquivo = "source.ts"): string[] {
   visit(ast);
   return result;
 }
+/**
+ * O Web App Manifest nao e ponto de IA.
+ *
+ * `app/manifest.ts` declara `purpose: "any"` e `"maskable"` nos icones — campo
+ * da especificacao do W3C (PWA), outro dominio com a MESMA palavra. O scanner e
+ * generico de proposito e por isso o encontra; sem esta exclusao, o registro de
+ * pontos de IA passaria a cobrar dois "purposes" que nunca chamam modelo.
+ *
+ * A exclusao e de ARQUIVO, nao de valor: nao existe lista de purposes ignorados,
+ * entao um LLM homonimo real continua sendo cobrado. O teste logo abaixo prova
+ * que a exclusao ainda tem razao de existir — se `purpose` sumir do manifest,
+ * ele reprova e cobra a limpeza desta linha.
+ */
+const FORA_DO_DOMINIO_DE_IA = new Set(["app/manifest.ts"]);
+
+function caminhoRelativo(arquivo: string): string {
+  return path.relative(RAIZ_DO_REPO, arquivo).split(path.sep).join("/");
+}
+
 function purposesEmitidosNoCodigo(): Map<string, string[]> {
   const encontrados = new Map<string, string[]>();
   for (const arquivo of arquivosDeCodigo(["lib", "workers", "app"])) {
+    if (FORA_DO_DOMINIO_DE_IA.has(caminhoRelativo(arquivo))) continue;
     for (const purpose of purposesDoTexto(readFileSync(arquivo, "utf8"), arquivo)) {
       const lista = encontrados.get(purpose) ?? [];
       lista.push(path.relative(RAIZ_DO_REPO, arquivo));
@@ -138,6 +158,14 @@ describe("registro de pontos de IA × código", () => {
     expect(emitidos.size).toBeGreaterThan(10);
     expect(emitidos.get("agent_turn")).toBeDefined();
     expect(arquivosDeCodigo(["lib"]).length).toBeGreaterThan(200);
+  });
+
+  it("a exclusão do Web App Manifest ainda tem razão de existir", () => {
+    // A exclusão é cirúrgica: só vale enquanto o manifest usar `purpose` para
+    // ícone. Se o campo sumir de lá, esta linha reprova e cobra apagar a
+    // exclusão — catraca que não pode virar esconderijo permanente.
+    const fonte = readFileSync(path.join(RAIZ_DO_REPO, "app", "manifest.ts"), "utf8");
+    expect(purposesDoTexto(fonte, "app/manifest.ts")).toEqual(["any", "any", "maskable"]);
   });
 
   it("todo purpose emitido no código está no registro", () => {

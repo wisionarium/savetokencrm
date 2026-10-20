@@ -8486,6 +8486,22 @@ export const DICIONARIO: Traducoes = {
 
   // ─── Tarefas (extraídas do PR #418) ───
   "Tarefas": { es: "Tareas" },
+  "Mais": { es: "Más" },
+  "Mais opções": { es: "Más opciones" },
+  "Navegação rápida": { es: "Navegación rápida" },
+  "Instalar aplicativo": { es: "Instalar aplicación" },
+  "Ferramentas": { es: "Herramientas" },
+  "Tarefas e agenda": { es: "Tareas y agenda" },
+  "Modelos de mensagem": { es: "Plantillas de mensaje" },
+  "Disparar fluxo": { es: "Disparar flujo" },
+  "Trocar o responsável desta conversa": { es: "Cambiar el responsable de esta conversación" },
+  "Recolher painel": { es: "Contraer panel" },
+  "Mostrar painel": { es: "Mostrar panel" },
+  "Mostrar painel do contato": { es: "Mostrar panel del contacto" },
+  "Diminuir o texto da conversa": { es: "Reducir el texto de la conversación" },
+  "Diminuir o texto": { es: "Reducir el texto" },
+  "Aumentar o texto da conversa": { es: "Aumentar el texto de la conversación" },
+  "Aumentar o texto": { es: "Aumentar el texto" },
   "O que ficou combinado, com prazo. Tarefa presa a um negócio aparece na linha do tempo dele.": {
     es: "Lo que quedó acordado, con plazo. Una tarea ligada a un negocio aparece en la línea de tiempo de él.",
   },

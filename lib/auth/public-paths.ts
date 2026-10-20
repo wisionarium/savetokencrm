@@ -89,6 +89,12 @@ export const PUBLIC_PATHS: RegExp[] = [
   // `/icon.png` (inexistente) devolvia 404 — a diferença é só a extensão.
   /^\/icon$/,
   /^\/manifest\.webmanifest$/,
+  // Os ícones 192/512 do manifest instalável (`app/api/pwa/icon/[size]/route.tsx`).
+  // O manifest é público (linha acima) e quem o lê é o NAVEGADOR, antes de
+  // qualquer sessão — o ícone tem de responder a ele. Ancorado nos DOIS
+  // tamanhos exatos: liberar `/api/pwa/icon/` deixaria qualquer sub-path futuro
+  // nascer público de carona.
+  /^\/api\/pwa\/icon\/(192|512)$/,
   /^\/team\/accept-invite\/.+$/,
   /^\/account-suspended$/,
   // OS MOLDES DE E-MAIL DO GoTrue. Quem busca é o GoTrue, um processo de

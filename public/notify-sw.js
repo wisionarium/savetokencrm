@@ -56,3 +56,25 @@ self.addEventListener("push", (event) => {
     })(),
   );
 });
+
+/*
+ * O HANDLER DE REDE — o que torna o app INSTALÁVEL.
+ *
+ * O navegador só oferece "adicionar à tela inicial" quando existe um service
+ * worker com um listener de `fetch`. Este arquivo nasceu como worker de bandeja
+ * e push e não tinha nenhum, então o manifest e os ícones sozinhos não
+ * bastariam.
+ *
+ * ⚠️ ELE NÃO CACHEIA NADA, de propósito. O produto guarda conversa de cliente;
+ * servir HTML autenticado do cache entregaria a tela de uma sessão a outra — e
+ * é o tipo de defeito que só aparece no aparelho compartilhado de quem atende.
+ * Para NAVEGAÇÃO, isto é um repasse transparente à rede. Offline, o navegador
+ * mostra a tela dele ("sem conexão"), que é honesta; um cache nosso mostraria
+ * dado velho como se fosse vivo. Requisições que não são navegação (RSC,
+ * assets, API) seguem intocadas — o worker não responde por elas.
+ */
+self.addEventListener("fetch", (event) => {
+  if (event.request.mode !== "navigate") return;
+  event.respondWith(fetch(event.request));
+});
+

@@ -278,7 +278,10 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
     <>
       <div
         className={cn(
-          "relative border-t border-border bg-background px-3 py-2",
+          // `pb` com a área segura do sistema: no iPhone a barra de gestos
+          // cobre o rodapé, e o composer — que é onde o polegar chega — não
+          // pode nascer embaixo dela. Zero em quem não tem área segura.
+          "relative border-t border-border bg-background px-3 pt-2 pb-[calc(env(safe-area-inset-bottom)_+_0.5rem)] md:pb-2",
           mode === "note" && "border-warning/40 bg-warning-bg",
         )}
       >
@@ -388,7 +391,13 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
             }
             className={cn(
               // Pill do mock ("Escreva uma mensagem…" + seta dentro).
-              "max-h-40 min-h-9 flex-1 resize-none rounded-full border border-input bg-background px-4 py-2 text-sm",
+              //
+              // `text-base md:text-sm`: o Safari do iOS dá ZOOM na página
+              // inteira quando um campo focado tem fonte menor que 16px — e o
+              // campo que a pessoa mais foca no produto é justamente este. Em
+              // 16px no celular o teclado abre sem empurrar a tela de lado; do
+              // `md` para cima, o pill segue compacto como sempre.
+              "max-h-40 min-h-9 flex-1 resize-none rounded-full border border-input bg-background px-4 py-2 text-base md:text-sm",
               "placeholder:text-muted-foreground focus:ring-1 focus:ring-ring focus:outline-hidden",
             )}
             disabled={mode === "note" ? isDisabled : respostaBarrada}

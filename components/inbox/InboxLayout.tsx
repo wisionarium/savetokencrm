@@ -401,11 +401,19 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
     <OpenConversationProvider conversationId={selectedId}>
     <div
       className={cn(
-        "grid h-[calc(100dvh-3.5rem-2*var(--space-6))] w-full grid-cols-1",
+        // NO CELULAR a grade encosta na TopBar e a barra de baixo flutua sobre
+        // ela (o `<main>` está com padding zero, por `data-conteudo="inbox"`).
+        // A partir de `md` volta a conta original, que desconta o `p-6`.
+        "grid h-[calc(100dvh-3.5rem)] w-full grid-cols-1 md:h-[calc(100dvh-3.5rem-2*var(--space-6))]",
         painelAberto
           ? "md:grid-cols-[232px_minmax(0,1fr)_264px] xl:grid-cols-[272px_1fr_296px] 2xl:grid-cols-[300px_1fr_320px]"
           : "md:grid-cols-[232px_minmax(0,1fr)_32px] xl:grid-cols-[272px_1fr_32px] 2xl:grid-cols-[300px_1fr_32px]",
       )}
+      // A CONVERSA ABERTA ESCONDE O RODAPÉ. O CSS lê daqui
+      // (`app/globals.css`, `html:has([data-conversa-aberta])`): no fio, a
+      // tela é toda da conversa, como no mensageiro. O atributo existe só
+      // abaixo de `md` porque só lá a barra existe — no desktop ele é inerte.
+      data-conversa-aberta={selectedId ? "true" : undefined}
       /*
        * O ESTADO DO TEMPO REAL, LEGÍVEL DE FORA — mesmo par que o dossiê do lead
        * já publica (`LeadDossier`), e pela mesma razão: quando a entrega morre,
@@ -505,7 +513,17 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
                     {t("Ficha")}
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="right" className="w-[min(22rem,90vw)] overflow-y-auto p-0">
+                {/*
+                  NO CELULAR A FICHA SOBE DE BAIXO, como o perfil do contato no
+                  mensageiro — largura cheia, até 85% da altura, canto de cima
+                  arredondado. O painel interno é o MESMO do desktop
+                  (`CRMSidePanel`), só muda o casulo: uma ficha que se lê de
+                  baixo para cima, com o polegar, sem virar de lado.
+                */}
+                <SheetContent
+                  side="bottom"
+                  className="max-h-[85dvh] overflow-y-auto rounded-t-2xl p-0 pb-[env(safe-area-inset-bottom)]"
+                >
                   <SheetTitle className="sr-only">{t("Ficha do contato")}</SheetTitle>
                   <CRMSidePanel conversation={selectedConversation} janelaFechada={motivoDaJanela} />
                 </SheetContent>
@@ -544,7 +562,12 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
                   contatoId={selectedConversation.contacts?.id ?? null}
                 />
               </div>
-              <ZoomDoFio userId={user.id ?? null} />
+              {/* O zoom do fio é gesto de desktop (pílula flutuante, alvo fino).
+                  No celular o fio rola normal e o gesto de pinça já é do
+                  navegador — então a pílula nem se monta abaixo de `md`. */}
+              <div className="hidden md:block">
+                <ZoomDoFio userId={user.id ?? null} />
+              </div>
             </div>
             <RetentionNotice conversationId={selectedConversation.id} />
             {motivoDaJanela && (

@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "App no celular e instalável",
+    "subtitle": "Mesma navegação, casca de telefone e PWA — desktop intocado",
+    "output": "app-no-celular.html",
+    "quality_profile": "standard"
+  },
+  "lanes": [
+    { "id": "humano", "label": "Pessoa" },
+    { "id": "app", "label": "Aplicativo" },
+    { "id": "navegador", "label": "Navegador" },
+    { "id": "marca", "label": "Marca da instalação" }
+  ],
+  "mainPath": ["catalogo", "abas", "barra", "gaveta", "conversa", "css"],
+  "nodes": [
+    {
+      "id": "pessoa",
+      "lane": "humano",
+      "col": 0,
+      "type": "actor",
+      "label": "Atendente no telefone"
+    },
+    {
+      "id": "catalogo",
+      "lane": "app",
+      "col": 1,
+      "type": "service",
+      "label": "Catálogo + RBAC + interface por vínculo"
+    },
+    {
+      "id": "abas",
+      "lane": "app",
+      "col": 2,
+      "type": "service",
+      "label": "abasMoveis — projeção do mesmo menu"
+    },
+    {
+      "id": "barra",
+      "lane": "app",
+      "col": 3,
+      "type": "ui",
+      "label": "MobileTabBar (md:hidden) + Mais"
+    },
+    {
+      "id": "gaveta",
+      "lane": "app",
+      "col": 4,
+      "type": "ui",
+      "label": "SidebarContent — todas as portas a um toque"
+    },
+    {
+      "id": "conversa",
+      "lane": "app",
+      "col": 4,
+      "type": "ui",
+      "label": "InboxLayout — data-conversa-aberta"
+    },
+    {
+      "id": "css",
+      "lane": "app",
+      "col": 5,
+      "type": "service",
+      "label": "globals.css :has() — esconde a barra no fio"
+    },
+    {
+      "id": "layout",
+      "lane": "app",
+      "col": 1,
+      "type": "service",
+      "label": "layout.tsx — manifest, appleWebApp, viewport"
+    },
+    {
+      "id": "manifest",
+      "lane": "app",
+      "col": 2,
+      "type": "service",
+      "label": "manifest.ts — 192/512, maskable, standalone"
+    },
+    {
+      "id": "icone",
+      "lane": "app",
+      "col": 3,
+      "type": "service",
+      "label": "api/pwa/icon/[size] — ImageResponse em runtime"
+    },
+    {
+      "id": "sw",
+      "lane": "app",
+      "col": 3,
+      "type": "service",
+      "label": "notify-sw.js — handler de fetch sem cache"
+    },
+    {
+      "id": "instalar",
+      "lane": "navegador",
+      "col": 4,
+      "type": "ui",
+      "label": "Convite de instalação (beforeinstallprompt)"
+    },
+    {
+      "id": "navegador",
+      "lane": "navegador",
+      "col": 5,
+      "type": "ui",
+      "label": "Navegador do telefone"
+    },
+    {
+      "id": "marca",
+      "lane": "marca",
+      "col": 0,
+      "type": "store",
+      "label": "platform_branding / organizations.settings.branding"
+    }
+  ],
+  "edges": [
+    { "id": "e1", "from": "catalogo", "to": "abas", "label": "sidebarGroups → recorte da barra" },
+    { "id": "e2", "from": "abas", "to": "barra", "label": "renderiza os alvos" },
+    { "id": "e3", "from": "barra", "to": "gaveta", "label": "Mais abre o sidebar inteiro" },
+    { "id": "e4", "from": "abas", "to": "css", "label": "a barra é [data-barra-movel]" },
+    { "id": "e5", "from": "conversa", "to": "css", "label": "marca data-conversa-aberta" },
+    { "id": "e6", "from": "css", "to": "barra", "label": "esconde a barra no fio" },
+    { "id": "e7", "from": "pessoa", "to": "barra", "label": "toca a aba" },
+    { "id": "e8", "from": "css", "to": "conversa", "label": "tela cheia da conversa" },
+    { "id": "e9", "from": "gaveta", "to": "catalogo", "label": "as mesmas portas" },
+    { "id": "e10", "from": "layout", "to": "manifest", "label": "link rel=manifest" },
+    { "id": "e11", "from": "manifest", "to": "icone", "label": "192 e 512" },
+    { "id": "e12", "from": "icone", "to": "marca", "label": "resolve em runtime" },
+    { "id": "e13", "from": "marca", "to": "manifest", "label": "nome e cor" },
+    { "id": "e14", "from": "navegador", "to": "manifest", "label": "lê antes de qualquer sessão" },
+    { "id": "e15", "from": "layout", "to": "navegador", "label": "appleWebApp + viewport cover" },
+    { "id": "e16", "from": "sw", "to": "navegador", "label": "passa a navegação à rede" },
+    { "id": "e17", "from": "navegador", "to": "sw", "label": "registra no boot" },
+    { "id": "e18", "from": "navegador", "to": "instalar", "label": "beforeinstallprompt" },
+    { "id": "e19", "from": "instalar", "to": "barra", "label": "BotaoInstalarApp no Mais" },
+    { "id": "e20", "from": "pessoa", "to": "navegador", "label": "adiciona à tela inicial" }
+  ]
+}

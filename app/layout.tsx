@@ -98,6 +98,16 @@ export async function generateMetadata(): Promise<Metadata> {
       "multi-tenant",
     ],
     robots: { index: false, follow: false },
+    // O manifest do app instalável (`app/manifest.ts`): ícones, cor e nome da
+    // instalação, resolvidos em runtime. O Next já o serviria em
+    // `/manifest.webmanifest`; declarar é o que garante o `<link rel="manifest">`
+    // no `<head>` de TODA página — inclusive as públicas, onde o Safari lê
+    // antes de existir sessão.
+    manifest: "/manifest.webmanifest",
+    // iOS: sem `appleWebApp`, o "Adicionar à Tela de Início" abre o app com a
+    // barra do Safari dentro. `capable` o põe em tela cheia, como o `display`
+    // do manifest faz no Android.
+    appleWebApp: { capable: true, statusBarStyle: "default", title: name },
     // Sem esta linha o navegador pede `/favicon.ico`, que não existe: medido em
     // produção, o 404 é a `app/not-found.tsx` INTEIRA (19.435 bytes de HTML)
     // servida para um pedido de ícone, em toda navegação sem cache. Declarar
@@ -115,6 +125,14 @@ export async function generateMetadata(): Promise<Metadata> {
  */
 export const viewport: Viewport = {
   themeColor: coresDaBarraDoNavegador(REGUA_DO_PRODUTO),
+  // `cover` é o que HABILITA `env(safe-area-inset-*)`: sem ele o rodapé de
+  // gestos do iPhone cobre a barra de baixo e o composer (`app/globals.css`).
+  viewportFit: "cover",
+  // `resizes-content`: com o teclado aberto, a altura `dvh` da conversa encolhe
+  // em vez de o teclado cobrir o composer. Sem isto, quem digita no celular
+  // perde o campo de vista — o defeito que a doutrina de QA visual pega e o
+  // `curl` não.
+  interactiveWidget: "resizes-content",
 };
 
 // Inline FOUC-prevention. Conteúdo é string literal estática (zero input do usuário),
@@ -286,6 +304,12 @@ export default function RootLayout({
         {/* Config pública do Supabase + marca resolvida, em runtime (imagem
             genérica self-host). */}
         <MarcaNoNavegador />
+        {/* Ícone da TELA INICIAL no iOS: o Safari não usa o manifest para isso
+            — sem este `<link>` ele fotografa a página no momento em que a
+            pessoa adiciona, e o resultado é um quadrado com o que estava na
+            tela. A rota é a mesma que gera o ícone 192 do manifest (marca da
+            instalação, em runtime). */}
+        <link rel="apple-touch-icon" href="/api/pwa/icon/192" />
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
       <body className="min-h-screen bg-bg font-sans text-text antialiased">

@@ -86,11 +86,10 @@ describe("as abas do rodapé no celular", () => {
 
   it("preset simplificado preserva as abas que ele contém", () => {
     // `SIMPLIFICADA` (em `lib/navigation/interface.ts`) lista inbox, kanban,
-    // contacts, tasks e connections. As três abas estão nela. Se a barra
-    // divergisse do preset, o operador que escolheu a interface enxuta veria
-    // menos no celular do que no computador.
+    // contacts, tasks e connections. Produtos NÃO está nela — a barra respeita
+    // a escolha do operador e mostra só o que o menu daquele vínculo oferece.
     const abas = abasMoveis({ preset: "simplificada" }, false, "viewer").map((d) => d.href);
-    expect(abas).toEqual([...ABAS_MOVEIS]);
+    expect(abas).toEqual(["/app/contacts", "/app/tasks", "/app/inbox"]);
   });
 
   it("destino removido pela interface desaparece da barra e mantém a ordem", () => {
@@ -99,7 +98,7 @@ describe("as abas do rodapé no celular", () => {
       false,
       "viewer",
     ).map((d) => d.href);
-    expect(abas).toEqual(["/app/inbox", "/app/tasks"]);
+    expect(abas).toEqual(["/app/tasks", "/app/inbox"]);
   });
 
   it("renomeia só o Inbox; o resto herda o rótulo do catálogo", () => {
@@ -107,7 +106,7 @@ describe("as abas do rodapé no celular", () => {
     const contatos = buscar("/app/contacts");
     expect(inbox).toBeDefined();
     expect(contatos).toBeDefined();
-    expect(rotuloDaAba(inbox!)).toBe("Conversas");
+    expect(rotuloDaAba(inbox!)).toBe("Mensagens");
     expect(rotuloDaAba(contatos!)).toBe(contatos!.label);
   });
 });

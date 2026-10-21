@@ -138,9 +138,9 @@ test("interface por membro atualiza ao vivo, preserva formulário e convite apli
     mkdirSync(evidence, { recursive: true });
     await member.screenshot({ path: `${evidence}/interface-produto-no-bloco.png` });
     await member.setViewportSize({ width: 390, height: 844 });
-    await member.getByRole("button", { name: "Abrir navegação" }).click();
-    await nav(member).getByRole("button", { name: "CRM" }).click();
-    await expect(member.getByRole("link", { name: /Produtos/ }).last()).toBeVisible();
+    await member.getByRole("link", { name: "Mais" }).click();
+    await member.waitForURL("**/app/mais");
+    await expect(nav(member).getByRole("link", { name: /Produtos/ })).toBeVisible();
     expect(
       await member.evaluate(
         () => document.body.scrollWidth <= document.documentElement.clientWidth + 1,

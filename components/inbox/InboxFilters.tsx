@@ -1,8 +1,10 @@
 "use client";
 import { useT } from "@/hooks/i18n/useT";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { MagnifyingGlass } from "@/lib/ui/icons";
+import { Funnel, MagnifyingGlass } from "@/lib/ui/icons";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import {
@@ -20,6 +22,7 @@ import { useAuth } from "@/hooks/auth/AuthProvider";
 import { useContactTagVocabulary } from "@/hooks/contacts/useContactTagVocabulary";
 import { useConversationTagVocabulary } from "@/hooks/inbox/useConversationTags";
 import { useConversationCounts } from "@/hooks/inbox/useConversationCounts";
+import { useMarcaDaInstalacao } from "@/lib/branding/contexto";
 import type { Role, VisibilityMode } from "@/lib/auth/types";
 
 export type InboxTab = "unassigned" | "mine" | "all" | "closed" | "archived" | "ai";
@@ -136,6 +139,31 @@ export function InboxFilters({ value, onChange }: Props) {
   }, [value.search]);
   const { data: channels } = useChannelSessions({ refetchInterval: 30_000 });
   const { activeOrg } = useAuth();
+  /**
+   * A MARCA DA HOME, no celular — e só aqui.
+   *
+   * O topo fixo do celular saiu; no lugar dele a lista de conversas abre com
+   * a marca da instalação (ou da organização, quando ela definiu a sua). É a
+   * MESMA precedência do sidebar: organização > instalação > produto.
+   *
+   * O PNG da Tecla entra como fallback do fork quando a instalação se chama
+   * "Tecla" e ainda não configurou um logo próprio. Não mexemos no
+   * `DEFAULT_APP_NAME` (há catraca protegendo a marca do produto): quem
+   * configurou outro nome não vê o ativo da Tecla.
+   */
+  const marca = useMarcaDaInstalacao();
+  const nomeDaMarca = activeOrg?.marca?.nome ?? marca.name;
+  const logoDaMarca =
+    activeOrg?.marca?.logoUrl ||
+    marca.logoUrl ||
+    (/^tecla$/i.test(nomeDaMarca) ? "/marca/tecla.png" : null);
+  const [filtrosAbertos, setFiltrosAbertos] = useState(false);
+  const refinamentosAtivos = [
+    value.leitura !== "todas",
+    value.channel_session_id != null,
+    value.tag != null,
+    value.assigned_to != null,
+  ].filter(Boolean).length;
   /**
    * As opções são a UNIÃO das duas caixas — as mesmas que o filtro consulta
    * (`conversations.tags` ou `contacts.tags`, no handler da lista).
@@ -263,33 +291,14 @@ export function InboxFilters({ value, onChange }: Props) {
     return () => clearTimeout(t);
   }, [searchInput]);
 
-  return (
-    <div className="border-b border-border bg-background">
-      <div className="space-y-2 px-3 pt-3 pb-2">
-        <div className="flex items-center gap-2">
-          <div className="relative min-w-0 flex-1">
-            <MagnifyingGlass
-              size={15}
-              weight="regular"
-              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-subtle"
-              aria-hidden
-            />
-            {/* "última mensagem", e não "mensagem": a busca alcança apenas
-                `conversations.last_message_preview` — a ÚLTIMA mensagem, truncada em 200
-                caracteres já na ingestão (`grep -rn 'slice(0, 200)' lib/channels/` mostra onde).
-                Medido numa conversa real de 32 mensagens: buscar o que o cliente pediu na
-                3ª devolve ZERO. Alcançar o histórico é projeto próprio (índice trigram +
-                retenção + LGPD); até lá, a tela não promete o que o backend não faz. */}
-            <Input
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              placeholder={t("Buscar por nome, telefone ou última mensagem…")}
-              className="h-9 rounded-full border-transparent bg-surface-elevated pl-9 text-sm shadow-none focus-visible:border-border focus-visible:bg-background"
-              aria-label={t("Buscar conversas")}
-            />
-          </div>
-        </div>
-
+  /**
+   * Os refinamentos num lugar só, renderizados duas vezes: inline no desktop e
+   * dentro da gaveta no celular. Duas cópias do JSX envelheceriam divergindo —
+   * uma com um filtro novo e a outra sem —, então a fonte é esta função.
+   */
+  function renderRefinamentos() {
+    return (
+      <>
         {/* Leitura (lidas/não lidas) — um refinamento como os outros, não uma
             segunda fileira de abas: o bloco segmentado de 3 botões repetia os
             nomes das abas ("Todas", "Minhas") e brigava com elas pelo mesmo
@@ -430,20 +439,102 @@ export function InboxFilters({ value, onChange }: Props) {
             )}
           </div>
         )}
+      </>
+    );
+  }
+
+  function limparRefinamentos() {
+    onChange({
+      ...value,
+      leitura: "todas",
+      channel_session_id: undefined,
+      tag: undefined,
+      assigned_to: undefined,
+    });
+  }
+
+  return (
+    <div className="border-b border-border bg-background">
+      {/*
+        A HOME NO CELULAR — marca + filtro. O topo fixo do app acabou; esta
+        faixa é a única coisa acima da busca e das abas, e só existe na coluna
+        da lista (quando há conversa aberta, a coluna inteira sai). No desktop
+        ela não aparece: lá a TopBar e os selects inline continuam.
+      */}
+      <div className="flex items-center justify-between gap-2 px-3 pt-2 pb-1 md:hidden">
+        <div className="flex min-w-0 items-center gap-2">
+          {logoDaMarca && (
+            <span className="flex h-8 shrink-0 items-center rounded-md dark:bg-white dark:px-1.5">
+              {/* <img> e não next/image: a URL vem do banco/.env e não há
+                  allowlist de domínios para o logo de quem hospeda. Alt vazio
+                  porque o nome ao lado já é o rótulo da marca. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={logoDaMarca}
+                alt=""
+                className="h-7 w-auto max-w-[8rem] object-contain"
+              />
+            </span>
+          )}
+          <span className="truncate text-lg font-semibold tracking-tight">{nomeDaMarca}</span>
+        </div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="relative h-9 w-9 shrink-0"
+          onClick={() => setFiltrosAbertos(true)}
+          aria-label={t("Filtros")}
+        >
+          <Funnel size={18} weight="regular" aria-hidden />
+          {refinamentosAtivos > 0 && (
+            <span
+              className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-accent"
+              aria-hidden
+            />
+          )}
+        </Button>
       </div>
 
-      {/* Faixa sublinhada em DUAS LINHAS quando precisa, nunca cortada: seis
-          abas num grid de 280px não cabem lado a lado — antes elas estouravam
-          num scroll horizontal sem barra visível (`[scrollbar-width:none]`) e o
-          "Automático" morria no cantinho sem ninguém perceber que dava para
-          rolar. `flex-wrap` mostra tudo; `justify-start` em vez de
-          `justify-between` para a segunda linha não espalhar. */}
+      <div className="space-y-2 px-3 pt-2 pb-2 md:pt-3">
+        <div className="flex items-center gap-2">
+          <div className="relative min-w-0 flex-1">
+            <MagnifyingGlass
+              size={15}
+              weight="regular"
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-subtle"
+              aria-hidden
+            />
+            {/* "última mensagem", e não "mensagem": a busca alcança apenas
+                `conversations.last_message_preview` — a ÚLTIMA mensagem, truncada em 200
+                caracteres já na ingestão (`grep -rn 'slice(0, 200)' lib/channels/` mostra onde).
+                Medido numa conversa real de 32 mensagens: buscar o que o cliente pediu na
+                3ª devolve ZERO. Alcançar o histórico é projeto próprio (índice trigram +
+                retenção + LGPD); até lá, a tela não promete o que o backend não faz. */}
+            <Input
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder={t("Buscar por nome, telefone ou última mensagem…")}
+              className="h-9 rounded-full border-transparent bg-surface-elevated pl-9 text-sm shadow-none focus-visible:border-border focus-visible:bg-background"
+              aria-label={t("Buscar conversas")}
+            />
+          </div>
+        </div>
+
+        {/* Desktop: os refinamentos inline, como sempre. No celular eles vivem
+            na gaveta do funil — a mesma função, para não haver duas listas. */}
+        <div className="hidden space-y-2 md:block">{renderRefinamentos()}</div>
+      </div>
+
+      {/* CHIPS no celular; faixa sublinhada no desktop. A faixa antiga quebrava
+          em duas linhas porque seis abas não cabem em 280px; chips roláveis
+          mostram que há mais conteúdo sem empurrar a lista para baixo. */}
       <Tabs
         value={value.tab}
         onValueChange={(v) => onChange(aoTrocarDeAba(value, v as InboxTab))}
         className="px-3"
       >
-        <TabsList className="h-auto w-full flex-wrap justify-start gap-2 overflow-x-visible rounded-none bg-transparent p-0 [scrollbar-width:none]">
+        <TabsList className="flex h-auto w-full justify-start gap-2 overflow-x-auto rounded-none bg-transparent p-0 pb-2 [scrollbar-width:none] md:flex-wrap md:overflow-visible md:pb-0">
           {tabs.map((tab) => {
             const meta = INBOX_TABS.find((t) => t.value === tab)!;
             const count = countFor[tab];
@@ -451,17 +542,43 @@ export function InboxFilters({ value, onChange }: Props) {
               <TabsTrigger
                 key={tab}
                 value={tab}
-                className="-mb-px shrink-0 gap-1 rounded-none border-b-2 border-transparent px-0 pb-2 pt-1 text-xs font-medium text-text-muted data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:text-text data-[state=active]:shadow-none"
+                className="shrink-0 gap-1 rounded-full border border-border bg-surface-elevated px-3 py-1.5 text-xs font-medium text-text-muted data-[state=active]:border-accent data-[state=active]:bg-accent-soft data-[state=active]:text-accent data-[state=active]:shadow-none md:-mb-px md:rounded-none md:border-x-0 md:border-t-0 md:border-b-2 md:border-transparent md:bg-transparent md:px-0 md:pb-2 md:pt-1 md:data-[state=active]:border-accent md:data-[state=active]:bg-transparent md:data-[state=active]:text-text"
               >
                 {t(meta.label)}
                 {typeof count === "number" && count > 0 && (
-                  <span className="text-[11px] tabular-nums text-text-subtle">{count}</span>
+                  <span className="text-[11px] tabular-nums opacity-70">{count}</span>
                 )}
               </TabsTrigger>
             );
           })}
         </TabsList>
       </Tabs>
+
+      <Sheet open={filtrosAbertos} onOpenChange={setFiltrosAbertos}>
+        <SheetContent
+          side="bottom"
+          className="max-h-[85dvh] overflow-y-auto rounded-t-2xl p-0 pb-[env(safe-area-inset-bottom)] md:hidden"
+        >
+          <div className="flex items-center justify-between border-b border-border px-4 py-3">
+            <SheetTitle className="text-base">{t("Filtros")}</SheetTitle>
+          </div>
+          <div className="space-y-2 px-4 py-3">{renderRefinamentos()}</div>
+          <div className="flex gap-2 border-t border-border p-3">
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1"
+              onClick={limparRefinamentos}
+              disabled={refinamentosAtivos === 0}
+            >
+              {t("Limpar filtros")}
+            </Button>
+            <Button type="button" className="flex-1" onClick={() => setFiltrosAbertos(false)}>
+              {t("Ver resultados")}
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

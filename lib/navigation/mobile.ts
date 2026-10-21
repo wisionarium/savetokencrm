@@ -34,19 +34,22 @@ import { NAV_DESTINATIONS, sidebarGroups, type NavDestination } from "./registry
  * criaria um segundo endereço para a mesma tela e uma rota que o registro de
  * navegação não conhece (`tests/unit/navegacao-completude.test.ts`).
  *
- * A ordem é a de uso: conversa → o que ficou combinado → pessoas.
+ * A ordem é a do desenho aprovado (imagem 4): pessoas → o que ficou
+ * combinado → conversa → catálogo. "Mais" fecha a barra, mas NÃO entra aqui:
+ * ele não é destino do catálogo (é a tela que abre o menu inteiro) e a
+ * catraca de `navegacao-completude` cobraria uma porta que não existe.
  */
-export const ABAS_MOVEIS = ["/app/inbox", "/app/tasks", "/app/contacts"] as const;
+export const ABAS_MOVEIS = ["/app/contacts", "/app/tasks", "/app/inbox", "/app/products"] as const;
 
 /**
  * O rótulo da barra pode divergir do catálogo de propósito — e só aqui.
  *
  * "Inbox" é palavra de quem construiu o sistema; no telefone, onde a barra é a
- * única navegação visível, a mesma tela se chama "Conversas". O catálogo
+ * única navegação visível, a mesma tela se chama "Mensagens". O catálogo
  * continua sendo a fonte: isto é a projeção, não uma segunda verdade.
  */
 const ROTULO_NA_BARRA: Record<string, string> = {
-  "/app/inbox": "Conversas",
+  "/app/inbox": "Mensagens",
 };
 
 export function rotuloDaAba(destino: Pick<NavDestination, "href" | "label">): string {

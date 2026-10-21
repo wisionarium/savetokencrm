@@ -36,10 +36,10 @@ export function AppShell({ sidebarCollapsed, podeAtender, children }: AppShellPr
   useSinalDePresenca(podeAtender);
   /**
    * O inbox é a única tela que se mede sozinha: o `InboxLayout` calcula a
-   * própria altura em `100dvh` menos a TopBar, e por isso NÃO pode receber o
-   * padding do `<main>` no celular — o padding entraria na conta uma segunda
-   * vez e o composer nasceria abaixo da borda. A partir de `md` volta o `p-6`
-   * de sempre.
+   * própria altura em `100dvh` no celular (sem TopBar, que deixou de existir
+   * abaixo de `md`) e por isso NÃO pode receber o padding do `<main>` ali — o
+   * padding entraria na conta uma segunda vez e o composer nasceria abaixo da
+   * borda. A partir de `md` volta o `p-6` de sempre, com a TopBar de volta.
    */
   const pathname = usePathname();
   const ehInbox = pathname?.startsWith("/app/inbox") ?? false;
@@ -82,7 +82,14 @@ export function AppShell({ sidebarCollapsed, podeAtender, children }: AppShellPr
         */}
         <main
           data-conteudo={ehInbox ? "inbox" : "app"}
-          className={cn("flex-1 overflow-auto", ehInbox ? "p-0 md:p-6" : "p-3 md:p-6")}
+          className={cn(
+            "flex-1 overflow-auto md:p-6",
+            // Abaixo de `md` não há mais TopBar: o conteúdo encosta no topo e
+            // precisa somar a área segura do aparelho (notch/status bar) para
+            // não nascer debaixo dela. O inbox resolve isso na própria grade,
+            // que já começa com `env(safe-area-inset-top)`.
+            ehInbox ? "p-0" : "p-3 pt-[calc(env(safe-area-inset-top)+0.75rem)]",
+          )}
         >
           {children}
         </main>

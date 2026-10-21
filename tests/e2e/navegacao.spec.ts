@@ -225,25 +225,25 @@ test.describe("navegação agrupada", () => {
   test.describe("mobile", () => {
     test.use({ viewport: { width: 390, height: 844 } });
 
-    test("em 390px, o sidebar vira gaveta e não cria overflow horizontal", async ({ page }) => {
+    test("em 390px, o menu inteiro vive na tela Mais e não cria overflow horizontal", async ({ page }) => {
       await loginAdmin(page);
 
       await expect(sidebar(page), "o sidebar desktop fica fora da árvore acessível no mobile").toHaveCount(0);
       await expectSemOverflowHorizontal(page, "shell mobile após login");
 
-      await page.getByRole("button", { name: "Abrir navegação" }).click();
+      // O topo fixo do celular saiu: o menu inteiro mora na quinta aba.
+      await page.getByRole("link", { name: "Mais" }).click();
+      await page.waitForURL("**/app/mais");
       await expect(sidebar(page)).toBeVisible();
-      await expectSemOverflowHorizontal(page, "shell mobile com drawer aberto");
+      await expectSemOverflowHorizontal(page, "tela Mais sem overflow");
       await page.screenshot({
-        path: path.join(EVIDENCE, "nav-mobile-390-drawer-aberta.png"),
+        path: path.join(EVIDENCE, "nav-mobile-390-mais.png"),
         fullPage: true,
       });
 
-      await sidebar(page).getByRole("button", { name: "Atendimento" }).click();
-      await sidebar(page).getByRole("link", { name: "Inbox", exact: true }).click();
+      await sidebar(page).getByRole("link", { name: "Mensagens", exact: true }).click();
       await page.waitForURL(/\/app\/inbox/);
-      await expect(page.getByRole("dialog")).toHaveCount(0);
-      await expectSemOverflowHorizontal(page, "shell mobile após navegar pelo drawer");
+      await expectSemOverflowHorizontal(page, "shell mobile após navegar pela tela Mais");
 
       await page.screenshot({
         path: path.join(EVIDENCE, "nav-mobile-390-sem-overflow.png"),

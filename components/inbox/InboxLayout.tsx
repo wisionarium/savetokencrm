@@ -351,24 +351,17 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
       ? t("Contato anonimizado — não é possível enviar mensagens.")
       : null;
 
-  // Altura da grade: a conta desconta TUDO que fica acima e abaixo dela.
-  //   3.5rem            TopBar (`h-14`, em components/shell/TopBar.tsx)
-  //   2 * --space-6     padding do <main> do AppShell (`p-6`, em cima e embaixo)
+  // Altura da grade: no CELULAR ela ocupa a tela inteira. Não há mais TopBar
+  // abaixo de `md` (ela saiu do desenho), então o único desconto é a área
+  // segura do aparelho — e essa entra como `padding-top`, dentro do próprio
+  // `100dvh`, para o notch não comer a marca da home nem o botão de voltar da
+  // conversa.
   //
-  // Com `100vh-3.5rem` o padding ficava de fora e a grade media 48px a MAIS que a
-  // tela. Quem pagava a diferença era o composer, que fica no rodapé: nascia
-  // parcialmente abaixo da borda, atrapalhando justo na hora de escrever.
-  //
-  // As duas parcelas NÃO estão na mesma unidade, e por isso o padding entra pelo
-  // token e não como `3rem`: o `@theme inline` de `app/globals.css` remapeia a
-  // escala de spacing para `var(--space-N)` — `--space-6` é `24px` LITERAL —, mas
-  // não remapeia o `14`, que o Tailwind 4 calcula pelo multiplicador `--spacing`
-  // e segue sendo `3.5rem` de verdade. (Até o Tailwind 4 quem remapeava era o
-  // `tailwind.config.ts`; o arquivo não existe mais, o efeito é o mesmo.)
-  // Escrever a soma como
-  // `6.5rem` só acerta enquanto a raiz for 16px; com acessibilidade de fonte maior
-  // ou menor o composer sai da tela de novo. Pelo token, a conta se auto-corrige
-  // se a escala de espaçamento mudar.
+  // A partir de `md`, a conta original volta: TopBar (`h-14`) + o `p-6` do
+  // `<main>` (em cima e embaixo). Escrever a soma como `6.5rem` só acerta
+  // enquanto a raiz for 16px; com acessibilidade de fonte maior ou menor o
+  // composer sai da tela de novo. Pelo token, a conta se auto-corrige se a
+  // escala de espaçamento mudar.
   //
   // `dvh` em vez de `vh` porque no celular a `vh` ignora a barra do navegador — o
   // mesmo corte, só que pior e mudando conforme se rola a página.
@@ -401,10 +394,12 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
     <OpenConversationProvider conversationId={selectedId}>
     <div
       className={cn(
-        // NO CELULAR a grade encosta na TopBar e a barra de baixo flutua sobre
-        // ela (o `<main>` está com padding zero, por `data-conteudo="inbox"`).
-        // A partir de `md` volta a conta original, que desconta o `p-6`.
-        "grid h-[calc(100dvh-3.5rem)] w-full grid-cols-1 md:h-[calc(100dvh-3.5rem-2*var(--space-6))]",
+        // NO CELULAR a grade encosta no topo (não há mais TopBar) e a barra de
+        // baixo flutua sobre ela (o `<main>` está com padding zero, por
+        // `data-conteudo="inbox"`). `pt` com a área segura é o respiro do
+        // notch. A partir de `md` volta a conta original, que desconta a
+        // TopBar e o `p-6`.
+        "grid h-[100dvh] w-full grid-cols-1 pt-[env(safe-area-inset-top)] md:h-[calc(100dvh-3.5rem-2*var(--space-6))] md:pt-0",
         painelAberto
           ? "md:grid-cols-[232px_minmax(0,1fr)_264px] xl:grid-cols-[272px_1fr_296px] 2xl:grid-cols-[300px_1fr_320px]"
           : "md:grid-cols-[232px_minmax(0,1fr)_32px] xl:grid-cols-[272px_1fr_32px] 2xl:grid-cols-[300px_1fr_32px]",

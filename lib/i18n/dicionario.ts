@@ -10359,6 +10359,12 @@ export const DICIONARIO: Traducoes = {
   'A origem aparece na ficha do contato e no filtro "Site (landing page)" da lista de contatos.': {
     es: 'El origen aparece en la ficha del contacto y en el filtro "Sitio (landing page)" de la lista de contactos.',
   },
+  Filtros: { es: "Filtros" },
+  "Ver resultados": { es: "Ver resultados" },
+  Atalhos: { es: "Atajos" },
+  "Preferências": { es: "Preferencias" },
+  "Navegação": { es: "Navegación" },
+  Tema: { es: "Tema" },
 };
 
 /**

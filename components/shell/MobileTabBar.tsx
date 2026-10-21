@@ -1,11 +1,8 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 
-import { BotaoInstalarApp } from "@/components/shell/BotaoInstalarApp";
-import { SidebarContent } from "@/components/shell/Sidebar";
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useAuth } from "@/hooks/auth/AuthProvider";
 import { useT } from "@/hooks/i18n/useT";
 import { useConversationCounts } from "@/hooks/inbox/useConversationCounts";
@@ -23,11 +20,13 @@ import { cn } from "@/lib/utils";
  * curadoria do menu). O que muda no telefone é ONDE elas moram: o polegar
  * alcança o rodapé, não a gaveta. Destino que sai do menu sai das duas.
  *
- * ─── Por que "Mais" abre o sidebar inteiro ─────────────────────────────────
+ * ─── Por que "Mais" é uma TELA, e não uma gaveta ────────────────────────────
  *
- * Esconder o que não cabe na barra transformaria o rodapé num teto. "Mais" abre
- * a mesma `SidebarContent` da gaveta: nenhuma porta some, e o app instalável
- * continua tendo todas as telas a um toque.
+ * O topo fixo do celular acabou: no lugar dele, a home abre com a marca e o
+ * filtro. Tudo o que vivia lá — busca, idioma, tema, conta, organização — e o
+ * menu inteiro passam a morar em `/app/mais`, uma tela cheia de configurações.
+ * Gaveta lateral esconde o conteúdo atrás de um gesto e não dá endereço; a
+ * tela tem URL, botão de voltar e o mesmo espaço de leitura do resto do app.
  *
  * ─── Só abaixo de `md` ─────────────────────────────────────────────────────
  *
@@ -38,7 +37,6 @@ export function MobileTabBar() {
   const t = useT();
   const pathname = usePathname();
   const { user, activeOrg } = useAuth();
-  const [maisAberto, setMaisAberto] = useState(false);
   const orgId = activeOrg?.orgId ?? null;
   const platform = user.is_platform_admin && !user.support;
 
@@ -48,7 +46,7 @@ export function MobileTabBar() {
   );
 
   // A contagem da Fila é o único número que este app sabe dizer sobre "tem
-  // coisa esperando você". É a mesma visão que a aba Conversas abre por padrão
+  // coisa esperando você". É a mesma visão que a aba Mensagens abre por padrão
   // (`unassigned`) — por isso o badge fica honesto: o número é o que você vê
   // ao tocar. Não é "mensagens não lidas", e o rótulo acessível diz isso.
   const { data: contagens } = useConversationCounts(orgId);
@@ -57,6 +55,9 @@ export function MobileTabBar() {
   function ativo(href: string): boolean {
     return pathname === href || pathname.startsWith(`${href}/`);
   }
+  const maisAtivo = ativo("/app/mais");
+  // Fora de qualquer aba (Configurações, Perfil, Conexões…), "Mais" acende:
+  // é de lá que se chega a tudo o que não coube no polegar.
   const nenhumaAbaAtiva = !abas.some((a) => ativo(a.href));
 
   return (
@@ -96,33 +97,23 @@ export function MobileTabBar() {
           );
         })}
         <li className="flex-1">
-          <Sheet open={maisAberto} onOpenChange={setMaisAberto}>
-            <SheetTrigger asChild>
-              <button
-                type="button"
-                aria-label={t("Mais opções")}
-                className={cn(
-                  "flex h-full w-full flex-col items-center justify-center gap-0.5 text-[11px] transition-colors",
-                  nenhumaAbaAtiva ? "text-accent" : "text-text-muted hover:text-foreground",
-                )}
-              >
-                <DotsThree size={22} weight={nenhumaAbaAtiva ? "bold" : "regular"} aria-hidden />
-                {t("Mais")}
-              </button>
-            </SheetTrigger>
-            <SheetContent
-              side="left"
-              className="flex w-72 max-w-[calc(100vw-2rem)] flex-col gap-0 p-0 sm:max-w-xs"
-            >
-              <SheetTitle className="sr-only">{t("Mais")}</SheetTitle>
-              <BotaoInstalarApp />
-              <SidebarContent
-                collapsed={false}
-                showCollapseControl={false}
-                onNavigate={() => setMaisAberto(false)}
-              />
-            </SheetContent>
-          </Sheet>
+          <Link
+            href="/app/mais"
+            aria-current={maisAtivo ? "page" : undefined}
+            className={cn(
+              "flex h-full flex-col items-center justify-center gap-0.5 text-[11px] transition-colors",
+              maisAtivo || nenhumaAbaAtiva
+                ? "text-accent"
+                : "text-text-muted hover:text-foreground",
+            )}
+          >
+            <DotsThree
+              size={22}
+              weight={maisAtivo || nenhumaAbaAtiva ? "bold" : "regular"}
+              aria-hidden
+            />
+            {t("Mais")}
+          </Link>
         </li>
       </ul>
     </nav>

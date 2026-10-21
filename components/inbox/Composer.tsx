@@ -254,9 +254,21 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
     setPendingFile(imagem);
   }
 
+  function fecharMenu() {
+    setMenuDismissed(true);
+    // O "/" era só o gatilho do menu. Fechar sem escolher não pode deixar
+    // lixo no campo — mas um "/algo" digitado de propósito fica, para a
+    // pessoa continuar editando.
+    if (text.trim() === "/") {
+      setText("");
+      requestAnimationFrame(() => autoresize());
+    }
+    taRef.current?.focus();
+  }
+
   function onKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Escape" && menuOpen) {
-      setMenuDismissed(true);
+      fecharMenu();
       return;
     }
     if (e.key === "Enter" && !e.shiftKey) {
@@ -295,7 +307,7 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
             setDispatchFlowsOpen(true);
             setMenuDismissed(true);
           }}
-          onClose={() => setMenuDismissed(true)}
+          onClose={fecharMenu}
         />
         <div className="mb-1.5 flex gap-1">
           <button
@@ -392,12 +404,18 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
             className={cn(
               // Pill do mock ("Escreva uma mensagem…" + seta dentro).
               //
+              // `rounded-2xl`, e NÃO `rounded-full`: o campo cresce com o texto
+              // (até 40dvh) e um raio de pílula em quatro linhas vira uma
+              // elipse — a borda direita e a esquerda se afastam e o campo
+              // parece um balão. Retângulo arredondado continua o mesmo em uma
+              // ou em cinco linhas.
+              //
               // `text-base md:text-sm`: o Safari do iOS dá ZOOM na página
               // inteira quando um campo focado tem fonte menor que 16px — e o
               // campo que a pessoa mais foca no produto é justamente este. Em
               // 16px no celular o teclado abre sem empurrar a tela de lado; do
               // `md` para cima, o pill segue compacto como sempre.
-              "max-h-40 min-h-9 flex-1 resize-none rounded-full border border-input bg-background px-4 py-2 text-base md:text-sm",
+              "max-h-[40dvh] min-h-9 flex-1 resize-none rounded-2xl border border-input bg-background px-4 py-2 text-base break-words md:max-h-40 md:text-sm",
               "placeholder:text-muted-foreground focus:ring-1 focus:ring-ring focus:outline-hidden",
             )}
             disabled={mode === "note" ? isDisabled : respostaBarrada}

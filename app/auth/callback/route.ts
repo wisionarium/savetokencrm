@@ -142,7 +142,7 @@ export async function GET(request: NextRequest) {
     if (orgId) {
       (await cookies()).set("active_org", orgId, {
         httpOnly: true,
-        sameSite: "strict",
+        sameSite: "lax",
         secure: cookieSecure(),
         path: "/",
       });

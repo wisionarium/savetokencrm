@@ -32,7 +32,7 @@ export async function createClient() {
     // D-01.01: cookie name canônico alinhado ao middleware.
     cookieOptions: {
       name: "sb-deskcomm-auth",
-      sameSite: "strict",
+      sameSite: "lax",
       httpOnly: true,
       secure: cookieSecure(),
       path: "/",

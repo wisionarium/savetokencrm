@@ -58,7 +58,7 @@ export async function proxy(request: NextRequest) {
       },
       cookieOptions: {
         name: COOKIE_NAME,
-        sameSite: "strict",
+        sameSite: "lax",
         httpOnly: true,
         secure: cookieSecure(),
         path: "/",

@@ -314,10 +314,8 @@ export default function RootLayout({
         <MarcaNoNavegador />
         {/* Ícone da TELA INICIAL no iOS: o Safari não usa o manifest para isso
             — sem este `<link>` ele fotografa a página no momento em que a
-            pessoa adiciona, e o resultado é um quadrado com o que estava na
-            tela. A rota é a mesma que gera o ícone 192 do manifest (marca da
-            instalação, em runtime). */}
-        <link rel="apple-touch-icon" href="/api/pwa/icon/192" />
+            pessoa adiciona. Aponta diretamente para o ícone oficial da Tecla (180px opaco). */}
+        <link rel="apple-touch-icon" href="/marca/tecla-180.png" />
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
       <body className="min-h-screen bg-bg font-sans text-text antialiased">

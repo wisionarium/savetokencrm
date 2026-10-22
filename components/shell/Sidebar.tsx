@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useT } from "@/hooks/i18n/useT";
 import { usePathname } from "next/navigation";
 import { useMemo, useRef, useState, useTransition } from "react";
-import { CaretDoubleLeft, CaretDoubleRight, CaretDown, Gear } from "@/lib/ui/icons";
+import { CaretDoubleLeft, CaretDoubleRight, Gear } from "@/lib/ui/icons";
 import { cn } from "@/lib/utils";
 import { toggleSidebar } from "@/app/actions/shell/toggleSidebar";
 import { useAuth } from "@/hooks/auth/AuthProvider";
@@ -12,7 +12,7 @@ import { VersionFooter } from "@/components/shell/VersionFooter";
 import { LogotipoDoProduto, SimboloDoProduto } from "@/components/branding/MarcaDoProduto";
 import { logoDaMarca, marcaEhADoProduto } from "@/lib/branding";
 import { useMarcaDaInstalacao } from "@/lib/branding/contexto";
-import { GRUPO_NO_RODAPE, NAV_GROUPS, principaisDoRail, sidebarGroups } from "@/lib/navigation/registry";
+import { GRUPO_NO_RODAPE, principaisDoRail, sidebarGroups } from "@/lib/navigation/registry";
 
 interface SidebarContentProps {
   collapsed: boolean;
@@ -60,23 +60,14 @@ export function SidebarContent({
   const rail = useMemo(() => principaisDoRail(grupos), [grupos]);
 
   /**
-   * Tudo recolhido ao abrir, sempre — o clique abre um bloco por vez e vale
-   * para a sessão. Sem persistência de propósito (ver acima).
+   * Lista plana de todos os itens do sidebar — sem cabeçalhos de grupo, sem
+   * colapsar. Com poucos itens, a bandeja toda cabe sem rolar e cada destino
+   * está a um clique de distância.
    */
-  // Tudo recolhido ao abrir o app, sempre: quem abre expande um bloco por
-  // vez. Sem leitura de `localStorage` de propósito — preferência salva
-  // reabriria os blocos no próximo acesso e a bandeja voltaria cheia.
-  const [gruposFechados, setGruposFechados] = useState<Set<string>>(
-    () => new Set(NAV_GROUPS.map((g) => g.id)),
+  const itensPlanos = useMemo(
+    () => grupos.flatMap(({ items }) => items),
+    [grupos],
   );
-  function toggleGrupo(id: string) {
-    setGruposFechados((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }
 
   const brand = useMarcaDaInstalacao();
   /**
@@ -178,11 +169,11 @@ export function SidebarContent({
         )}
       </div>
       {/*
-        Grupos recolhidos por padrão (só Atendimento abre): o menu inicial
-        cabe sem rolar em qualquer altura, e cada bloco abre com um clique.
-        Sem hubs no meio — todo destino do grupo aparece no próprio bloco.
+        Lista plana — todos os itens do sidebar expostos, sem cabeçalhos de
+        grupo nem colapsar. Com poucos destinos, a bandeja cabe sem rolar e
+        cada porta está a um clique de distância.
       */}
-      <nav className="flex-1 space-y-2 overflow-y-auto p-2" aria-label={t("Navegação principal")}>
+      <nav className="flex-1 space-y-1 overflow-y-auto p-2" aria-label={t("Navegação principal")}>
         {/*
           RAIL (mock do dono): recolhido, UM ícone por grupo — o principal, e o
           clique NAVEGA direto para ele. Expandir no clique seria brigar com o
@@ -222,60 +213,31 @@ export function SidebarContent({
             })}
           </ul>
         ) : (
-          grupos.map(({ group, items }) => {
-            const tituloId = `nav-grupo-${group.id}`;
-            const aberto = !gruposFechados.has(group.id);
-            return (
-              <div key={group.id} className="space-y-1">
-                <h2 id={tituloId}>
-                  <button
-                    type="button"
-                    onClick={() => toggleGrupo(group.id)}
-                    aria-expanded={aberto}
-                    className="flex w-full items-center justify-between rounded-md px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent/40 hover:text-foreground"
+          <ul className="space-y-1">
+            {itensPlanos.map((item) => {
+              const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+              const Icon = item.icon;
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    aria-current={isActive ? "page" : undefined}
+                    onClick={onNavigate}
+                    className={cn(
+                      "relative flex items-center gap-3 rounded-md px-3 py-1 text-sm transition-colors",
+                      isActive
+                        ? "bg-accent text-accent-foreground"
+                        : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
+                    )}
                   >
-                    {t(group.label)}
-                    <CaretDown
-                      size={12}
-                      weight="bold"
-                      className={cn(
-                        "shrink-0 text-text-subtle transition-transform",
-                        !aberto && "-rotate-90",
-                      )}
-                      aria-hidden
-                    />
-                  </button>
-                </h2>
-                {aberto && (
-                  <ul aria-labelledby={tituloId} className="space-y-1">
-                    {items.map((item) => {
-                      const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
-                      const Icon = item.icon;
-                      return (
-                        <li key={item.href}>
-                          <Link
-                            href={item.href}
-                            aria-current={isActive ? "page" : undefined}
-                            onClick={onNavigate}
-                            className={cn(
-                              "relative flex items-center gap-3 rounded-md px-3 py-1 text-sm transition-colors",
-                              isActive
-                                ? "bg-accent text-accent-foreground"
-                                : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
-                            )}
-                          >
-                            <Icon size={18} weight={isActive ? "fill" : "regular"} aria-hidden />
-                            <span className="truncate">{t(item.label)}</span>
-                            {item.healthDot && <ConnectionHealthDot className="ml-auto" />}
-                          </Link>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </div>
-            );
-          })
+                    <Icon size={18} weight={isActive ? "fill" : "regular"} aria-hidden />
+                    <span className="truncate">{t(item.label)}</span>
+                    {item.healthDot && <ConnectionHealthDot className="ml-auto" />}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
         )}
       </nav>
       <div className="border-t p-2">

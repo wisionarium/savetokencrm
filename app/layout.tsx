@@ -3,6 +3,7 @@ import { Atkinson_Hyperlegible, IBM_Plex_Mono } from "next/font/google";
 import { headers } from "next/headers";
 import { Toaster } from "sonner";
 import { coresDaBarraDoNavegador } from "@/lib/branding/barra-do-navegador";
+import { iconesDoApp } from "@/lib/branding/icones-do-app";
 import { MarcaDaInstalacaoProvider } from "@/lib/branding/contexto";
 import { cssDaMarca } from "@/lib/branding/css";
 import {
@@ -114,7 +115,14 @@ export async function generateMetadata(): Promise<Metadata> {
     // `/icon` faz o pedido ir para `app/icon.tsx`, que desenha a marca da
     // instalação em runtime — ver o cabeçalho daquele arquivo para por que ele
     // não pode ser um arquivo estático em `public/`.
-    icons: { icon: "/icon" },
+    //
+    // `apple` é o ícone da TELA DE INÍCIO do iOS, que NÃO lê o manifest. Sem
+    // ele, o iPhone usa uma miniatura da página. Com logo de arte (Tecla), o
+    // caminho é um PNG opaco de 180 px — transparência o iOS pinta de preto.
+    icons: {
+      icon: "/icon",
+      apple: iconesDoApp(name, marca.logoUrl).apple,
+    },
   };
 }
 

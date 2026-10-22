@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 
+import { iconesDoApp } from "@/lib/branding/icones-do-app";
 import { marcaDaSaida, NEUTROS_DE_SAIDA } from "@/lib/branding/saida";
 import { NAV_CATALOG } from "@/lib/navigation/catalogo";
 import { ABAS_MOVEIS, rotuloDaAba } from "@/lib/navigation/mobile";
@@ -37,6 +38,7 @@ export const dynamic = "force-dynamic";
 
 export default async function manifest(): Promise<MetadataRoute.Manifest> {
   const marca = await marcaDaSaida(null);
+  const icones = iconesDoApp(marca.nome, marca.logoUrl);
   return {
     id: "/app",
     name: marca.nome,
@@ -53,11 +55,13 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     categories: ["business", "productivity"],
     icons: [
       // `any` para a aba/tela inicial; `maskable` para o Android recortar o
-      // ladrilho sem comer a marca ao meio. O mesmo arquivo serve aos dois
-      // porque o desenho é centralizado com respiro (ver `app/api/pwa/icon/`).
-      { src: "/api/pwa/icon/192", sizes: "192x192", type: "image/png", purpose: "any" },
-      { src: "/api/pwa/icon/512", sizes: "512x512", type: "image/png", purpose: "any" },
-      { src: "/api/pwa/icon/512", sizes: "512x512", type: "image/png", purpose: "maskable" },
+      // ladrilho sem comer a marca ao meio. Quando a instalação é a Tecla sem
+      // logo próprio, os quatro caminhos são PNG de verdade (arte não se
+      // desenha com uma letra); nas demais marcas, a rota desenha a inicial em
+      // runtime — a regra de precedência mora em `lib/branding/icones-do-app.ts`.
+      { src: icones.any192, sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: icones.any512, sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: icones.maskable512, sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
     // Atalhos do toque longo no ícone instalado. Sao os MESMOS destinos das
     // abas de baixo (`ABAS_MOVEIS`) — derivados, nao uma segunda curadoria. Se o

@@ -48,9 +48,7 @@ function comoPapel(role: ActiveOrg["role"]) {
 
 afterEach(cleanup);
 
-function expandirGrupo(nome: string) {
-  fireEvent.click(screen.getByRole("button", { name: nome }));
-}
+
 
 describe("Sidebar plano e desagrupado", () => {
   it("renderiza todos os itens do menu diretamente expostos, sem cabeçalhos colapsáveis", () => {
@@ -60,7 +58,6 @@ describe("Sidebar plano e desagrupado", () => {
     expect(screen.getByRole("link", { name: /Inbox/ })).toHaveAttribute("href", "/app/inbox");
     expect(screen.getByRole("link", { name: "Contatos" })).toHaveAttribute("href", "/app/contacts");
     expect(screen.getByRole("link", { name: "Tarefas" })).toHaveAttribute("href", "/app/tasks");
-    expect(screen.getByRole("link", { name: "Produtos" })).toHaveAttribute("href", "/app/products");
     expect(screen.getByRole("link", { name: "Respostas rápidas" })).toHaveAttribute("href", "/app/templates");
     expect(screen.getByRole("link", { name: "Galeria" })).toHaveAttribute("href", "/app/galeria");
     expect(screen.getByRole("link", { name: "Fluxos" })).toHaveAttribute("href", "/app/ai/fluxos");
@@ -69,6 +66,8 @@ describe("Sidebar plano e desagrupado", () => {
   it("itens removidos e legados não aparecem no menu", () => {
     comoPapel("admin");
     render(<Sidebar collapsed={false} />);
+    expect(screen.queryByRole("link", { name: "Kanban" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Produtos" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Agentes" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Alertas" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Desempenho" })).toBeNull();

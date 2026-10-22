@@ -1,5 +1,5 @@
 import { LogotipoDoProduto } from "@/components/branding/MarcaDoProduto";
-import { marcaEhADoProduto } from "@/lib/branding";
+import { logoDaMarca, marcaEhADoProduto } from "@/lib/branding";
 import { marcaDaSaida } from "@/lib/branding/saida";
 import { createClient } from "@/lib/supabase/server";
 import { IdiomaProvider } from "@/lib/i18n/IdiomaProvider";
@@ -79,7 +79,17 @@ export default async function PublicLayout({ children }: { children: React.React
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 data-testid="logo-da-fachada"
-                src={marca.logoUrl}
+                src={logoDaMarca(marca.nome, marca.logoUrl) ?? marca.logoUrl ?? ""}
+                alt={marca.nome}
+                className="h-10 w-auto max-w-[12rem] object-contain"
+              />
+            </div>
+          ) : logoDaMarca(marca.nome, marca.logoUrl) ? (
+            <div className="flex justify-center">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                data-testid="logo-da-fachada"
+                src={logoDaMarca(marca.nome, marca.logoUrl)!}
                 alt={marca.nome}
                 className="h-10 w-auto max-w-[12rem] object-contain"
               />

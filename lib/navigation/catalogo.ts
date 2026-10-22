@@ -112,14 +112,6 @@ export const NAV_CATALOG = [
     sidebar: true,
   },
   {
-    href: "/app/radar",
-    label: "Kanban",
-    description: "Quem esfriou e ainda está aberto — o que corre risco de morrer sem resposta.",
-    icon: "ClockCountdown",
-    group: "atendimento",
-    sidebar: true,
-  },
-  {
     // Renomeado de "Templates": estes são scripts do atendente, consumidos pelo
     // Composer do inbox. O nome "Templates" fica livre para os da Meta (HSM),
     // onde é o termo técnico correto.
@@ -151,24 +143,6 @@ export const NAV_CATALOG = [
   // menu fica com Contatos, Tarefas e Produtos; o rail passa a usar Contatos
   // como principal do grupo.
   {
-    // ⚠️ ERA "Kanban", e a URL continua sendo. O nome saiu da interface porque o
-    // produto tinha CINCO vocabulários para a mesma coisa — "Kanban" no menu,
-    // "Pipelines" no título desta tela, "Funis" no menu ao lado, "funil" em todo
-    // o corpo dela e "quadro" no onboarding inteiro. Três deles no mesmo
-    // viewport: o <h1> dizia "Pipelines", o estado vazio dizia "Sem pipelines
-    // configurados" e o botão embaixo dizia "Criar meu primeiro funil".
-    //
-    // Ficou "Funis" porque é o que esta tela É: a lista dos funis, de onde se
-    // abre o quadro de cada um. "Pipeline" é palavra de quem construiu o
-    // sistema; "funil de vendas" é palavra de quem vende.
-    href: "/app/kanban",
-    label: "Funis",
-    description: "Seus funis de venda — clique em um para abrir o quadro de clientes.",
-    icon: "Kanban",
-    group: "crm",
-    section: "O dia a dia da venda",
-  },
-  {
     href: "/app/contacts",
     label: "Contatos",
     description: "As pessoas do outro lado da conversa e seu histórico.",
@@ -190,51 +164,6 @@ export const NAV_CATALOG = [
     group: "crm",
     section: "O dia a dia da venda",
     sidebar: true,
-  },
-  {
-    // ⚠️ Esta tela nasceu porque a FERRAMENTA já existia sem ela. O agente de IA
-    // vinha com "procurar produto na loja" ligada por padrão, lendo uma tabela
-    // que ninguém nunca preencheu — e o efeito não era silêncio: era o agente
-    // respondendo "não tenho nada com esse nome" para uma loja de estoque cheio.
-    //
-    // Fica no grupo do CRM, e não em Configurações, porque o catálogo é insumo
-    // de VENDA: ele existe para o agente responder preço na conversa.
-    //
-    // ⚠️ ESTA FRASE DIZIA "consultar preço é trabalho de quem ATENDE, todo dia",
-    // e era o argumento para o `sidebar: true`. Ela se contradizia com a própria
-    // descrição do destino, uma linha abaixo: quem responde o preço é o
-    // atendente de IA, dentro do Inbox. O humano não abre esta tela para
-    // vender — abre para cadastrar o que vende.
-    href: "/app/products",
-    label: "Produtos",
-    description: "O catálogo da loja, com o preço que o atendente de IA responde.",
-    icon: "Storefront",
-    group: "crm",
-    section: "Preparar a venda",
-    sidebar: true,
-  },
-  {
-    // A promessa que o comentário da Agenda fazia desde que ela nasceu. Aqui se
-    // decide O QUE se pode marcar, quanto dura e quem atende — e é isto que a
-    // tela de marcar e o agente de IA oferecem ao cliente.
-    //
-    // Nasceu porque a `calendar_event_types` tinha dez categorias no CHECK,
-    // duração, buffers e antecedência mínima, e NÃO havia como criar ou editar
-    // um tipo por lugar nenhum: a organização recebia três semeados e ficava com
-    // eles para sempre.
-    href: "/app/settings/tenant/agenda",
-    label: "Tipos de agendamento",
-    description: "O que se pode marcar, quanto dura, onde acontece e quem atende.",
-    icon: "CalendarBlank",
-    group: "organizacao",
-    // "Sua empresa", junto de Atendimento e Empresa: é configuração do NEGÓCIO,
-    // não da conta de quem está logado. O gate `navegacao-registry` cobra a
-    // seção em todo grupo que tem hub, e sem ela o destino não aparece no hub.
-    section: "Sua empresa",
-    // SEM `sidebar`, como as outras DEZ entradas de "organizacao": este grupo
-    // tem hub, e se chega às telas dele por "Configurações". Eu tinha posto
-    // `sidebar: true` e a cerca reprovou dizendo "a tela existe e não tem porta
-    // na navegação" — a porta existia, era outra.
   },
   {
     // Estava enterrado em Configurações e ninguém sabia que existia — o achado
@@ -292,41 +221,6 @@ export const NAV_CATALOG = [
     group: "fluxos",
     minRole: "manager",
   },
-  {
-    // Em Configurações desde 2026-10-06 (decisão do dono): roteador é
-    // configuração sensível — qual agente pega qual conversa — e mora no hub
-    // da empresa, ao lado de Distribuição de atendimento.
-    href: "/app/ai/routers",
-    label: "Roteadores",
-    description: "Qual agente pega qual conversa, e quando o humano assume.",
-    icon: "Signpost",
-    group: "organizacao",
-    section: "Sua empresa",
-    minRole: "manager",
-  },
-  {
-    href: "/app/ai/credentials",
-    label: "Credenciais",
-    description: "A chave do provedor de IA que os agentes usam para pensar.",
-    icon: "Key",
-    group: "organizacao",
-    section: "Sua empresa",
-    minRole: "manager",
-  },
-  {
-    // O sistema chama modelo em 23 lugares e, até esta tela, a escolha vivia
-    // espalhada por três pilhas de código e sete variáveis de ambiente — não
-    // havia onde responder "quem usa IA aqui, e com qual chave?".
-    // Em Configurações desde 2026-10-06 (decisão do dono): a chave do provedor
-    // é credencial sensível e mora no hub da empresa, junto de Credenciais.
-    href: "/app/ai/providers",
-    label: "Provedores",
-    description: "Qual inteligência atende cada parte do sistema — e o que acontece se ela falhar.",
-    icon: "Plugs",
-    group: "organizacao",
-    section: "Sua empresa",
-    minRole: "manager",
-  },
   // ---- Canais — por onde as mensagens entram e saem ----
   //
   // Desde 2026-10-06 (decisão do dono) este grupo não ocupa linha no menu: as
@@ -376,19 +270,6 @@ export const NAV_CATALOG = [
     // ⚠️ O grupo "canais" não tem hub, então o ⌘K passa a ser a ÚNICA porta
     // navegável. Para voltar a mostrá-la, basta devolver `sidebar: true`.
   },
-  {
-    // Em Configurações desde 2026-10-06 (decisão do dono): captação e
-    // automações se configuram uma vez, ao lado de API Tokens — é a mesma
-    // superfície sistema-a-sistema ("Dados e acesso").
-    href: "/app/webhooks",
-    label: "Webhooks",
-    description: "Avise outros sistemas quando algo acontecer aqui dentro.",
-    icon: "WebhooksLogo",
-    group: "organizacao",
-    section: "Dados e acesso",
-    minRole: "manager",
-  },
-
   // ---- Organização — conta, empresa, acesso ----
   {
     href: "/app/settings/profile",
@@ -465,80 +346,10 @@ export const NAV_CATALOG = [
     minRole: "admin",
   },
   {
-    // Mora em Organização e não em Canais de propósito: o que se configura aqui
-    // é a CONTA DE ANÚNCIOS da empresa — dinheiro e identidade comercial, ao lado
-    // de billing e API tokens. Canais é por onde se FALA com o cliente, e os dois
-    // eixos são independentes (dá para receber lead de anúncio num número servido
-    // por qualquer transporte). Ver `lib/plataformas-de-anuncio/types.ts`.
-    href: "/app/settings/conversoes",
-    label: "Conversões",
-    description:
-      "Devolver ao anúncio as vendas que ele trouxe, e marcar a origem de quem chega pelo site.",
-    icon: "ChartLineUp",
-    group: "organizacao",
-    section: "Sua empresa",
-    // `admin` pelo mesmo critério das vizinhas: o token grava na conta de
-    // anúncios da empresa, e quem o troca decide para onde vai o dinheiro de
-    // mídia. Um `manager` ficaria acima de billing na mesma prancheta.
-    minRole: "admin",
-  },
-  {
-    // Vizinha de Conversões, e SEPARADA dela de propósito. As duas conectam "a
-    // Meta" e a tentação de fundi-las é real — mas são credenciais de escopos
-    // diferentes, em tabelas diferentes (0214), com consequências opostas
-    // quando vencem: o token de leitura vencido deixa uma tela vazia, o de
-    // conversões vencido faz a empresa parar de reportar vendas sem sintoma.
-    // Uma tela só, com dois campos de token parecidos, é como se cola o token
-    // errado no campo errado e se perde uma semana achando que quebrou.
-    href: "/app/settings/meta-ads",
-    label: "Meta Ads",
-    description: "Conectar a conta de anúncios para ler o desempenho das campanhas.",
-    icon: "Megaphone",
-    group: "organizacao",
-    section: "Sua empresa",
-    // `admin` pelo mesmo critério da vizinha, mesmo o token sendo só de
-    // leitura: ele expõe orçamento e performance da conta inteira, e quem
-    // apenas LÊ a tela (`manager`) não precisa poder trocar a credencial.
-    minRole: "admin",
-  },
-  {
-    href: "/app/settings/marca",
-    label: "Marca",
-    description: "O nome e a cor que sua empresa mostra dentro do sistema.",
-    icon: "Palette",
-    group: "organizacao",
-    section: "Sua empresa",
-    // `admin` pelo mesmo motivo da linha de cima: o que se edita ali é
-    // identidade da empresa, e dá-lo a `manager` o colocaria abaixo de billing e
-    // de API tokens na mesma prancheta.
-    minRole: "admin",
-    // SEM `sidebar`: fica só no hub. Trocar a marca é tarefa de uma vez, e
-    // agrupar o menu já o fez crescer — duas telas a mais estouraram a dobra em
-    // 900px, medido pelo e2e `navegacao.spec.ts`.
-  },
-  {
-    href: "/app/settings/billing",
-    label: "Billing",
-    description: "Plano e cobrança.",
-    icon: "Receipt",
-    group: "organizacao",
-    section: "Sua empresa",
-    minRole: "admin",
-  },
-  {
     href: "/app/lgpd/requests",
     label: "LGPD",
     description: "Pedidos de exportação e exclusão de dados feitos por clientes.",
     icon: "ScalesSimple",
-    group: "organizacao",
-    section: "Dados e acesso",
-    minRole: "admin",
-  },
-  {
-    href: "/app/settings/api-tokens",
-    label: "API Tokens",
-    description: "Chaves para outro sistema conversar com o seu CRM.",
-    icon: "Lock",
     group: "organizacao",
     section: "Dados e acesso",
     minRole: "admin",
@@ -555,15 +366,6 @@ export const NAV_CATALOG = [
     group: "organizacao",
     section: "Dados e acesso",
     minRole: "manager",
-  },
-  {
-    href: "/app/extensions",
-    label: "Extensões",
-    description:
-      "Guias instalados para orientar o trabalho no CRM, com permissões e estado visíveis.",
-    icon: "PuzzlePiece",
-    group: "organizacao",
-    section: "Sua empresa",
   },
 ] as const satisfies readonly NavMetadata[];
 

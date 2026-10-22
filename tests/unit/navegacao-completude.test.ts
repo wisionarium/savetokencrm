@@ -46,6 +46,20 @@ const NAV_ALLOWLIST: Record<string, string> = {
     "porta é o rodapé de versão (VersionFooter), que aparece justamente quando há versão nova — melhor que um card fixo. Além disso é só do dono do servidor (is_platform_admin), papel que o registro não modela",
   "/app/mais":
     "tela do celular que reúne conta, preferências e o menu inteiro. É a quinta aba da barra de baixo, mas não é destino do catálogo: quem navega por ela chega aos destinos reais — ela é a porta, não uma tela de grupo",
+  "/app/radar": "tela de Kanban (radar) removida do menu lateral para simplificar a interface",
+  "/app/kanban": "tela de Funis/Kanban removida da navegação a pedido do usuário",
+  "/app/products": "tela de Produtos removida da barra lateral a pedido do usuário",
+  "/app/settings/tenant/agenda": "tela de Tipos de agendamento removida das configurações a pedido do usuário",
+  "/app/ai/routers": "tela de Roteadores removida das configurações a pedido do usuário",
+  "/app/ai/credentials": "tela de Credenciais removida das configurações a pedido do usuário",
+  "/app/ai/providers": "tela de Provedores removida das configurações a pedido do usuário",
+  "/app/webhooks": "tela de Webhooks removida das configurações a pedido do usuário",
+  "/app/settings/conversoes": "tela de Conversões removida das configurações a pedido do usuário",
+  "/app/settings/meta-ads": "tela de Meta Ads removida das configurações a pedido do usuário",
+  "/app/settings/marca": "tela de Marca removida das configurações a pedido do usuário",
+  "/app/settings/billing": "tela de Billing removida das configurações a pedido do usuário",
+  "/app/settings/api-tokens": "tela de API Tokens removida das configurações a pedido do usuário",
+  "/app/extensions": "tela de Extensões removida das configurações a pedido do usuário",
 };
 
 /** Deriva as rotas estáticas a partir dos arquivos de página que existem. */

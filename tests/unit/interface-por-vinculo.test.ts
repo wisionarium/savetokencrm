@@ -69,7 +69,7 @@ describe("interface por vínculo é apresentação", () => {
       complete,
     );
     expect(
-      interfaceTemDestino({ preset: "completa", destinos: ["/app/ai/credentials"] }, "agent"),
+      interfaceTemDestino({ preset: "completa", destinos: ["/app/settings/tenant"] }, "agent"),
     ).toBe(false);
   });
   it("token novo preserva escolha, token antigo omite e usa default na leitura", () => {

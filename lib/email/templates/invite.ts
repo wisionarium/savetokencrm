@@ -16,6 +16,7 @@
  * ter visto qualquer tela do produto.
  */
 import { NEUTROS_DE_SAIDA, type MarcaDeSaida } from "@/lib/branding/saida";
+import { ROTULO_DO_PAPEL, type Role } from "@/lib/auth/types";
 
 export interface InviteEmailOptions {
   inviterName: string;
@@ -69,7 +70,7 @@ export function buildInviteEmail(opts: InviteEmailOptions): {
     </h1>
     <p style="margin:0 0 16px;font-size:15px;line-height:1.5">
       ${escapeHtml(opts.inviterName)} convidou você como
-      <strong>${escapeHtml(opts.role)}</strong> no ${escapeHtml(marca)}.
+      <strong>${escapeHtml(ROTULO_DO_PAPEL[opts.role as Role] ?? opts.role)}</strong> no ${escapeHtml(marca)}.
     </p>
     <p style="margin:24px 0">
       <a href="${opts.acceptUrl}" style="display:inline-block;padding:12px 24px;background:${opts.marca.accent};color:${opts.marca.accentFg};border-radius:6px;text-decoration:none;font-weight:600">

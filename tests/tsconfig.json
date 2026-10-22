@@ -1,0 +1,14 @@
+{
+  "extends": "../tsconfig.typecheck.json",
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["../*"]
+    }
+  },
+  "include": [
+    "./**/*",
+    "../next-env.d.ts",
+    "../**/*.ts",
+    "../**/*.tsx"
+  ]
+}

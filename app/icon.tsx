@@ -79,31 +79,43 @@ export default async function Icon() {
   const marca = await marcaDaSaida(null);
 
   if (marcaEhADoProduto({ name: marca.nome, logoUrl: marca.logoUrl })) {
-    // 78% da aresta: o D ocupa ~75% do próprio viewBox, então sobra o mesmo
-    // respiro que a letra tem no ramo de baixo.
-    const lado = Math.round(size.width * 0.78);
-    return new ImageResponse(
-      (
-        <div
-          style={{
-            width: "100%",
-            height: "100%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: NEUTROS_DE_SAIDA.fundo,
-          }}
-        >
-          <svg viewBox={SIMBOLO.viewBox} width={lado} height={lado}>
-            <g fill={CORES_DA_MARCA.claro.simbolo} transform={SIMBOLO.transform}>
-              <path d={SIMBOLO.d} />
-              <rect {...SIMBOLO.modulo} />
-            </g>
-          </svg>
-        </div>
-      ),
-      { ...size, headers: CACHE },
-    );
+    try {
+      const fs = await import("node:fs/promises");
+      const path = await import("node:path");
+      const pngPath = path.join(process.cwd(), "public", "marca", "tecla-192.png");
+      const buffer = await fs.readFile(pngPath);
+      return new Response(buffer, {
+        headers: {
+          "content-type": "image/png",
+          ...CACHE,
+        },
+      });
+    } catch {
+      // Fallback para renderização SVG se o arquivo não estiver acessível
+      const lado = Math.round(size.width * 0.78);
+      return new ImageResponse(
+        (
+          <div
+            style={{
+              width: "100%",
+              height: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: NEUTROS_DE_SAIDA.fundo,
+            }}
+          >
+            <svg viewBox={SIMBOLO.viewBox} width={lado} height={lado}>
+              <g fill={CORES_DA_MARCA.claro.simbolo} transform={SIMBOLO.transform}>
+                <path d={SIMBOLO.d} />
+                <rect {...SIMBOLO.modulo} />
+              </g>
+            </svg>
+          </div>
+        ),
+        { ...size, headers: CACHE },
+      );
+    }
   }
 
   const letra = letraDoIcone(marca.nome);

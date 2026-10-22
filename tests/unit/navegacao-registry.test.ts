@@ -118,14 +118,9 @@ describe("sidebarGroups", () => {
     expect(hrefs).not.toContain("/app/integrations/nuvemshop");
   });
 
-  it("Funil e Etapas do funil saíram do menu, mas seguem destinos do CRM", () => {
-    // Decisão do dono: os dois saíram do bloco CRM no sidebar. Saem do MENU, não
-    // do produto — o grupo continua sendo "crm", o ⌘K continua achando e os
-    // links de dentro do produto (conversões, webhook, evolução) continuam de
-    // pé. O que NÃO pode voltar é o destino trocar de grupo nem virar destino
-    // morto; é isso que as duas primeiras asserções prendem.
+  it("Etapas do funil segue destino do CRM e Funil/Kanban saiu do registro", () => {
     expect(dest("/app/settings/tenant/pipelines").group).toBe("crm");
-    expect(dest("/app/kanban").group).toBe("crm");
+    expect(NAV_DESTINATIONS.some((d) => d.href === "/app/kanban")).toBe(false);
     const sidebar = sidebarGroups(true, null)
       .find((g) => g.group.id === "crm")
       ?.items.map((i) => i.href);
@@ -134,7 +129,7 @@ describe("sidebarGroups", () => {
     // Seguem vivos e pesquisáveis no ⌘K.
     const buscaveis = searchable(true, null).map((d) => d.href);
     expect(buscaveis).toContain("/app/settings/tenant/pipelines");
-    expect(buscaveis).toContain("/app/kanban");
+    expect(buscaveis).not.toContain("/app/kanban");
   });
 
   it("o CRM não tem hub: o sidebar traz as telas do dia a dia do grupo", () => {
@@ -142,7 +137,6 @@ describe("sidebarGroups", () => {
     expect(crm?.items.map((i) => i.href)).toEqual([
       "/app/contacts",
       "/app/tasks",
-      "/app/products",
     ]);
     expect(NAV_GROUPS.find((g) => g.id === "crm")?.hub).toBeUndefined();
   });
@@ -207,32 +201,26 @@ describe("sidebarGroups", () => {
     expect(hub).toContain("/app/audit");
   });
 
-  it("Conexões, Provedores, Roteadores e Webhooks moram no hub Configurações", () => {
-    for (const [href, grupo] of [
-      ["/app/connections", "organizacao"],
-      ["/app/ai/providers", "organizacao"],
-      ["/app/ai/routers", "organizacao"],
-      ["/app/webhooks", "organizacao"],
-    ] as const)
-      expect(dest(href).group).toBe(grupo);
+  it("Conexões mora no hub Configurações e Provedores, Roteadores e Webhooks saíram do registro", () => {
+    expect(dest("/app/connections").group).toBe("organizacao");
+    for (const href of ["/app/ai/providers", "/app/ai/routers", "/app/webhooks"])
+      expect(NAV_DESTINATIONS.some((d) => d.href === href)).toBe(false);
     const hub = hubSections("organizacao", true, null).flatMap((s) => s.items.map((i) => i.href));
-    for (const href of ["/app/connections", "/app/ai/providers", "/app/ai/routers", "/app/webhooks"])
-      expect(hub).toContain(href);
+    expect(hub).toContain("/app/connections");
+    expect(hub).not.toContain("/app/ai/providers");
   });
 });
 
 describe("hubSections", () => {
-  it("o hub do CRM é inventário: as cinco telas do grupo, nas duas seções", () => {
+  it("o hub do CRM é inventário: as telas do grupo, nas duas seções", () => {
     // As seções são a régua do sidebar escrita por extenso — o que se abre todo
     // dia contra o que se define uma vez. Lista EXATA: `toContain` deixaria uma
     // tela nova entrar sem que ninguém decidisse de que lado dela ela cai.
     const secoes = hubSections("crm", true, null);
     expect(secoes.map((s) => s.section)).toEqual(["O dia a dia da venda", "Preparar a venda"]);
     expect(secoes.flatMap((s) => s.items.map((i) => i.href))).toEqual([
-      "/app/kanban",
       "/app/contacts",
       "/app/tasks",
-      "/app/products",
       "/app/settings/tenant/pipelines",
     ]);
   });
@@ -243,7 +231,7 @@ describe("hubSections", () => {
 
   it("o hub mostra o que não está no sidebar — é inventário, não sobra", () => {
     const hrefs = hubSections("organizacao", true, null).flatMap((s) => s.items.map((i) => i.href));
-    expect(hrefs).toContain("/app/ai/providers");
+    expect(hrefs).toContain("/app/connections");
     expect(hrefs).toContain("/app/audit");
     expect(hrefs).not.toContain("/app/ai/fluxos");
   });
@@ -252,7 +240,7 @@ describe("hubSections", () => {
     const hrefs = hubSections("organizacao", VIEWER.platform, VIEWER.role).flatMap((s) =>
       s.items.map((i) => i.href),
     );
-    expect(hrefs).not.toContain("/app/settings/api-tokens");
+    expect(hrefs).not.toContain("/app/audit");
     expect(hrefs).toContain("/app/settings/profile");
   });
 
@@ -265,7 +253,7 @@ describe("hubSections", () => {
 describe("searchable", () => {
   it("expõe todo destino visível, do sidebar ou não", () => {
     const hrefs = searchable(ADMIN.platform, ADMIN.role).map((d) => d.href);
-    expect(hrefs).toContain("/app/ai/providers");
+    expect(hrefs).toContain("/app/contacts");
     expect(hrefs).toContain("/app/inbox");
   });
 

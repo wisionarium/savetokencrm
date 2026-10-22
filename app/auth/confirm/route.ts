@@ -178,7 +178,11 @@ export async function GET(request: NextRequest) {
       payload: decisao.payload,
       requestId,
     });
-    if (aceite.ok) return redirectTo("/app");
+    if (aceite.ok) {
+      if (sessaoPreservada) return redirectTo("/app");
+      await supabase.auth.signOut();
+      return redirectTo("/login?confirmed=true");
+    }
 
     // Convite revogado, ou banco fora: a tela de aceite continua existindo e
     // sabe explicar cada caso. Degradar para ela preserva exatamente o
@@ -225,5 +229,6 @@ export async function GET(request: NextRequest) {
     requestId,
   });
 
-  return redirectTo("/onboarding/welcome");
+  await supabase.auth.signOut();
+  return redirectTo("/login?confirmed=true");
 }

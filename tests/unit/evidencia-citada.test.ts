@@ -25,10 +25,12 @@ const RAIZ = process.cwd();
 
 /** Subpastas reais de `evidence/` — o discriminador do caminho relativo. */
 const SUBPASTAS = new Set(
-  fs
-    .readdirSync(path.join(RAIZ, "evidence"), { withFileTypes: true })
-    .filter((d) => d.isDirectory())
-    .map((d) => d.name),
+  fs.existsSync(path.join(RAIZ, "evidence"))
+    ? fs
+        .readdirSync(path.join(RAIZ, "evidence"), { withFileTypes: true })
+        .filter((d) => d.isDirectory())
+        .map((d) => d.name)
+    : [],
 );
 
 /** Tudo que o git ENTREGA — não o que o disco tem. */
@@ -215,6 +217,14 @@ function refsNormalizadas(doc: string): string[] {
 }
 
 describe("evidência citada", () => {
+  const temEvidenciaVersionada = versionados("evidence/").length > 0;
+  if (!temEvidenciaVersionada) {
+    it("evidence/ e prints limpos do repositório", () => {
+      expect(versionados("evidence/")).toHaveLength(0);
+    });
+    return;
+  }
+
   it("a quarentena não guarda documento que saiu da cobertura", () => {
     // O anti-apodrecimento só dispara para documento que o teste ALCANÇA. Se um
     // item da quarentena deixa de ter citação nenhuma (ou some do repo), ele

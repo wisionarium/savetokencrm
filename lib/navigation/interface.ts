@@ -19,7 +19,6 @@ export type InterfaceSettings = z.infer<typeof interfaceSettingsSchema>;
 export const INTERFACE_COMPLETA: InterfaceSettings = { preset: "completa" };
 const SIMPLIFICADA: readonly NavDestinationId[] = [
   "/app/inbox",
-  "/app/kanban",
   "/app/contacts",
   "/app/tasks",
   "/app/connections",

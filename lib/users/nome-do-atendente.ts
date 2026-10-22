@@ -49,43 +49,70 @@ import { createAdminClient } from "@/lib/supabase/admin";
  * número virar problema, o conserto é desnormalizar o nome na linha (o repo já
  * faz isso em `conversation_notes.created_by_name`), não aumentar o paralelismo.
  */
+const nomesCache = new Map<string, { nome: string | null; exp: number }>();
+
 export async function nomesDosAtendentes(
   userIds: Array<string | null | undefined>,
 ): Promise<Map<string, string | null>> {
+  const agora = Date.now();
   const unicos = [...new Set(userIds.filter((id): id is string => Boolean(id)))];
   if (unicos.length === 0) return new Map();
+
+  const resultado = new Map<string, string | null>();
+  const faltantes: string[] = [];
+
+  for (const id of unicos) {
+    const cached = nomesCache.get(id);
+    if (cached && cached.exp > agora) {
+      resultado.set(id, cached.nome);
+    } else {
+      faltantes.push(id);
+    }
+  }
+
+  if (faltantes.length === 0) {
+    return resultado;
+  }
 
   if (!isServiceRoleConfigured()) {
     // Declarado, não acidental: uma linha de log por leitura degradada, e o
     // chamador recebe um mapa VAZIO (não um mapa de nulls), para nunca confundir
     // "não consegui ler" com "esse atendente não tem nome".
     logger.info("[nome-do-atendente] sem service role: o nome do atendente não é resolvido", {
-      atendentes: unicos.length,
+      atendentes: faltantes.length,
     });
-    return new Map();
+    return resultado;
   }
 
   const admin = createAdminClient();
   const pares = await Promise.all(
-    unicos.map(async (id): Promise<readonly [string, string | null]> => {
+    faltantes.map(async (id): Promise<readonly [string, string | null]> => {
       try {
         const { data, error } = await admin.auth.admin.getUserById(id);
         if (error) {
           // O supabase-js NÃO lança aqui — é este ramo, e não o catch, que pega o
           // caso real (403 not_admin, usuário apagado, GoTrue fora do ar).
           logger.warn("[nome-do-atendente] lookup falhou", { user_id: id, erro: error.message });
+          nomesCache.set(id, { nome: null, exp: agora + 30_000 });
           return [id, null] as const;
         }
         const nome = (data?.user?.user_metadata?.full_name as string | undefined) ?? null;
+        nomesCache.set(id, { nome, exp: agora + 5 * 60_000 });
         return [id, nome] as const;
       } catch (err) {
         logger.warn("[nome-do-atendente] lookup lançou", {
           user_id: id,
           erro: err instanceof Error ? err.message : String(err),
         });
+        nomesCache.set(id, { nome: null, exp: agora + 30_000 });
         return [id, null] as const;
       }
     }),
   );
-  return new Map(pares);
+
+  for (const [id, nome] of pares) {
+    resultado.set(id, nome);
+  }
+
+  return resultado;
 }

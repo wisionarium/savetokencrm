@@ -56,7 +56,7 @@ describe("as abas do rodapé no celular", () => {
 
   it("destino que saiu do menu não volta pela barra — o caso do Funis", () => {
     const abas = abasMoveis(null, false, "viewer").map((d) => d.href);
-    expect(NAV_CATALOG.some((d) => d.href === "/app/kanban"), "Funis saiu do catálogo?").toBe(true);
+    expect((NAV_CATALOG as readonly { href: string }[]).some((d) => d.href === "/app/kanban")).toBe(false);
     expect(abas).not.toContain("/app/kanban");
   });
 

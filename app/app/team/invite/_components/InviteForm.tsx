@@ -21,6 +21,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ROLES, type Role } from "@/lib/schemas/team";
+import { ROTULO_DO_PAPEL } from "@/lib/auth/types";
+import { Copy } from "@/lib/ui/icons";
+import { copyToClipboard } from "@/lib/clipboard";
 import { descreverMotivoDaFalha } from "./motivo-da-falha";
 
 interface ResultState {
@@ -81,15 +84,15 @@ export function InviteForm() {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="role">Role</Label>
+          <Label htmlFor="role">{t("Cargo")}</Label>
           <Select value={role} onValueChange={(v) => setRole(v as Role)}>
             <SelectTrigger id="role">
-              <SelectValue />
+              <SelectValue>{t(ROTULO_DO_PAPEL[role] ?? role)}</SelectValue>
             </SelectTrigger>
             <SelectContent>
               {ROLES.map((r) => (
                 <SelectItem key={r} value={r}>
-                  {r}
+                  {t(ROTULO_DO_PAPEL[r] ?? r)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -123,15 +126,37 @@ export function InviteForm() {
                 </h2>
                 <ul className="mt-2 space-y-2 text-sm">
                   {result.sent.map((s) => (
-                    <li key={s.email} className="rounded-md border p-2">
-                      <div className="font-medium">{s.email}</div>
+                    <li key={s.email} className="flex flex-col gap-2 rounded-md border p-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-medium">{s.email}</span>
+                        {s.accept_url ? (
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            className="h-7 gap-1 text-xs"
+                            onClick={async () => {
+                              if (await copyToClipboard(s.accept_url)) {
+                                toast.success(t("Link do convite copiado!"));
+                              } else {
+                                toast.error(t("Não foi possível copiar."));
+                              }
+                            }}
+                          >
+                            <Copy size={13} />
+                            {t("Copiar link")}
+                          </Button>
+                        ) : null}
+                      </div>
                       <div className="text-xs text-muted-foreground">
                         {s.email_dispatched
-                          ? t("Email enviado.")
-                          : t("Resend não configurado — link copiável abaixo (DEV).")}
+                          ? t("Email enviado com sucesso.")
+                          : t("Envio por email desligado — copie o link acima e envie pelo WhatsApp.")}
                       </div>
-                      {!s.email_dispatched ? (
-                        <code className="mt-1 block text-xs break-all">{s.accept_url}</code>
+                      {s.accept_url ? (
+                        <code className="block rounded bg-muted p-1 text-xs break-all select-all">
+                          {s.accept_url}
+                        </code>
                       ) : null}
                     </li>
                   ))}

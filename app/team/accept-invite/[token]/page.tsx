@@ -16,6 +16,8 @@ import { createClient } from "@/lib/supabase/server";
 import { AcceptInviteForm } from "./AcceptInviteForm";
 import { idiomaDoVisitante } from "@/lib/i18n/idiomaAnonimo";
 import { traduzir } from "@/lib/i18n/dicionario";
+import { rotuloDoPapel } from "@/lib/auth/types";
+import { GoogleAuthButton } from "@/components/auth/GoogleAuthButton";
 
 export const dynamic = "force-dynamic";
 
@@ -77,29 +79,38 @@ export default async function AcceptInvitePage({ params }: PageProps) {
       <Shell>
         <h1 className="text-xl font-semibold">{t("Você foi convidado")}</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          {t("Para aceitar o convite como")} <strong>{payload.role}</strong>,{" "}
+          {t("Para aceitar o convite como")} <strong>{t(rotuloDoPapel(payload.role))}</strong>,{" "}
           {t("faça login com o email")} <strong>{payload.email}</strong>.
         </p>
-        <div className="mt-4 flex flex-wrap items-center gap-3">
-          <Link
-            href={`/login?next=${next}`}
-            className="inline-block rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
-          >
-            {t("Fazer login")}
-          </Link>
-          {/*
-            O caminho que faltava. Quem é convidado e ainda NÃO tem conta só
-            tinha "Fazer login" — então criava conta pelo caminho comum, e o
-            provisionamento, sem achar vínculo, abria uma empresa e o tornava
-            admin dela. O token viaja no link para que a conta nova já nasça
-            amarrada a este convite.
-          */}
-          <Link
-            href={`/signup?invite=${encodeURIComponent(token)}`}
-            className="text-sm underline underline-offset-4"
-          >
-            {t("Ainda não tenho conta")}
-          </Link>
+        <div className="mt-4 space-y-3">
+          <GoogleAuthButton
+            invite={token}
+            next={`/team/accept-invite/${token}`}
+            label={t("Entrar com o Google")}
+          />
+
+          <div className="relative my-2 flex items-center justify-center">
+            <div className="w-full border-t border-border" />
+            <span className="bg-card px-2 text-xs uppercase text-muted-foreground">
+              {t("ou")}
+            </span>
+            <div className="w-full border-t border-border" />
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              href={`/login?next=${next}`}
+              className="inline-block rounded-md bg-secondary px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-secondary/80"
+            >
+              {t("Fazer login")}
+            </Link>
+            <Link
+              href={`/signup?invite=${encodeURIComponent(token)}`}
+              className="text-sm underline underline-offset-4"
+            >
+              {t("Ainda não tenho conta")}
+            </Link>
+          </div>
         </div>
       </Shell>
     );
@@ -131,7 +142,7 @@ export default async function AcceptInvitePage({ params }: PageProps) {
     <Shell>
       <h1 className="text-xl font-semibold">{t("Aceitar convite")}</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        {t("Você foi convidado para entrar como")} <strong>{payload.role}</strong>.{" "}
+        {t("Você foi convidado para entrar como")} <strong>{t(rotuloDoPapel(payload.role))}</strong>.{" "}
         {t("Confirme abaixo para ativar seu acesso.")}
       </p>
       <AcceptInviteForm token={token} label={t("Aceitar convite")} pendingLabel={t("Confirmando…")} failureLabel={t("Não foi possível aceitar este convite. Ele pode ter vencido ou seu acesso foi revogado. Peça um novo link ao administrador.")} />
@@ -142,7 +153,13 @@ export default async function AcceptInvitePage({ params }: PageProps) {
 function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen items-center justify-center p-6">
-      <div className="w-full max-w-md rounded-lg border bg-card p-8 shadow-sm">{children}</div>
+      <div className="w-full max-w-md rounded-lg border bg-card p-8 shadow-sm">
+        <div className="mb-6 flex justify-start">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/marca/tecla.png" alt="Tecla" className="h-8 w-auto object-contain" />
+        </div>
+        {children}
+      </div>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-﻿import { withSentryConfig } from "@sentry/nextjs";
+import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
@@ -52,41 +52,46 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withSentryConfig(nextConfig, {
-  // For all available options, see:
-  // https://www.npmjs.com/package/@sentry/webpack-plugin#options
+const isDev = process.env.NODE_ENV !== "production";
 
-  org: "automatik-labs",
+export default isDev
+  ? nextConfig
+  : withSentryConfig(nextConfig, {
+      // For all available options, see:
+      // https://www.npmjs.com/package/@sentry/webpack-plugin#options
 
-  project: "javascript-nextjs",
+      org: "automatik-labs",
 
-  // Only print logs for uploading source maps in CI
-  silent: !process.env.CI,
+      project: "javascript-nextjs",
 
-  // For all available options, see:
-  // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
+      // Only print logs for uploading source maps in CI
+      silent: !process.env.CI,
 
-  // Upload a larger set of source maps for prettier stack traces (increases build time)
-  widenClientFileUpload: true,
+      // For all available options, see:
+      // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
 
-  // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
-  // This can increase your server load as well as your hosting bill.
-  // Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-
-  // side errors will fail.
-  tunnelRoute: "/monitoring",
+      // Upload a larger set of source maps for prettier stack traces (increases build time)
+      widenClientFileUpload: true,
 
-  webpack: {
-    // HeranÃ§a do wizard do Sentry (instrumentaÃ§Ã£o automÃ¡tica de cron monitors).
-    // Inerte aqui: o bloco `webpack:` inteiro Ã© ignorado pelo build de produÃ§Ã£o,
-    // que roda Turbopack (ver Dockerfile). Fica como resÃ­duo defensivo, nÃ£o como
-    // modo de build suportado por este repositÃ³rio.
-    // https://docs.sentry.io/product/crons/
-    automaticVercelMonitors: true,
+      // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
+      // This can increase your server load as well as your hosting bill.
+      // Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-
+      // side errors will fail.
+      tunnelRoute: "/monitoring",
 
-    // Tree-shaking options for reducing bundle size
-    treeshake: {
-      // Automatically tree-shake Sentry logger statements to reduce bundle size
-      removeDebugLogging: true,
-    },
-  },
-});
+      webpack: {
+        // Herança do wizard do Sentry (instrumentação automática de cron monitors).
+        // Inerte aqui: o bloco `webpack:` inteiro é ignorado pelo build de produção,
+        // que roda Turbopack (ver Dockerfile). Fica como resíduo defensivo, não como
+        // modo de build suportado por este repositório.
+        // https://docs.sentry.io/product/crons/
+        automaticVercelMonitors: true,
+
+        // Tree-shaking options for reducing bundle size
+        treeshake: {
+          // Automatically tree-shake Sentry logger statements to reduce bundle size
+          removeDebugLogging: true,
+        },
+      },
+    });
+

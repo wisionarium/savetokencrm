@@ -103,15 +103,13 @@ describe("o vocabulário do funil na interface", () => {
     expect(ruins.map((d) => `${d.label}: ${d.description}`)).toEqual([]);
   });
 
-  it("os dois destinos de funil têm nomes DIFERENTES", () => {
-    // Eles listavam as mesmas linhas de `crm_pipelines`, lado a lado no grupo
-    // CRM, e um deles se chamava "Kanban" — que não é o que a tela mostra.
+  it("Funis/Kanban saiu do catálogo e etapas segue com rótulo próprio", () => {
     const lista = NAV_DESTINATIONS.find((d) => d.href === "/app/kanban");
     const etapas = NAV_DESTINATIONS.find((d) => d.href === "/app/settings/tenant/pipelines");
-    expect(lista?.label).toBeTruthy();
+    expect(lista).toBeUndefined();
     expect(etapas?.label).toBeTruthy();
-    expect(lista?.label).not.toBe(etapas?.label);
   });
+
 
   it("dois itens do mesmo grupo nunca compartilham rótulo", () => {
     // A colisão que motivou a regra: com os dois chamados "Funis", o menu tinha

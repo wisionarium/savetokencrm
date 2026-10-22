@@ -105,7 +105,27 @@ export function ehSessaoAusente(error: { name?: string } | null | undefined): bo
   return error?.name === "AuthSessionMissingError";
 }
 
+const authUserMemCache = new Map<string, { user: AuthUser | null; exp: number }>();
+
+function obterChaveDaSessao(store: { getAll(): Array<{ name: string; value: string }> }): string | null {
+  const cookiesList = store.getAll();
+  const auth = cookiesList.filter((c) => c.name.startsWith("sb-"));
+  if (auth.length === 0) return null;
+  return auth.map((c) => `${c.name}=${c.value}`).join(";");
+}
+
 export const loadAuthUser = cache(async (): Promise<AuthUser | null> => {
+  const store = await cookies();
+  const chave = obterChaveDaSessao(store);
+  const agora = Date.now();
+
+  if (chave) {
+    const cached = authUserMemCache.get(chave);
+    if (cached && cached.exp > agora) {
+      return cached.user;
+    }
+  }
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -148,7 +168,10 @@ export const loadAuthUser = cache(async (): Promise<AuthUser | null> => {
       message: error.message,
     });
   }
-  if (!user) return null;
+  if (!user) {
+    if (chave) authUserMemCache.set(chave, { user: null, exp: agora + 3_000 });
+    return null;
+  }
 
   // Platform admin e Org memberships consultados em paralelo no Supabase:
   // elimina round-trip sequencial a cada requisição.
@@ -220,8 +243,14 @@ export const loadAuthUser = cache(async (): Promise<AuthUser | null> => {
   });
 
   const support = await readSupportContext(supabase);
-  const fullName = (user.user_metadata?.full_name as string | undefined) ?? null;
-  const avatarUrl = (user.user_metadata?.avatar_url as string | undefined) ?? null;
+  const fullName =
+    (user.user_metadata?.full_name as string | undefined) ??
+    (user.user_metadata?.name as string | undefined) ??
+    null;
+  const avatarUrl =
+    (user.user_metadata?.avatar_url as string | undefined) ??
+    (user.user_metadata?.picture as string | undefined) ??
+    null;
   const locale = (user.user_metadata?.locale as string | undefined) ?? null;
   // A cadeia inteira num lugar só: pessoa → organização ativa → padrão. Quem
   // consome pede `idioma` e não precisa saber que existe uma ordem.
@@ -235,7 +264,7 @@ export const loadAuthUser = cache(async (): Promise<AuthUser | null> => {
   );
   const timezone = (user.user_metadata?.timezone as string | undefined) ?? null;
 
-  return {
+  const res: AuthUser = {
     id: user.id,
     email: user.email ?? "",
     full_name: fullName,
@@ -247,6 +276,17 @@ export const loadAuthUser = cache(async (): Promise<AuthUser | null> => {
     organizations: memberships,
     support,
   };
+
+  if (chave) {
+    authUserMemCache.set(chave, { user: res, exp: agora + 15_000 });
+    if (authUserMemCache.size > 200) {
+      for (const [k, v] of authUserMemCache) {
+        if (v.exp <= agora) authUserMemCache.delete(k);
+      }
+    }
+  }
+
+  return res;
 });
 
 /**

@@ -39,6 +39,36 @@ type Traducoes = Record<string, Partial<Record<Exclude<Idioma, "pt-BR">, string>
 export const DICIONARIO: Traducoes = {
   // /admin/email — o servidor SMTP da instalação (PR #714, @betoarts, recorte).
   "Servidor de e-mail conectado e autenticado.": { es: "Servidor de correo conectado y autenticado." },
+  "Seu email foi confirmado, faça login para continuar": {
+    es: "Tu correo ha sido confirmado, inicia sesión para continuar.",
+  },
+  "Cargo": { es: "Cargo" },
+  "Link do convite copiado!": { es: "¡Enlace de invitación copiado!" },
+  "Não foi possível copiar.": { es: "No fue posible copiar." },
+  "Email enviado com sucesso.": { es: "Correo enviado con éxito." },
+  "Envio por email desligado — copie o link acima e envie pelo WhatsApp.": {
+    es: "Envío por correo desactivado — copia el enlace de arriba y envíalo por WhatsApp.",
+  },
+  "Convidado": { es: "Invitado" },
+  "Continuar com o Google": { es: "Continuar con Google" },
+  "Entrar com o Google": { es: "Iniciar sesión con Google" },
+  "Criar conta com o Google": { es: "Crear cuenta con Google" },
+  "Conectando...": { es: "Conectando..." },
+  "Não foi possível conectar com o Google.": { es: "No fue posible conectar con Google." },
+  "Erro inesperado ao conectar com o Google.": { es: "Error inesperado al conectar con Google." },
+  "ou continue com": { es: "o continúa con" },
+  "ou": { es: "o" },
+  "Foto de perfil": { es: "Foto de perfil" },
+  "Escolher da galeria": { es: "Elegir de la galería" },
+  "Enviando foto...": { es: "Subiendo foto..." },
+  "Remover foto": { es: "Eliminar foto" },
+  "Foto de perfil atualizada!": { es: "¡Foto de perfil actualizada!" },
+  "Formatos aceitos: JPG, PNG, WEBP ou GIF até 5MB.": {
+    es: "Formatos admitidos: JPG, PNG, WEBP o GIF hasta 5MB.",
+  },
+  "A imagem deve ter no máximo 5MB.": { es: "La imagen debe tener un máximo de 5MB." },
+  "Erro ao enviar foto.": { es: "Error al subir la foto." },
+  "Erro inesperado ao enviar foto.": { es: "Error inesperado al subir la foto." },
   "Preencha e salve o servidor e o remetente antes de testar.": {
     es: "Completa y guarda el servidor y el remitente antes de probar.",
   },

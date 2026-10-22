@@ -42,6 +42,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ROLES, type Role } from "@/lib/schemas/team";
+import { ROTULO_DO_PAPEL } from "@/lib/auth/types";
 import { DotsThree } from "@/lib/ui/icons";
 
 interface Props {
@@ -78,7 +79,7 @@ export function TeamMembersClient({ currentUserId, canManage }: Props) {
           <TableHeader>
             <TableRow>
               <TableHead>{t("Membro")}</TableHead>
-              <TableHead>Role</TableHead>
+              <TableHead>{t("Cargo")}</TableHead>
               <TableHead>{t("Interface")}</TableHead>
               <TableHead>{t("Status")}</TableHead>
               <TableHead>{t("Última atividade")}</TableHead>
@@ -103,21 +104,21 @@ export function TeamMembersClient({ currentUserId, canManage }: Props) {
                       }
                     >
                       <SelectTrigger
-                        className="w-[130px]"
+                        className="w-[140px]"
                         aria-label={`${t("Papel de")} ${m.full_name ?? m.email ?? m.user_id}`}
                       >
-                        <SelectValue />
+                        <SelectValue>{t(ROTULO_DO_PAPEL[m.role as Role] ?? m.role)}</SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         {ROLES.map((r) => (
                           <SelectItem key={r} value={r}>
-                            {r}
+                            {t(ROTULO_DO_PAPEL[r] ?? r)}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   ) : (
-                    <Badge variant="secondary">{m.role}</Badge>
+                    <Badge variant="secondary">{t(ROTULO_DO_PAPEL[m.role as Role] ?? m.role)}</Badge>
                   )}
                 </TableCell>
                 <TableCell>

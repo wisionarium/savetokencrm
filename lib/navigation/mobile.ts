@@ -39,7 +39,7 @@ import { NAV_DESTINATIONS, sidebarGroups, type NavDestination } from "./registry
  * ele não é destino do catálogo (é a tela que abre o menu inteiro) e a
  * catraca de `navegacao-completude` cobraria uma porta que não existe.
  */
-export const ABAS_MOVEIS = ["/app/contacts", "/app/tasks", "/app/inbox", "/app/products"] as const;
+export const ABAS_MOVEIS = ["/app/contacts", "/app/tasks", "/app/inbox"] as const;
 
 /**
  * O rótulo da barra pode divergir do catálogo de propósito — e só aqui.

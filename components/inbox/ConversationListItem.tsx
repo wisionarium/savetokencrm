@@ -244,10 +244,9 @@ export const ConversationListItem = memo(function ConversationListItem({
         {/*
           SELO DE CANAL (novo visual): o número DA EMPRESA por onde a conversa
           chegou, como emblema do avatar. Só quando há canal resolvido — sem
-          dado, sem selo (emblema sem fonte seria enfeite). Todos os providers
-          de mensagem do produto são WhatsApp (`meta_cloud`, `zernio`, `waha`
-          legado), então o emblema é único; se um dia entrar outro mensageiro,
-          este ponto vira mapa provider→ícone.
+          dado, sem selo (emblema sem fonte seria enfeite). Todos os canais
+          de mensagem do produto são WhatsApp, então o emblema é único; se um dia
+          entrar outro mensageiro, este ponto vira mapa canal→ícone.
         */}
         {canal && (
           <span

@@ -51,18 +51,20 @@ const plexMono = IBM_Plex_Mono({
  * A leitura do banco é memoizada em `lib/branding/instalacao.ts`, então as três
  * chamadas por requisição custam UMA consulta a cada TTL.
  */
-async function marcaResolvida(): Promise<{
+import { cache } from "react";
+
+const marcaResolvida = cache(async (): Promise<{
   /** A linha crua — só `EstiloDaMarca` precisa dela, para gravar o estado. */
   readonly linha: LinhaDaMarca | null;
   readonly marca: MarcaResolvida;
-}> {
+}> => {
   const linha = await marcaDaInstalacao();
   const marca = resolverMarca(
     [camadaDaInstalacao(linha), camadaDoAmbiente(env)],
     REGUA_DO_PRODUTO,
   );
   return { linha, marca };
-}
+});
 
 /**
  * Metadata dinâmica (não `export const metadata`) para a marca ser lida em RUNTIME.
@@ -119,10 +121,7 @@ export async function generateMetadata(): Promise<Metadata> {
     // `apple` é o ícone da TELA DE INÍCIO do iOS, que NÃO lê o manifest. Sem
     // ele, o iPhone usa uma miniatura da página. Com logo de arte (Tecla), o
     // caminho é um PNG opaco de 180 px — transparência o iOS pinta de preto.
-    icons: {
-      icon: "/icon",
-      apple: iconesDoApp(name, marca.logoUrl).apple,
-    },
+    icons: { icon: "/icon" },
   };
 }
 
@@ -316,9 +315,15 @@ export default function RootLayout({
             — sem este `<link>` ele fotografa a página no momento em que a
             pessoa adiciona. Aponta diretamente para o ícone oficial da Tecla (180px opaco). */}
         <link rel="apple-touch-icon" href="/marca/tecla-180.png" />
-        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        <script
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }}
+        />
       </head>
-      <body className="min-h-screen bg-bg font-sans text-text antialiased">
+      <body
+        suppressHydrationWarning
+        className="min-h-screen bg-bg font-sans text-text antialiased"
+      >
         <Providers>
           <MarcaDosClientComponents>
             <ThemeProvider>{children}</ThemeProvider>

@@ -66,10 +66,23 @@ export function ConversationList({
   // Sem filtro de cliente: TODO filtro é parâmetro do schema e roda no banco.
   // `clientFilter` era o mecanismo que permitia um filtro existir fora do contrato
   // — e foi por ele que "Não lidos" virou ilha, fora da cerca que vigia os demais.
-  const items = useMemo(
-    () => (q.data?.pages.flatMap((p) => p.data) ?? []) as ConversationWithContact[],
-    [q.data],
-  );
+  const items = useMemo(() => {
+    const raw = (q.data?.pages.flatMap((p) => p.data) ?? []) as ConversationWithContact[];
+    return [...raw].sort((a, b) => {
+      const timeA = a.last_message_at
+        ? new Date(a.last_message_at).getTime()
+        : a.created_at
+          ? new Date(a.created_at).getTime()
+          : 0;
+      const timeB = b.last_message_at
+        ? new Date(b.last_message_at).getTime()
+        : b.created_at
+          ? new Date(b.created_at).getTime()
+          : 0;
+      if (timeA !== timeB) return timeB - timeA;
+      return b.id.localeCompare(a.id);
+    });
+  }, [q.data]);
 
   // Notify parent of currently-visible IDs (for j/k nav). Must use effect
   // (not render-time call) — invoking onVisibleChange during render triggers

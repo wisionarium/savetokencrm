@@ -77,6 +77,7 @@ export async function PublicEnvScript({
 
   return (
     <script
+      suppressHydrationWarning
       // Conteúdo derivado de env do servidor (não de input do usuário).
       dangerouslySetInnerHTML={{ __html: `window.__PUBLIC_ENV__=${payload};` }}
     />

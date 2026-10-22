@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { signInWithPassword } from "@/app/actions/auth/signInWithPassword";
+import { GoogleAuthButton } from "@/components/auth/GoogleAuthButton";
 
 export function LoginForm({ next }: { next?: string }) {
   const t = useT();
@@ -97,6 +98,16 @@ export function LoginForm({ next }: { next?: string }) {
       <Button type="submit" className="w-full" disabled={isPending}>
         {isPending ? t("Entrando...") : t("Entrar")}
       </Button>
+
+      <div className="relative my-4 flex items-center justify-center">
+        <div className="w-full border-t border-border" />
+        <span className="bg-card px-2 text-xs uppercase text-muted-foreground">
+          {t("ou continue com")}
+        </span>
+        <div className="w-full border-t border-border" />
+      </div>
+
+      <GoogleAuthButton next={next} label={t("Entrar com o Google")} />
     </form>
   );
 }

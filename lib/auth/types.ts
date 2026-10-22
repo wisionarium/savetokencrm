@@ -49,12 +49,19 @@ export const PAPEIS_HUMANOS: ReadonlyArray<Role> = ["viewer", "agent", "manager"
 
 /** Rótulo pt-BR para quem configura. `ai_operator` nunca aparece em seletor de time. */
 export const ROTULO_DO_PAPEL: Record<Role, string> = {
-  viewer: "Somente leitura",
+  viewer: "Convidado",
   agent: "Atendente",
   ai_operator: "Assistente com autonomia de operação",
   manager: "Gerente",
   admin: "Administrador",
 };
+
+export function rotuloDoPapel(role: string): string {
+  if (role in ROTULO_DO_PAPEL) {
+    return ROTULO_DO_PAPEL[role as Role];
+  }
+  return role;
+}
 
 /**
  * Escopo de visualização de conversas por atendente (G4-01, spec 13 §3.5).

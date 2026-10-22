@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { signUp } from "@/app/actions/auth/signUp";
+import { GoogleAuthButton } from "@/components/auth/GoogleAuthButton";
 
 /**
  * Convite em curso: a conta está sendo criada para ACEITAR um convite, não para
@@ -251,6 +252,19 @@ export function SignupForm({ convite }: { convite?: ConviteDoSignup }) {
       <Button type="submit" className="w-full" disabled={isPending}>
         {isPending ? t("Criando conta...") : t("Criar conta")}
       </Button>
+
+      <div className="relative my-4 flex items-center justify-center">
+        <div className="w-full border-t border-border" />
+        <span className="bg-card px-2 text-xs uppercase text-muted-foreground">
+          {t("ou continue com")}
+        </span>
+        <div className="w-full border-t border-border" />
+      </div>
+
+      <GoogleAuthButton
+        invite={convite?.token}
+        label={t("Criar conta com o Google")}
+      />
     </form>
   );
 }

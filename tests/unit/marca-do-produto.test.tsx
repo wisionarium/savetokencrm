@@ -41,7 +41,7 @@ const org = {
 let contexto: { user: AuthUser; activeOrg: ActiveOrg | null } = { user: usuario, activeOrg: org };
 vi.mock("@/hooks/auth/AuthProvider", () => ({ useAuth: () => contexto }));
 
-const PADRAO: Branding = { name: DEFAULT_APP_NAME, logoUrl: null, initial: "D" };
+const PADRAO: Branding = { name: DEFAULT_APP_NAME, logoUrl: null, initial: "T" };
 
 function renderSidebar(marca: Branding, collapsed: boolean) {
   return render(
@@ -73,21 +73,19 @@ describe("marcaEhADoProduto", () => {
 });
 
 describe("o desenho na barra lateral", () => {
-  it("aberta e sem marca própria, mostra o logotipo do produto (SVG, não <img>)", () => {
+  it("aberta e sem marca própria, mostra a logo da Tecla", () => {
     renderSidebar(PADRAO, false);
-    const logotipo = screen.getByRole("img", { name: DEFAULT_APP_NAME });
-    expect(logotipo.tagName.toLowerCase()).toBe("svg");
-    // O e2e `marca-logo.spec.ts` lê "barra sem <img>" como "sem logo do
-    // revendedor"; um <img> do produto aqui faria a spec medir a coisa errada.
-    expect(document.querySelector("img")).toBeNull();
-    // Nem o nome em texto: o logotipo já o escreve.
-    expect(screen.queryByText(DEFAULT_APP_NAME)).toBeNull();
+    const img = document.querySelector("img");
+    expect(img?.getAttribute("src")).toBe("/marca/tecla.png");
+    expect(screen.getByText(DEFAULT_APP_NAME)).toBeTruthy();
   });
 
-  it("recolhida, mostra só o símbolo — e não a inicial em texto", () => {
+  it("recolhida, mostra a logo da Tecla — e não a inicial em texto", () => {
     renderSidebar(PADRAO, true);
-    expect(screen.getByRole("img", { name: DEFAULT_APP_NAME }).tagName.toLowerCase()).toBe("svg");
-    expect(screen.queryByText("D")).toBeNull();
+    const img = screen.getByRole("img", { name: DEFAULT_APP_NAME });
+    expect(img.tagName.toLowerCase()).toBe("img");
+    expect(img.getAttribute("src")).toBe("/marca/tecla.png");
+    expect(screen.queryByText("T")).toBeNull();
   });
 
   it("com nome da instalação, segue em texto — o desenho do produto não vaza", () => {

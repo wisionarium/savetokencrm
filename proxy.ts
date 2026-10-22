@@ -10,6 +10,14 @@ import {
 
 const COOKIE_NAME = "sb-deskcomm-auth";
 
+const sessionEdgeCache = new Map<string, { user: unknown; exp: number }>();
+
+function chaveDeSessaoProxy(request: NextRequest): string | null {
+  const cookiesList = request.cookies.getAll().filter((c) => c.name.startsWith("sb-"));
+  if (cookiesList.length === 0) return null;
+  return cookiesList.map((c) => `${c.name}=${c.value}`).join(";");
+}
+
 export async function proxy(request: NextRequest) {
   const response = NextResponse.next({ request: { headers: request.headers } });
 
@@ -57,11 +65,29 @@ export async function proxy(request: NextRequest) {
       },
     },
   );
+  const chave = chaveDeSessaoProxy(request);
+  const agora = Date.now();
+  let user: any = null;
 
-  // Validate JWT server-side (NEVER use getSession on backend per CLAUDE.md).
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  if (chave) {
+    const hit = sessionEdgeCache.get(chave);
+    if (hit && hit.exp > agora) {
+      user = hit.user;
+    }
+  }
+
+  if (!user) {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+    if (chave) {
+      sessionEdgeCache.set(chave, { user, exp: agora + (user ? 15_000 : 3_000) });
+      if (sessionEdgeCache.size > 200) {
+        for (const [k, v] of sessionEdgeCache) {
+          if (v.exp <= agora) sessionEdgeCache.delete(k);
+        }
+      }
+    }
+  }
 
   if (!user) {
     // API routes must respond with JSON envelope (contract: {error:{code,message}})

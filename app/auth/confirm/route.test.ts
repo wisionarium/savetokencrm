@@ -55,6 +55,7 @@ function stubSupabase(c: Cenario) {
       verifyOtp: vi.fn(async () => c.verifyOtp),
       exchangeCodeForSession: vi.fn(async () => c.verifyOtp),
       getUser: vi.fn(async () => c.getUser),
+      signOut: vi.fn(async () => undefined),
     },
   };
 }
@@ -80,7 +81,7 @@ describe("GET /auth/confirm", () => {
     );
   }
 
-  it("convite válido: grava o vínculo e entra no app, sem tela intermediária", async () => {
+  it("convite válido: grava o vínculo e redireciona para o login confirmado", async () => {
     comSupabase({ verifyOtp: { data: { user: USUARIO }, error: null }, getUser: { data: { user: null } } });
     vi.mocked(decidirConviteDoSignup).mockReturnValue({
       tipo: "convite",
@@ -94,7 +95,7 @@ describe("GET /auth/confirm", () => {
     expect(vi.mocked(aplicarConvite)).toHaveBeenCalledWith(
       expect.objectContaining({ userId: USUARIO.id, payload: PAYLOAD }),
     );
-    expect(destino(res)).toBe("/app");
+    expect(destino(res)).toBe("/login?confirmed=true");
     // Quem foi convidado NÃO ganha organização própria.
     expect(vi.mocked(ensureTenantForUser)).not.toHaveBeenCalled();
   });
@@ -166,6 +167,6 @@ describe("GET /auth/confirm", () => {
 
     expect(vi.mocked(ensureTenantForUser)).toHaveBeenCalledWith(USUARIO);
     expect(vi.mocked(aplicarConvite)).not.toHaveBeenCalled();
-    expect(destino(res)).toBe("/onboarding/welcome");
+    expect(destino(res)).toBe("/login?confirmed=true");
   });
 });

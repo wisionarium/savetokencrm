@@ -7,6 +7,7 @@ export const PUBLIC_PATHS: RegExp[] = [
   /^\/login(\/.*)?$/,
   /^\/signup$/,
   /^\/auth\/confirm$/,
+  /^\/auth\/callback$/,
   /^\/403$/,
   /^\/admin\/forbidden$/,
   /^\/404$/,

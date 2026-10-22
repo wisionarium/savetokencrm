@@ -43,13 +43,20 @@ import { useResumeAiAttendance } from "@/hooks/inbox/useResumeAiAttendance";
 import { usePauseAiAttendance } from "@/hooks/inbox/usePauseAiAttendance";
 import { useAutomaticoAtivo } from "@/hooks/ai/useAutomaticoAtivo";
 import { comandoDaConversa, ROTULO_DO_MOTIVO } from "@/lib/inbox/comando-da-conversa";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ReassignDialog } from "@/components/inbox/ReassignDialog";
 import type { ConversationWithContact } from "@/hooks/inbox/useConversationsRealtime";
 import { rotuloDoContato } from "@/lib/contacts/rotulo-do-contato";
+import { iniciaisDoContato } from "@/lib/contacts/iniciais-do-contato";
 import { phoneForDisplay } from "@/lib/channels/phone-variants";
 
 interface Props {
   conversation: ConversationWithContact;
+  /**
+   * Abre o perfil do contato. O casulo decide o destino: `Sheet` abaixo de `md`
+   * e painel direito no desktop — o mesmo gesto, dois recipientes.
+   */
+  onAbrirPerfil?: () => void;
 }
 
 /**
@@ -91,7 +98,7 @@ function lembreteEstaAtivo(snoozeUntil: string | null): boolean {
   return snoozeUntil != null && new Date(snoozeUntil).getTime() > Date.now();
 }
 
-export function ConversationHeader({ conversation }: Props) {
+export function ConversationHeader({ conversation, onAbrirPerfil }: Props) {
   const t = useT();
   const { user } = useAuth();
   const claim = useClaimConversation();
@@ -117,6 +124,27 @@ export function ConversationHeader({ conversation }: Props) {
   const c = conversation.contacts ?? null;
   const displayName = rotuloDoContato(c, t);
   const phone = c?.phone_number ? phoneForDisplay(c.phone_number) : null;
+  /**
+   * A foto vem de `/api/v1/contacts/{id}/avatar`, nunca do `storage_path` — a
+   * rota assina a URL do bucket privado, e o caminho cru não é servível. Só
+   * monta a `<img>` quando existe arquivo e o contato não está anonimizado; sem
+   * isso o navegador pediria a rota para todo contato sem foto e levaria 404 em
+   * cada um. O `AvatarFallback` cobre imagem que falha, então as iniciais nunca
+   * somem.
+   */
+  const fotoDoContato =
+    c?.id && c.avatar_storage_path && !c.is_anonymized
+      ? `/api/v1/contacts/${c.id}/avatar`
+      : null;
+  const iniciais = iniciaisDoContato(displayName, phone);
+  const avatarDoContato = (
+    <Avatar className="h-8 w-8 shrink-0">
+      {fotoDoContato ? <AvatarImage src={fotoDoContato} alt="" className="object-cover" /> : null}
+      <AvatarFallback className="bg-surface-elevated text-[11px] font-medium text-text-muted">
+        {iniciais}
+      </AvatarFallback>
+    </Avatar>
+  );
   const status = conversation.status;
   const isMineAssigned = conversation.assigned_to_user_id === user.id;
   const isOpen = status === "open" || conversation.assigned_to_user_id == null;
@@ -205,7 +233,7 @@ export function ConversationHeader({ conversation }: Props) {
     // desktop mostra folgada. Do `md` para cima, intocado.
     <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-background px-3 py-2 md:px-4 md:py-3">
       <div className="min-w-0">
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 items-center gap-2">
           {/*
             ESTRELA (placeholder, novo visual): o mock fixa conversa favorita, e
             HOJE não há campo para isso (persistir exige migration — avisado ao
@@ -220,8 +248,31 @@ export function ConversationHeader({ conversation }: Props) {
               aria-hidden
             />
           </span>
-          {/* Caixa alta por CSS, como na lista (o dado continua intacto). */}
-          <h2 className="truncate text-sm font-semibold uppercase">{displayName}</h2>
+          {/*
+            FOTO + NOME SÃO UMA PORTA SÓ (decisão do dono): tocar em qualquer um
+            dos dois abre o perfil — como no WhatsApp. No desktop o mesmo clique
+            expande o painel direito. Um botão com os dois, e não dois alvos
+            separados: dois botões dariam dois nomes acessíveis para a mesma
+            pessoa e um deles ficaria sem foco visível.
+          */}
+          {onAbrirPerfil ? (
+            <button
+              type="button"
+              onClick={onAbrirPerfil}
+              data-testid="abrir-perfil-do-contato"
+              title={t("Ver contato")}
+              className="-mx-1 flex min-h-11 min-w-0 items-center gap-2 rounded-md px-1 text-left transition-colors hover:bg-surface-elevated focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-hidden"
+            >
+              {avatarDoContato}
+              {/* Caixa alta por CSS, como na lista (o dado continua intacto). */}
+              <span className="truncate text-sm font-semibold uppercase">{displayName}</span>
+            </button>
+          ) : (
+            <>
+              {avatarDoContato}
+              <h2 className="truncate text-sm font-semibold uppercase">{displayName}</h2>
+            </>
+          )}
           <Badge variant="outline" className="h-4 px-1.5 text-[10px]">
             {t(STATUS_LABEL[status] ?? status)}
           </Badge>

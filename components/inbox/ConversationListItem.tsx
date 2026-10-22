@@ -17,6 +17,7 @@ import { ChamaDeEngajamento } from "./ChamaDeEngajamento";
 import { cn } from "@/lib/utils";
 import type { ConversationWithContact } from "@/hooks/inbox/useConversationsRealtime";
 import { rotuloDoContato } from "@/lib/contacts/rotulo-do-contato";
+import { iniciaisDoContato } from "@/lib/contacts/iniciais-do-contato";
 import { phoneForDisplay } from "@/lib/channels/phone-variants";
 
 interface Props {
@@ -81,17 +82,6 @@ const COR_DO_COMANDO: Record<string, string> = {
   ninguem: "bg-muted-foreground/60",
   encerrada: "bg-muted-foreground/30",
 };
-
-function initials(name: string | null | undefined, fallback: string): string {
-  const v = (name ?? "").trim();
-  if (!v) return fallback.slice(0, 2).toUpperCase();
-  const parts = v.split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return fallback.slice(0, 2).toUpperCase();
-  if (parts.length === 1) return (parts[0] ?? "").slice(0, 2).toUpperCase();
-  const first = parts[0]?.[0] ?? "";
-  const last = parts[parts.length - 1]?.[0] ?? "";
-  return (first + last).toUpperCase();
-}
 
 function relativeTime(iso: string | null, locale: Locale): string {
   if (!iso) return "";
@@ -241,7 +231,7 @@ export const ConversationListItem = memo(function ConversationListItem({
             />
           ) : null}
           <AvatarFallback className="bg-surface-elevated text-sm font-medium text-text-muted">
-            {initials(displayName, phoneFallback)}
+            {iniciaisDoContato(displayName, phoneFallback)}
           </AvatarFallback>
         </Avatar>
         <span

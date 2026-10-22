@@ -194,6 +194,19 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
   const [respondendo, setRespondendo] = useState<ConversationMensagem | null>(null);
 
   /**
+   * O nome/foto do cabeçalho abre o perfil — o MESMO gesto do WhatsApp.
+   *
+   * O destino é decidido no clique, e não por CSS: abaixo de `md` o perfil é o
+   * `Sheet` da ficha; do `md` para cima, é o painel direito. Passar os dois
+   * estados adiante ao mesmo tempo abriria o modal do Radix em portal sobre o
+   * desktop, onde o `Sheet` está escondido por classe mas continua montado.
+   */
+  const abrirPerfilDoContato = useCallback(() => {
+    if (window.matchMedia("(min-width: 768px)").matches) setPainelAberto(true);
+    else setFichaAberta(true);
+  }, []);
+
+  /**
    * A ORG tem automático de pé? Sobe para cá porque agora é a ABA que precisa —
    * `ConversationList` e `ConversationHeader` continuam lendo o mesmo hook, e o
    * react-query dedupa: segue sendo uma requisição só.
@@ -528,7 +541,10 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
         )}
         {selectedConversation ? (
           <>
-            <ConversationHeader conversation={selectedConversation} />
+            <ConversationHeader
+              conversation={selectedConversation}
+              onAbrirPerfil={abrirPerfilDoContato}
+            />
             <div className="relative min-h-0 flex-1 overflow-hidden">
               {/*
                 O zoom do fio é o `data-zoom-do-fio` + `--zoom-fio` daqui

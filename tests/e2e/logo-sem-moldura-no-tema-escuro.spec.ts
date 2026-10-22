@@ -1,41 +1,32 @@
 /**
- * A MOLDURA CLARA DO LOGO NO TEMA ESCURO — QUEM A RECEBE, E QUEM NÃO RECEBE.
+ * O LOGO DO OPERADOR APARECE CRU NO TEMA ESCURO — SEM MOLDURA CLARA.
  *
  * ═══ O QUE ESTA SPEC MEDE, E POR QUE ELA EXISTE ═══
  *
- * O PR #659 (@felipebnt) põe uma moldura clara por trás do logo ENVIADO por
- * quem hospeda quando o tema é escuro (`rounded-md dark:bg-white dark:px-…
- * dark:py-… dark:shadow-sm`). Sem ela, arte escura sobre `--color-surface`
- * escuro (`#1d1c17`) simplesmente some — sem erro, sem aviso, e sem nada na
- * tela dizendo que sumiu.
+ * Houve uma moldura clara por trás do logo ENVIADO por quem hospeda quando o
+ * tema era escuro (`dark:bg-white`), para arte escura não sumir contra
+ * `--color-surface` (`#1d1c17`). O chip resolvia o contraste e criava outro
+ * defeito visível: um bloco branco em volta do PNG, no menu lateral e — no
+ * celular, onde o tema segue o do sistema — na faixa da marca da home. O dono
+ * pediu o PNG como ele é; a moldura saiu de todas as superfícies.
  *
- * Já existe uma cerca para isso: `tests/unit/logo-nao-some-no-tema-escuro.ts`.
- * Ela lê a FONTE e prova que o `<img>` continua embrulhado pelo chip — e o
- * cabeçalho dela diz, em voz alta, o que ela NÃO faz:
+ * O custo, declarado: arte escura agora precisa vir preparada para os dois
+ * temas. Nada no app clareia o fundo por conta própria.
  *
- *   > O que ele NÃO faz é medir contraste num navegador — isso é Playwright com
- *   > `getComputedStyle`, e está anotado como pendência.
+ * A cerca de FONTE para essa decisão é `tests/unit/logo-sem-moldura.test.ts`.
+ * Esta spec é a medição no NAVEGADOR: ela abre a tela, escolhe o tema como uma
+ * pessoa escolhe, e pergunta ao Chromium qual cor foi pintada atrás do logo —
+ * uma classe escrita no JSX e uma classe que o Tailwind de fato compilou para o
+ * seletor de tema (`@custom-variant dark (&:where([data-theme="dark"], …))`,
+ * `app/globals.css`) são coisas diferentes, e só a segunda pinta pixel.
  *
- * Esta spec é essa pendência. Ela não relê a fonte: ela abre a tela, escolhe o
- * tema como uma pessoa escolhe, e pergunta ao NAVEGADOR qual cor foi pintada.
- * A diferença não é de rigor formal — uma classe `dark:` escrita no JSX e uma
- * classe `dark:` que o Tailwind de fato compilou para o seletor certo
- * (`@custom-variant dark (&:where([data-theme="dark"], …))`, `app/globals.css`)
- * são coisas diferentes, e só a segunda pinta pixel.
+ * ═══ A FRONTEIRA QUE CONTINUA VALENDO ═══
  *
- * ═══ A FRONTEIRA QUE A RECONCILIAÇÃO CRIOU ═══
+ *   - logo ENVIADO por quem hospeda  → desenhado cru, nos dois temas
+ *   - arte do PRODUTO (`marcaDoProduto`) → `<svg>` inline, sem moldura nenhuma
  *
- * O #659 foi escrito antes de a `main` ganhar o ramo `marcaDoProduto` (#642) —
- * a identidade PRÓPRIA do produto, um `<svg>` inline desenhado para os dois
- * temas. A reconciliação preservou os dois e disse a fronteira:
- *
- *   - logo ENVIADO por quem hospeda  → recebe a moldura (contraste desconhecido)
- *   - arte do PRODUTO (`marcaDoProduto`) → NÃO recebe (já serve os dois temas)
- *
- * O caso (5) é essa fronteira, e é o que mais importa: pôr a moldura na marca do
- * produto seria dar o remédio a quem não tem a doença — e violaria a condição
- * com que o dono aprovou a mudança ("desde que não quebre o visual que já
- * existe e está consolidado há meses").
+ * O caso (5) guarda a fronteira: pôr moldura na marca do produto seria dar o
+ * remédio a quem não tem a doença e quebraria o visual consolidado.
  *
  * ═══ A CONDIÇÃO DO DONO É MENSURÁVEL, E O CASO (6) A MEDE ═══
  *
@@ -43,20 +34,24 @@
  * enviou logo: o cabeçalho da barra lateral tem de ocupar o MESMO retângulo que
  * ocupava. O caso (6) mede `getBoundingClientRect` nos dois temas e exige
  * igualdade — e grava os números em `evidence/` para que a comparação com um
- * build ANTERIOR ao #659 seja aritmética, não impressão.
+ * build ANTERIOR seja aritmética, não impressão.
  *
- * ═══ AS TRÊS SUPERFÍCIES ═══
+ * ═══ AS QUATRO SUPERFÍCIES ═══
  *
- * O #659 toca três telas, e consertar uma só devolveria o defeito nas outras
- * duas. As três são medidas aqui:
+ * São todas as que desenham o logo do operador, e precisam concordar — mudar
+ * uma só devolve o defeito nas outras:
  *
  *   1. a barra lateral do app   (`components/shell/Sidebar.tsx`)   — casos 1,2,5,6
  *   2. a tela de entrada        (`app/(public)/layout.tsx`)        — caso 3
  *   3. a PRÉVIA da tela de marca(`components/branding/CampoDeLogo.tsx`) — caso 4
+ *   4. a faixa da marca no celular (`components/inbox/InboxFilters.tsx`) — coberta
+ *      pela cerca de fonte; aqui o tema do celular não é semeável sem viewport
+ *      de dispositivo, e o caso 1 já mede o mesmo componente de marca no tema
+ *      escuro.
  *
- * A terceira é a que mais engana: se a prévia mostrar o logo cru onde o app real
- * desenha a moldura, ela deixa de ser prévia — o operador aprova uma coisa na
- * tela de marca e recebe outra no produto.
+ * A terceira é a que mais engana: se a prévia mostrar um chip que o app real não
+ * desenha, ela deixa de ser prévia — o operador aprova uma coisa na tela de
+ * marca e recebe outra no produto.
  *
  * ═══ COMO O TEMA É ESCOLHIDO (e por que de dois jeitos) ═══
  *
@@ -155,7 +150,7 @@ function pngSolido(lado: number, cor: [number, number, number]): Buffer {
   ]);
 }
 
-/** Azul-marinho: a arte do relato — invisível contra `#1d1c17` sem a moldura. */
+/** Azul-marinho: a arte do relato original — sem contraste contra `#1d1c17`. */
 const PNG_AZUL_MARINHO = pngSolido(64, [16, 24, 64]);
 
 // ── Medição ─────────────────────────────────────────────────────────────────
@@ -168,7 +163,7 @@ interface Caixa {
 }
 
 interface Moldura {
-  /** A tag do elemento que embrulha o logo — `div` com a moldura, outra coisa sem. */
+  /** A tag do elemento que embrulha o logo — o chip quando ele existir. */
   readonly tagDoPai: string;
   readonly classeDoPai: string;
   /** `getComputedStyle().backgroundColor` do pai — o que o NAVEGADOR pintou. */
@@ -186,13 +181,13 @@ const px = (s: string): number => Number.parseFloat(s) || 0;
 /**
  * Mede o elemento que EMBRULHA o logo — o pai direto, seja ele qual for.
  *
- * O seletor é deliberadamente cego à classe da moldura. Perguntar por
- * `.dark\:bg-white` acharia o elemento pela classe que se quer provar, e passaria
- * verde num DOM onde a moldura existe mas não embrulha nada (a sabotagem do
- * "chip irmão auto-fechado" que derrubou a primeira versão da cerca unitária).
- * Partindo do `<img>` e subindo um nível, o que se mede é o que de fato está
- * atrás do logo — se a moldura for movida para um irmão, o pai medido passa a
- * ser outro e o fundo volta a ser transparente.
+ * O seletor é deliberadamente cego à classe da moldura: perguntar por
+ * `.dark\:bg-white` acharia o elemento pela classe que se quer provar — e o
+ * contrário, procurar a AUSÊNCIA, ficaria refém do nome que o próximo merge
+ * escolher. Partindo do `<img>` e subindo um nível, o que se mede é o que de fato
+ * está atrás do logo. Com o chip removido, esse pai é o cabeçalho da barra, a
+ * caixa da prévia ou o invólucro da fachada; se um chip voltar, ele é que passa a
+ * ser medido — e o fundo claro dele reprova os casos abaixo.
  */
 async function medirMoldura(logo: Locator): Promise<Moldura> {
   await expect(logo).toBeVisible({ timeout: 15_000 });
@@ -225,9 +220,10 @@ function canais(cor: string): { r: number; g: number; b: number; a: number } | n
 /**
  * "Fundo claro" medido, não adjetivado: opaco E com os três canais altos.
  *
- * O limiar é 200/255 porque a moldura do produto é `bg-white` puro (255) e o
+ * O limiar é 200/255 porque a moldura que saiu era `bg-white` puro (255) e o
  * `--color-surface` escuro é `#1d1c17` (29,28,23) — não há nada entre os dois
- * que este número precise arbitrar.
+ * que este número precise arbitrar. Um logo azul-marinho desenhado cru sobre o
+ * fundo escuro deixa o pai transparente, não claro: é isso que os casos cobram.
  */
 function fundoEClaro(cor: string): boolean {
   const c = canais(cor);
@@ -297,9 +293,7 @@ async function loginComTotp(page: Page, email: string, secret: string): Promise<
     ]);
     if (desfecho === "entrou") return;
     if (desfecho === "sem-desfecho") {
-      throw new Error(
-        `o desafio de MFA de ${email} não terminou em 60s (url=${page.url()})`,
-      );
+      throw new Error(`o desafio de MFA de ${email} não terminou em 60s (url=${page.url()})`);
     }
     await page.waitForTimeout(msUntilNextTotpWindow() + 200);
   }
@@ -363,7 +357,7 @@ async function medirCaixa(alvo: Locator): Promise<Caixa> {
 
 test.describe.configure({ mode: "serial" });
 
-test.describe("a moldura do logo no tema escuro", () => {
+test.describe("o logo sem moldura, nos dois temas", () => {
   // Cada caso faz o próprio login: `mode: "serial"` encadeia ORDEM e estado do
   // BANCO, não a sessão do navegador (as fixtures `page`/`context` são de escopo
   // de teste). Ver o comentário longo em `marca-logo.spec.ts`.
@@ -375,9 +369,7 @@ test.describe("a moldura do logo no tema escuro", () => {
     return s!;
   };
 
-  test("(1) tema ESCURO + logo ENVIADO: a barra lateral pinta a moldura clara", async ({
-    page,
-  }) => {
+  test("(1) tema ESCURO + logo ENVIADO: a barra lateral desenha o PNG cru", async ({ page }) => {
     await loginComTotp(page, creds.users.dono!.email, secret());
 
     await page.goto("/admin/marca");
@@ -398,26 +390,21 @@ test.describe("a moldura do logo no tema escuro", () => {
 
     expect(
       fundoEClaro(m.fundo),
-      `a moldura não foi pintada: o pai do <img> tem background-color=${m.fundo} ` +
-        `(tag=${m.tagDoPai}, classe="${m.classeDoPai}")`,
-    ).toBe(true);
-    expect(m.padding.every((p) => p > 0), `a moldura não tem folga: padding=${m.padding}`).toBe(
-      true,
-    );
-    expect(m.sombra, "a moldura não tem sombra").not.toBe("none");
-
-    // CONTENÇÃO, não proximidade: a moldura tem de ser MAIOR que o logo nos dois
-    // eixos e contê-lo. Uma moldura irmã (a sabotagem que derrubou a primeira
-    // versão da cerca unitária) teria fundo claro e não conteria nada.
-    expect(m.caixaDoPai.largura).toBeGreaterThan(m.caixaDoLogo.largura);
-    expect(m.caixaDoPai.altura).toBeGreaterThan(m.caixaDoLogo.altura);
-    expect(m.caixaDoPai.x).toBeLessThanOrEqual(m.caixaDoLogo.x);
-    expect(m.caixaDoPai.y).toBeLessThanOrEqual(m.caixaDoLogo.y);
+      `a barra lateral voltou a pintar uma moldura clara atrás do logo: ` +
+        `background-color=${m.fundo} (tag=${m.tagDoPai}, classe="${m.classeDoPai}")`,
+    ).toBe(false);
+    expect(m.sombra, `apareceu uma sombra de chip atrás do logo: ${m.sombra}`).toBe("none");
+    // E o que se mediu é o cabeçalho da barra, não um `<span>` de chip no meio:
+    // com a moldura de volta, o pai do `<img>` passaria a ser o embrulho branco.
+    expect(
+      m.classeDoPai,
+      `o logo está dentro de um elemento intermediário ("${m.classeDoPai}") — ` +
+        `o cabeçalho da barra é o pai direto quando não há chip`,
+    ).toContain("h-14");
+    expect(m.caixaDoLogo.largura, "o logo não foi medido com largura").toBeGreaterThan(0);
   });
 
-  test("(2) tema CLARO + logo ENVIADO: NÃO há moldura — as classes são `dark:`", async ({
-    page,
-  }) => {
+  test("(2) tema CLARO + logo ENVIADO: também sem moldura", async ({ page }) => {
     await loginComTotp(page, creds.users.dono!.email, secret());
     await page.goto("/app/inbox");
     await escolherTemaPelaTela(page, "light");
@@ -429,10 +416,10 @@ test.describe("a moldura do logo no tema escuro", () => {
 
     expect(
       fundoETransparente(m.fundo),
-      `no tema claro o logo ganhou fundo pintado (${m.fundo}) — as classes deveriam ser só \`dark:\``,
+      `no tema claro o logo ganhou fundo pintado (${m.fundo})`,
     ).toBe(true);
-    expect(m.padding, "no tema claro a moldura não pode ter folga").toEqual([0, 0, 0, 0]);
-    expect(m.sombra, "no tema claro a moldura não pode ter sombra").toBe("none");
+    expect(m.sombra, "no tema claro o logo ganhou sombra").toBe("none");
+    expect(m.classeDoPai, "o logo saiu do pai direto no tema claro").toContain("h-14");
   });
 
   test("(3) a TELA DE ENTRADA repete as duas medidas, sem sessão nenhuma", async ({ browser }) => {
@@ -443,10 +430,7 @@ test.describe("a moldura do logo no tema escuro", () => {
       const contexto = await browser.newContext();
       try {
         const pagina = await contexto.newPage();
-        await pagina.addInitScript(
-          (t) => window.localStorage.setItem("deskcomm-theme", t),
-          tema,
-        );
+        await pagina.addInitScript((t) => window.localStorage.setItem("deskcomm-theme", t), tema);
         await pagina.goto("/login");
         expect(await temaDaPagina(pagina), `a fachada não ficou em ${tema}`).toBe(tema);
 
@@ -454,53 +438,44 @@ test.describe("a moldura do logo no tema escuro", () => {
         anotar(`3-fachada-${tema}.json`, m);
         await pagina.screenshot({ path: evidencia(`3-fachada-${tema}.png`) });
 
-        if (tema === "dark") {
-          expect(
-            fundoEClaro(m.fundo),
-            `a fachada no escuro desenhou o logo CRU (fundo=${m.fundo}) — o defeito ` +
-              `volta inteiro na tela de primeira impressão`,
-          ).toBe(true);
-          expect(m.padding.every((p) => p > 0), `fachada escura sem folga: ${m.padding}`).toBe(
-            true,
-          );
-          expect(m.caixaDoPai.largura).toBeGreaterThan(m.caixaDoLogo.largura);
-          expect(m.caixaDoPai.altura).toBeGreaterThan(m.caixaDoLogo.altura);
-        } else {
-          expect(
-            fundoETransparente(m.fundo),
-            `a fachada no claro ganhou moldura (${m.fundo})`,
-          ).toBe(true);
-          expect(m.padding).toEqual([0, 0, 0, 0]);
-        }
+        expect(
+          fundoEClaro(m.fundo),
+          `a fachada no tema ${tema} pintou uma moldura clara atrás do logo ` +
+            `(fundo=${m.fundo}, pai="${m.classeDoPai}")`,
+        ).toBe(false);
+        expect(m.sombra, `a fachada no tema ${tema} ganhou sombra de chip`).toBe("none");
+        // O pai direto é o invólucro centralizador que já existia — não um chip.
+        expect(m.classeDoPai, `a fachada no tema ${tema} embrulhou o logo`).toContain(
+          "justify-center",
+        );
       } finally {
         await contexto.close();
       }
     }
   });
 
-  test("(4) a PRÉVIA da tela de marca prevê o que o app desenha", async ({ page }) => {
+  test("(4) a PRÉVIA da tela de marca prevê o que o app desenha — sem chip", async ({ page }) => {
     await loginComTotp(page, creds.users.dono!.email, secret());
     await page.goto("/admin/marca");
 
     // As duas caixas convivem no MESMO tema real (o fundo é simulado por
-    // `style`), então a condição lá é o rótulo da caixa — e é justamente por isso
-    // que a prévia pode divergir do app sem nada gritar.
-    const escura = await medirMoldura(page.locator("[data-previa-do-logo='escuro'] img"));
-    const clara = await medirMoldura(page.locator("[data-previa-do-logo='claro'] img"));
-    anotar("4-previa-escura.json", escura);
-    anotar("4-previa-clara.json", clara);
+    // `style`), então lá a pergunta não é a cor do fundo — é ESTRUTURAL: com o
+    // chip, o pai do `<img>` era o `<span>` branco; sem ele, o pai é a própria
+    // caixa `[data-previa-do-logo]`.
+    for (const caixa of ["escuro", "claro"] as const) {
+      const img = page.locator(`[data-previa-do-logo='${caixa}'] img`);
+      await expect(img).toBeVisible({ timeout: 15_000 });
+      const semChip = await img.evaluate((el) =>
+        el.parentElement?.hasAttribute("data-previa-do-logo"),
+      );
+      anotar(`4-previa-${caixa}.json`, { semChip });
+      expect(
+        semChip,
+        `a prévia da aparência ${caixa} embrulha o logo num chip que o app não desenha — ` +
+          `ela deixa de prever o que o operador recebe`,
+      ).toBe(true);
+    }
     await page.screenshot({ path: evidencia("4-previa.png"), fullPage: true });
-
-    expect(
-      fundoEClaro(escura.fundo),
-      `a prévia da aparência ESCURA mostra o logo cru (fundo=${escura.fundo}) — ela deixa ` +
-        `de prever o que o app desenha, e o operador aprova uma coisa e recebe outra`,
-    ).toBe(true);
-    expect(escura.padding.every((p) => p > 0)).toBe(true);
-    expect(
-      fundoETransparente(clara.fundo),
-      `a prévia da aparência CLARA ganhou moldura (${clara.fundo}) — o app não desenha isso`,
-    ).toBe(true);
   });
 
   test("(5) A FRONTEIRA: no escuro, a marca do PRODUTO não recebe moldura", async ({ page }) => {

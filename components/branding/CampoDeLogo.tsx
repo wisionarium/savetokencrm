@@ -313,35 +313,25 @@ export function CampoDeLogo({
                 style={{ backgroundColor: fundo }}
               >
                 {emVigor ? (
-                  // O chip claro na aparência escura é o MESMO que a barra
-                  // lateral e a tela de entrada aplicam de verdade
-                  // (`components/shell/Sidebar.tsx`, `app/(public)/layout.tsx`):
-                  // esta prévia deixaria de ser prévia se mostrasse o logo cru
-                  // onde o app real desenha um chip por baixo. Aqui não dá pra
-                  // usar a variante `dark:` do Tailwind — as duas caixas
-                  // renderizam lado a lado no MESMO tema real, simulando os
-                  // dois via `style` — então a condição é o rótulo da caixa, não
-                  // o tema da página.
-                  <span
-                    className={
-                      rotulo === t("Aparência escura")
-                        ? "rounded-md bg-white px-2 py-1 shadow-sm"
-                        : undefined
-                    }
-                  >
-                    {/* <img> e não next/image pelo mesmo motivo da barra lateral e da
-                      tela de acesso: a URL é do projeto de quem hospeda, e
-                      `next/image` exige allowlist de domínios fechada em BUILD — a
-                      imagem pré-buildada do self-host recusaria o domínio do
-                      operador. Altura fixa e largura livre para não distorcer arte
-                      de proporção desconhecida. */}
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={emVigor}
-                      alt={nomeEmVigor}
-                      className="max-h-12 w-auto max-w-full object-contain"
-                    />
-                  </span>
+                  // Sem moldura nas duas aparências: é o que o app desenha de
+                  // verdade desde que o chip `dark:bg-white` saiu da barra
+                  // lateral e da home do celular. O chip claro que esta prévia
+                  // desenhava na aparência escura virou uma promessa falsa —
+                  // deixaria de ser prévia. Aqui não dá pra usar a variante
+                  // `dark:` do Tailwind: as duas caixas renderizam lado a lado
+                  // no MESMO tema real, simulando os dois via `style`.
+                  // <img> e não next/image pelo mesmo motivo da barra lateral e da
+                  // tela de acesso: a URL é do projeto de quem hospeda, e
+                  // `next/image` exige allowlist de domínios fechada em BUILD — a
+                  // imagem pré-buildada do self-host recusaria o domínio do
+                  // operador. Altura fixa e largura livre para não distorcer arte
+                  // de proporção desconhecida.
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={emVigor}
+                    alt={nomeEmVigor}
+                    className="max-h-12 w-auto max-w-full object-contain"
+                  />
                 ) : (
                   <span
                     className="text-sm font-semibold tracking-tight"

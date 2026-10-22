@@ -105,7 +105,10 @@ describe("o desenho na barra lateral", () => {
 
   it("com logo da instalação, a imagem vence o desenho", () => {
     renderSidebar({ ...PADRAO, logoUrl: "https://cdn.exemplo.test/logo.png" }, false);
-    expect(screen.getByRole("img").tagName.toLowerCase()).toBe("img");
+    // A imagem do operador é decorativa (o nome vem escrito ao lado), então a
+    // pergunta é ao DOM — `getByRole("img")` não a veria.
+    expect(document.querySelector("img")?.tagName.toLowerCase()).toBe("img");
+    expect(document.querySelector("svg[role=img]")).toBeNull();
   });
 });
 

@@ -153,9 +153,11 @@ describe("a marca não diverge entre o SSR e a hidratação", () => {
     const noServidor = renderComAmbiente(undefined, <Sidebar collapsed={false} />);
 
     expect(noServidor).toContain(`src="${MARCA_DO_BANCO.logoUrl}"`);
-    expect(noServidor).toContain(`alt="${MARCA_DO_BANCO.name}"`);
-    // E o `<span>` de texto — o outro lado da troca de tipo — não está junto.
-    expect(noServidor).not.toContain(`>${MARCA_DO_BANCO.name}</span>`);
+    // O logo é decorativo ao lado do nome (o menu aberto mostra os dois), por
+    // isso `alt=""` — quem lê o texto já tem o nome no `<span>` adiante.
+    expect(noServidor).toContain('alt=""');
+    // E o `<span>` com o nome — o outro lado da troca de tipo — está junto.
+    expect(noServidor).toContain(`>${MARCA_DO_BANCO.name}</span>`);
   });
 });
 

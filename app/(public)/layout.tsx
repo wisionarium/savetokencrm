@@ -71,20 +71,18 @@ export default async function PublicLayout({ children }: { children: React.React
                 "primeira <img> da página", e uma asserção de negação com seletor
                 largo passa sozinha assim que outra imagem entra na tela.
               */}
-              {/* O chip `dark:bg-white` é o mesmo da barra lateral
-                (`components/shell/Sidebar.tsx`): esta tela também respeita
-                `data-theme` (o `ThemeProvider` embrulha a raiz inteira, login
-                incluso), então um logo escuro contra `--color-surface` escuro tem
-                o mesmo problema de contraste aqui. */}
-              <div className="rounded-md dark:bg-white dark:px-3 dark:py-2 dark:shadow-sm">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  data-testid="logo-da-fachada"
-                  src={marca.logoUrl}
-                  alt={marca.nome}
-                  className="h-10 w-auto max-w-[12rem] object-contain"
-                />
-              </div>
+              {/* Sem moldura: o PNG de quem hospeda aparece como é, também no
+                tema escuro. O chip `dark:bg-white` que existia aqui deixava um
+                bloco branco em volta do logo e saiu junto com o da barra lateral
+                (`components/shell/Sidebar.tsx`) — esta tela precisa desenhar o
+                MESMO que o app desenha. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                data-testid="logo-da-fachada"
+                src={marca.logoUrl}
+                alt={marca.nome}
+                className="h-10 w-auto max-w-[12rem] object-contain"
+              />
             </div>
           ) : marcaEhADoProduto({ name: marca.nome, logoUrl: null }) ? (
             <div className="flex justify-center">

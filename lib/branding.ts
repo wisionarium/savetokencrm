@@ -96,6 +96,31 @@ export function marcaEhADoProduto(marca: Pick<Branding, "name" | "logoUrl">): bo
   return marca.logoUrl === null && marca.name === DEFAULT_APP_NAME;
 }
 
+/**
+ * O ativo da Tecla — o logo que a instalação deste fork mostra quando se chama
+ * "Tecla" e ainda NÃO configurou um logo pela tela de marca (o caso de fábrica
+ * do fork). Fica em `public/marca/` e não em `public/` solto porque é um ativo
+ * de marca, não do produto: quem trocar o nome no `.env` deixa de vê-lo.
+ */
+export const LOGO_DA_TECLA = "/marca/tecla.png";
+
+/**
+ * O logo que a casca deve desenhar para um nome já resolvido.
+ *
+ * Precedência: logo configurado (organização > instalação) > ativo da Tecla >
+ * `null` (aí a casca cai no desenho do produto ou no nome em texto). A regra
+ * vive aqui, e não duplicada em cada tela, porque a barra lateral e a home do
+ * celular mostram a MESMA marca — quem divergir trata o mesmo operador como
+ * duas instalações diferentes.
+ *
+ * O nome não é comparado ao `DEFAULT_APP_NAME`: este fallback só existe para a
+ * instalação batizada de "Tecla". Quem configurou outro nome não o recebe.
+ */
+export function logoDaMarca(nome: string, logoUrl: string | null): string | null {
+  if (logoUrl) return logoUrl;
+  return /^tecla$/i.test(nome.trim()) ? LOGO_DA_TECLA : null;
+}
+
 export function branding(): Branding {
   if (typeof window !== "undefined") {
     const runtime = window.__PUBLIC_ENV__;

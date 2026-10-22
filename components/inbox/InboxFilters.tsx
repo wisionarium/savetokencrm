@@ -22,6 +22,7 @@ import { useAuth } from "@/hooks/auth/AuthProvider";
 import { useContactTagVocabulary } from "@/hooks/contacts/useContactTagVocabulary";
 import { useConversationTagVocabulary } from "@/hooks/inbox/useConversationTags";
 import { useConversationCounts } from "@/hooks/inbox/useConversationCounts";
+import { logoDaMarca } from "@/lib/branding";
 import { useMarcaDaInstalacao } from "@/lib/branding/contexto";
 import type { Role, VisibilityMode } from "@/lib/auth/types";
 
@@ -153,10 +154,10 @@ export function InboxFilters({ value, onChange }: Props) {
    */
   const marca = useMarcaDaInstalacao();
   const nomeDaMarca = activeOrg?.marca?.nome ?? marca.name;
-  const logoDaMarca =
-    activeOrg?.marca?.logoUrl ||
-    marca.logoUrl ||
-    (/^tecla$/i.test(nomeDaMarca) ? "/marca/tecla.png" : null);
+  // A MESMA regra da barra lateral (`logoDaMarca`): organização > instalação >
+  // ativo da Tecla > nada. Centralizada para as duas telas não divergirem — esta
+  // faixa e a barra mostram a mesma marca para a mesma pessoa.
+  const logoDaHome = logoDaMarca(nomeDaMarca, activeOrg?.marca?.logoUrl || marca.logoUrl);
   const [filtrosAbertos, setFiltrosAbertos] = useState(false);
   const refinamentosAtivos = [
     value.leitura !== "todas",
@@ -463,18 +464,20 @@ export function InboxFilters({ value, onChange }: Props) {
       */}
       <div className="flex items-center justify-between gap-2 px-3 pt-2 pb-1 md:hidden">
         <div className="flex min-w-0 items-center gap-2">
-          {logoDaMarca && (
-            <span className="flex h-8 shrink-0 items-center rounded-md dark:bg-white dark:px-1.5">
-              {/* <img> e não next/image: a URL vem do banco/.env e não há
-                  allowlist de domínios para o logo de quem hospeda. Alt vazio
-                  porque o nome ao lado já é o rótulo da marca. */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={logoDaMarca}
-                alt=""
-                className="h-7 w-auto max-w-[8rem] object-contain"
-              />
-            </span>
+          {logoDaHome && (
+            // Sem moldura: o PNG de quem hospeda aparece como é. Havia um chip
+            // branco no tema escuro (`dark:bg-white`), para salvar arte escura
+            // contra o fundo quase-preto; ele aparecia como um bloco branco em
+            // volta do logo no celular e saiu a pedido do dono.
+            // <img> e não next/image: a URL vem do banco/.env e não há
+            // allowlist de domínios para o logo de quem hospeda. Alt vazio
+            // porque o nome ao lado já é o rótulo da marca.
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={logoDaHome}
+              alt=""
+              className="h-7 w-auto max-w-[8rem] shrink-0 object-contain"
+            />
           )}
           <span className="truncate text-lg font-semibold tracking-tight">{nomeDaMarca}</span>
         </div>

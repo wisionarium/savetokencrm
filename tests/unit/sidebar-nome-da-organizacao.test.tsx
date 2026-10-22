@@ -44,8 +44,9 @@ vi.mock("@/components/shell/VersionFooter", () => ({ VersionFooter: () => null }
  * aqui é o jeito honesto de simular "o operador gravou um logo na tela de
  * marca": deste lado da fronteira é exatamente o que o layout raiz faz.
  *
- * `logoUrl: null` no padrão porque com logo a barra mostra a imagem NO LUGAR do
- * texto — os três primeiros casos, que medem nome, não mediriam nada.
+ * `logoUrl: null` no padrão porque com logo a barra desenha a imagem ao lado do
+ * texto — os primeiros casos, que medem nome, continuariam medindo o nome, mas
+ * com um `<img>` no meio da árvore.
  */
 let marcaDaInstalacao: Branding = {
   name: "Sistema do Revendedor",
@@ -130,19 +131,31 @@ describe("o logo na barra lateral", () => {
 
   afterEach(() => {
     marcaDaInstalacao = { name: "Sistema do Revendedor", logoUrl: null, initial: "S" };
+    contexto = { user: usuario, activeOrg: org };
   });
 
-  const imagem = () => screen.getByRole("img");
+  /**
+   * O `<img>` da marca, sem depender de papel acessível.
+   *
+   * Aberta, ele é DECORATIVO (`alt=""`) porque o nome está escrito ao lado — e
+   * `getByRole("img")` não acha `alt=""`. Recolhida, ele é a única marca da
+   * tela e volta a nomear a empresa pelo `alt`.
+   */
+  const imagem = () => document.querySelector("img");
 
-  it("com logo da instalação, a barra desenha a imagem no lugar do nome", () => {
+  it("com logo da instalação, a barra desenha a imagem E o nome ao lado", () => {
     marcaDaInstalacao = { ...marcaDaInstalacao, logoUrl: LOGO_DA_INSTALACAO };
     contexto = { user: usuario, activeOrg: org };
     renderSidebar({ collapsed: false });
 
-    expect(imagem().getAttribute("src")).toBe(LOGO_DA_INSTALACAO);
-    // A ausência importa: uma barra que mostrasse imagem E nome passaria só na
-    // asserção de cima, e o cabeçalho tem 56px de altura para um dos dois.
-    expect(screen.queryByText("Sistema do Revendedor")).toBeNull();
+    expect(imagem()?.getAttribute("src")).toBe(LOGO_DA_INSTALACAO);
+    // O logo do fork é um SÍMBOLO, não um logotipo que soletre a marca: o nome
+    // continua escrito ao lado. A imagem fica decorativa para o leitor de tela
+    // ouvir o nome uma vez só.
+    expect(screen.getByText("Sistema do Revendedor")).toBeTruthy();
+    expect(imagem()?.getAttribute("alt")).toBe("");
+    // A arte do produto é o outro ramo — com logo configurado ela não vaza.
+    expect(document.querySelector("svg[role=img]")).toBeNull();
   });
 
   it("o logo da organização SUBSTITUI o da instalação", () => {
@@ -153,10 +166,38 @@ describe("o logo na barra lateral", () => {
     };
     renderSidebar({ collapsed: false });
 
-    expect(imagem().getAttribute("src")).toBe(LOGO_DA_ORG);
-    // O `alt` acompanha a imagem que está ali: com o logo da org, legendar com o
-    // nome do revendedor descreveria a marca errada para quem usa leitor de tela.
-    expect(imagem().getAttribute("alt")).toBe("Loja da Ana");
+    expect(imagem()?.getAttribute("src")).toBe(LOGO_DA_ORG);
+    // O nome ao lado acompanha a imagem que está ali: com o logo da org,
+    // legendar com o nome do revendedor descreveria a marca errada.
+    expect(screen.getByText("Loja da Ana")).toBeTruthy();
+    expect(screen.queryByText("Sistema do Revendedor")).toBeNull();
+  });
+
+  it("recolhida, mostra SÓ a imagem — e não a inicial em texto", () => {
+    // O defeito que este caso fecha: recolher o menu trocava a marca pelo "T"
+    // da inicial, mesmo com um logo configurado. Recolhida não cabe texto, mas
+    // cabe a única coisa que identifica a empresa sem ele — o logo.
+    marcaDaInstalacao = { ...marcaDaInstalacao, logoUrl: LOGO_DA_INSTALACAO };
+    contexto = { user: usuario, activeOrg: { ...org, marca: { nome: "Tecla" } } };
+    renderSidebar({ collapsed: true });
+
+    expect(imagem()?.getAttribute("src")).toBe(LOGO_DA_INSTALACAO);
+    // Sem texto ao lado, a imagem É a marca: o `alt` nomeia a empresa.
+    expect(imagem()?.getAttribute("alt")).toBe("Tecla");
+    expect(screen.queryByText("Tecla")).toBeNull();
+    expect(screen.queryByText("T")).toBeNull();
+  });
+
+  it("instalação chamada Tecla, sem logo próprio, usa o ativo da Tecla", () => {
+    // O fallback do fork: o PNG de `public/marca/tecla.png` entra no lugar do
+    // nome em texto (aberta) e da inicial (recolhida). Trocar o nome no `.env`
+    // tira o ativo da tela — ele é da Tecla, não do produto.
+    marcaDaInstalacao = { name: "Tecla", logoUrl: null, initial: "T" };
+    contexto = { user: usuario, activeOrg: null };
+    renderSidebar({ collapsed: false });
+
+    expect(imagem()?.getAttribute("src")).toBe("/marca/tecla.png");
+    expect(screen.getByText("Tecla")).toBeTruthy();
   });
 
   it("logo VAZIO na organização cai para o da instalação, não apaga a marca", () => {
@@ -168,17 +209,17 @@ describe("o logo na barra lateral", () => {
     contexto = { user: usuario, activeOrg: { ...org, marca: { logoUrl: "" } } };
     renderSidebar({ collapsed: false });
 
-    expect(imagem().getAttribute("src")).toBe(LOGO_DA_INSTALACAO);
+    expect(imagem()?.getAttribute("src")).toBe(LOGO_DA_INSTALACAO);
   });
 
   it("sem logo nenhum, continua sendo o nome — não uma imagem quebrada", () => {
-    // Guarda de vacuidade dos três de cima: se a barra desenhasse `<img>` sempre,
-    // com `src` vazio, todos passariam pelo `getByRole("img")` e o produto
-    // mostraria o ícone de imagem quebrada em toda instalação de fábrica.
+    // Guarda de vacuidade dos casos de cima: se a barra desenhasse `<img>`
+    // sempre, com `src` vazio, todos passariam e o produto mostraria o ícone de
+    // imagem quebrada em toda instalação de fábrica.
     contexto = { user: usuario, activeOrg: org };
     renderSidebar({ collapsed: false });
 
-    expect(screen.queryByRole("img")).toBeNull();
+    expect(imagem()).toBeNull();
     expect(screen.getByText("Sistema do Revendedor")).toBeTruthy();
   });
 });

@@ -10,7 +10,7 @@ import { useAuth } from "@/hooks/auth/AuthProvider";
 import { ConnectionHealthDot } from "@/components/connections/ConnectionHealthDot";
 import { VersionFooter } from "@/components/shell/VersionFooter";
 import { LogotipoDoProduto, SimboloDoProduto } from "@/components/branding/MarcaDoProduto";
-import { marcaEhADoProduto } from "@/lib/branding";
+import { logoDaMarca, marcaEhADoProduto } from "@/lib/branding";
 import { useMarcaDaInstalacao } from "@/lib/branding/contexto";
 import { GRUPO_NO_RODAPE, NAV_GROUPS, principaisDoRail, sidebarGroups } from "@/lib/navigation/registry";
 
@@ -107,44 +107,51 @@ export function SidebarContent({
    * com `??` um `""` vindo de cima apagaria o logo do revendedor em vez de
    * descer para ele — que é o contrário do que a precedência por campo promete.
    */
-  const logo = activeOrg?.marca?.logoUrl || brand.logoUrl;
+  const logo = logoDaMarca(nome, activeOrg?.marca?.logoUrl || brand.logoUrl);
   // Só quando NINGUÉM — nem a instalação, nem a organização — pôs marca própria:
   // é a condição de `lib/branding.ts`, avaliada sobre o que a barra vai mostrar.
-  const marcaDoProduto = marcaEhADoProduto({ name: nome, logoUrl: logo ?? null });
+  const marcaDoProduto = marcaEhADoProduto({ name: nome, logoUrl: logo });
 
   return (
     <>
       <div
         className={cn(
-          "flex h-14 items-center border-b px-4",
+          "flex h-14 items-center gap-2 border-b px-4",
           collapsed ? "justify-center" : "justify-start",
         )}
       >
-        {logo && !collapsed ? (
-          // A moldura clara vale SÓ para o logo enviado por quem hospeda. A arte
-          // do produto (ramo `marcaDoProduto`, logo abaixo) já é desenhada para os
-          // dois temas e não precisa dela — pôr a moldura ali seria dar o remédio
-          // a quem não tem a doença.
-          // Chip claro só no tema escuro: a arte enviada é de quem hospeda, sem
-          // garantia de que tenha contraste contra `--color-surface` escuro
-          // (`#1d1c17`). Sem isto, todo logo escuro/colorido — a maioria do que
-          // se sobe pensando em fundo claro — some no tema escuro (issue: logo
-          // da Dra. Mariana Nascimento, azul-marinho sobre quase-preto). O chip
-          // é condicional ao TEMA, não à cor do logo (não dá pra inspecionar
-          // pixel de uma URL externa em server component), então ele aparece
-          // para qualquer logo — inclusive um já pensado pra fundo escuro, que
-          // fica com uma moldura branca de sobra. Troca aceita: pior caso
-          // "moldura desnecessária" é sempre melhor que pior caso "logo
-          // invisível".
-          <div className="rounded-md dark:bg-white dark:px-2 dark:py-1 dark:shadow-sm">
+        {logo ? (
+          // O PNG de quem hospeda é desenhado CRU — sem moldura: mostra o logo
+          // como ele é, sobre o fundo da barra. Existia um chip branco no tema
+          // escuro (`dark:bg-white`) para salvar arte escura contra
+          // `--color-surface` (#1d1c17); ele saiu a pedido do dono — a moldura
+          // aparecia como um bloco branco em volta do logo, inclusive no celular.
+          // Arte escura agora precisa vir preparada para os dois temas.
+          //
+          // Recolhida, só a imagem (é o único desenho que cabe em 64px, e é o
+          // que substitui a inicial em texto). Aberta, imagem + nome: o logo do
+          // fork é um símbolo, não um logotipo que soletre a marca.
+          <>
             {/* <img> em vez de next/image de propósito: a URL vem de quem hospeda
               (banco ou .env), e next/image exige allowlist de domínios fechada em
               build — a imagem pré-buildada rejeitaria o domínio do self-hoster.
               Altura fixa e largura livre porque a arte enviada tem proporção
-              desconhecida; forçar as duas distorceria o logo de quem configurou. */}
+              desconhecida; forçar as duas distorceria o logo de quem configurou.
+              `alt` vazio quando o nome está ao lado: quem lê a tela ouve o nome
+              uma vez só. Recolhida, a imagem É a marca e passa a nomeá-la. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={logo} alt={nome} className="h-7 w-auto max-w-[10rem] object-contain" />
-          </div>
+            <img
+              src={logo}
+              alt={collapsed ? nome : ""}
+              className={cn(
+                "shrink-0 object-contain",
+                collapsed ? "h-8 w-8" : "h-7 w-auto max-w-[8rem]",
+              )}
+            />
+            {!collapsed && (
+              <span className="min-w-0 truncate font-semibold tracking-tight">{nome}</span>
+            )}
+          </>
         ) : marcaDoProduto ? (
           // O desenho do produto, inline (ver `components/branding/MarcaDoProduto.tsx`):
           // logotipo com a barra aberta, só o símbolo com ela recolhida.
@@ -154,16 +161,20 @@ export function SidebarContent({
             <LogotipoDoProduto nome={nome} className="h-8 w-auto" />
           )
         ) : (
-          <span className={cn("font-semibold tracking-tight", collapsed && "sr-only")}>{nome}</span>
-        )}
-        {collapsed && !marcaDoProduto && (
-          <span aria-hidden className="text-lg font-bold text-primary">
-            {/* Spread e não `[0]`: nome começando com emoji ou acento composto
-                quebraria no meio do code point. Mesma regra de `resolveBranding`
-                — a inicial precisa acompanhar o nome que a barra mostra, senão
-                recolher o menu troca a marca. */}
-            {[...nome][0]?.toUpperCase() ?? brand.initial}
-          </span>
+          <>
+            <span className={cn("font-semibold tracking-tight", collapsed && "sr-only")}>
+              {nome}
+            </span>
+            {collapsed && (
+              <span aria-hidden className="text-lg font-bold text-primary">
+                {/* Spread e não `[0]`: nome começando com emoji ou acento composto
+                    quebraria no meio do code point. Mesma regra de `resolveBranding`
+                    — a inicial precisa acompanhar o nome que a barra mostra, senão
+                    recolher o menu troca a marca. */}
+                {[...nome][0]?.toUpperCase() ?? brand.initial}
+              </span>
+            )}
+          </>
         )}
       </div>
       {/*

@@ -200,10 +200,10 @@ function ehPurposeIsento(purpose: string): boolean {
  * de 79% para 101% entre duas chamadas, a primeira que cruza o teto avisa e
  * segue. Custo máximo: uma chamada além do teto.
  *
- * ⚠️ TETO 0 SEGUE, SEMPRE. Hoje `0` significa "sem limite" na tela
- * (`components/ai/BudgetCard.tsx:192`, verbatim: "0 desativa o orçamento (sem
- * limite, sem alertas)") e "bloqueia tudo" no enforcement — o teste vivo é
- * `spent < budgetCents` (`lib/agent-engine/edge/llm/run-model-call.ts:127`), e
+ * ⚠️ TETO 0 SEGUE, SEMPRE. `0` significa "sem limite" no contrato de
+ * configuração (era o que a tela do orçamento dizia, verbatim: "0 desativa o
+ * orçamento (sem limite, sem alertas)") e "bloqueia tudo" no enforcement — o
+ * teste vivo é `spent < budgetCents` (`lib/agent-engine/edge/llm/run-model-call.ts:127`), e
  * com teto 0 ele é falso já com gasto zero. É assim que `scripts/smoke-llm.ts:168`
  * prova o bloqueio: gravando `'0'`. A inversão perfeita — quem recusou o
  * orçamento de propósito levando o corte mais duro — morre aqui por construção.

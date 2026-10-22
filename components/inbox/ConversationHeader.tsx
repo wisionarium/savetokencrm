@@ -86,14 +86,14 @@ const STATUS_LABEL: Record<string, string> = {
   archived: "Arquivada",
 };
 
-/** Mesmas durações do `SnoozeButton` — o submenu do kebab é a outra porta do mesmo gesto. */
+/** Durações do submenu "Lembrar" — o kebab é a única porta deste gesto. */
 const LEMBRAR_DURACOES: Array<{ hours: 1 | 3 | 24; label: string }> = [
   { hours: 1, label: "Em 1 hora" },
   { hours: 3, label: "Em 3 horas" },
   { hours: 24, label: "Em 24 horas" },
 ];
 
-/** Mesmo predicado do `SnoozeButton` — helper fora do render (regra `react-hooks/purity`). */
+/** Predicado do lembrete — helper fora do render (regra `react-hooks/purity`). */
 function lembreteEstaAtivo(snoozeUntil: string | null): boolean {
   return snoozeUntil != null && new Date(snoozeUntil).getTime() > Date.now();
 }
@@ -113,9 +113,9 @@ export function ConversationHeader({ conversation, onAbrirPerfil }: Props) {
   const automaticoDaOrg = useAutomaticoAtivo();
   const [reassignOpen, setReassignOpen] = useState(false);
   /**
-   * O "Lembrar" agora vive no kebab (⋮) como submenu — mesma mutation do
-   * `SnoozeButton` (que segue existindo e testado em `snooze-button.test.tsx`),
-   * sem aninhar um DropdownMenu dentro do outro.
+   * O "Lembrar" vive no kebab (⋮) como submenu — a mutation
+   * `useSnoozeConversation` é a mesma, sem aninhar um DropdownMenu dentro do
+   * outro.
    */
   const { snooze, cancel } = useSnoozeConversation();
   const lembreteAtivo = lembreteEstaAtivo(conversation.snooze_until ?? null);

@@ -14,7 +14,9 @@ interface Alvo { tabela: string; papel: Role; rotulo: string; href: (id: string,
 
 /** Apenas entidades que têm produtor e superfície atual; agenda nasce com a Task 6. */
 export const REFERENCIAS_DE_AVISO = {
-  ai_agent: { tabela: "ai_agents", papel: "admin", rotulo: "Revisar agente", href: (id: string) => `/app/ai/agents/${id}`, ativo: true },
+  // `ai_agent` saiu em 2026-10-22: as telas de agente foram removidas e não há
+  // mais superfície para onde levar. Avisos antigos com esse `ref_kind` caem em
+  // INDISPONIVEL — o mesmo tratamento já dado a `conhecimento_nao_indexado`.
   appointment: {tabela:"calendar_appointments",papel:"agent",rotulo:"Abrir compromisso",href:(id:string)=>`/app/tasks/agenda?compromisso=${id}`},
   conversation: { tabela: "conversations", papel: "agent", rotulo: "Abrir conversa", href: (id: string) => `/app/inbox/${id}` },
   contact: { tabela: "contacts", papel: "agent", rotulo: "Ver contato", href: (id: string) => `/app/contacts/${id}` },
@@ -25,7 +27,7 @@ export const REFERENCIAS_DE_AVISO = {
   // própria — as páginas de Casos saíram da navegação. Sem conversa
   // (não deveria acontecer: a coluna é NOT NULL), cai na Central em vez
   // de inventar destino.
-  agent_case: { tabela: "agent_cases", papel: "agent", rotulo: "Abrir atendimento", href: (id: string, _pipelineId?: string, conversaId?: string) => conversaId ? `/app/inbox/${conversaId}` : "/app/ai/inbox" },
+  agent_case: { tabela: "agent_cases", papel: "agent", rotulo: "Abrir atendimento", href: (id: string, _pipelineId?: string, conversaId?: string) => conversaId ? `/app/inbox/${conversaId}` : "/app/inbox" },
   // O PONTEIRO do fluxo, não a inscrição: o aviso de `followup_sem_agente` é
   // sobre um fluxo que não tem inscrição nenhuma — é exatamente essa a queixa.
   // `manager` é a mesma régua da aba Fluxos (`canWrite` em FlowsList).
@@ -35,7 +37,6 @@ export const REFERENCIAS_DE_AVISO = {
 export type InboxRefKind = keyof typeof REFERENCIAS_DE_AVISO | "organization" | "ai_budget" | "job_queue" | "cron_jobs";
 type ContextoGeral = { papel: Role; href: string; rotulo: string };
 interface Politica { refs: readonly InboxRefKind[]; orientacao: string; geral?: ContextoGeral }
-const EVOLUCAO: ContextoGeral = { papel: "manager", href: "/app/ai/evolution", rotulo: "Abrir evolução do assistente" };
 const CONEXOES: ContextoGeral = { papel: "admin", href: "/app/connections", rotulo: "Revisar conexões" };
 
 /** Completude em compile time; pares desconhecidos em clones falham fechados. */
@@ -62,8 +63,12 @@ export const POLITICAS_DE_AVISO = {
   // protege). `contact` continua na lista por causa dos itens de clone antigo,
   // gravados antes da troca — tirá-lo faria aqueles avisos perderem o destino.
   handoff: { refs: ["conversation", "contact"], orientacao: "Abra a conversa: o cartão no fim do fio diz por que a IA passou, o que ela já tentou e se o cliente foi avisado." },
-  promotion_review: { refs: [], orientacao: "Na evolução do assistente, confira as propostas disponíveis. Este aviso não identifica uma proposta específica.", geral: EVOLUCAO },
-  judge_unaligned: { refs: [], orientacao: "Na evolução do assistente, confira a avaliação de qualidade. Este aviso não identifica uma avaliação específica.", geral: EVOLUCAO },
+  // `promotion_review` e `judge_unaligned` são kinds de versões anteriores e
+  // não têm produtor hoje. A tela de evolução do assistente saiu em 2026-10-22,
+  // então eles ficam sem destino geral — a orientação ainda diz a quem pedir,
+  // em vez de mandar a pessoa para uma rota que responde 404.
+  promotion_review: { refs: [], orientacao: "Peça ao gestor para revisar as propostas de melhoria do assistente — esta versão não tem tela própria para elas." },
+  judge_unaligned: { refs: [], orientacao: "Peça ao gestor para revisar a calibragem do avaliador de qualidade do assistente." },
   followup_dead: { refs: ["followup_enrollment"], orientacao: "Peça ao gestor para revisar o acompanhamento que parou." },
   snooze_expired: { refs: ["conversation"], orientacao: "Confira se cabe retomar o atendimento descrito neste aviso." },
   next_action_ambiguous: { refs: ["contact"], orientacao: "Confira os negócios do contato e escolha a qual deles pertence a próxima ação." },
@@ -97,12 +102,12 @@ export const POLITICAS_DE_AVISO = {
   // cai em "sem destino" com a orientação abaixo: o telefone está no corpo do
   // aviso, escrito pelo worker.
   voice_call_missed: { refs: ["contact"], orientacao: "Retorne a ligação quando puder — quem ligou não foi atendido." },
-  // Leva AO CASO (`REFERENCIAS_DE_AVISO.agent_case` já aponta para
-  // `/app/ai/cases?caso=<id>`), e não a uma tela genérica de conexões: o que
-  // está pendente é o ATENDIMENTO, e quem abre o aviso precisa cair nele. A
-  // conferência da conexão é o segundo passo, e vai na orientação.
+  // Leva À CONVERSA do caso (`REFERENCIAS_DE_AVISO.agent_case`), e não a uma
+  // tela genérica de conexões: o que está pendente é o ATENDIMENTO, e quem abre
+  // o aviso precisa cair nele. A conferência da conexão é o segundo passo, e vai
+  // na orientação.
   aviso_de_caso_nao_entregue: { refs: ["agent_case"], orientacao: "O aviso deste atendimento não saiu no WhatsApp. Abra o atendimento — ele continua esperando — e confira a conexão de avisos em Configurações." },
-  other: { refs: ["lead", "channel_session", "appointment", "ai_agent"], orientacao: "Confira a situação descrita neste aviso com a pessoa responsável." },
+  other: { refs: ["lead", "channel_session", "appointment"], orientacao: "Confira a situação descrita neste aviso com a pessoa responsável." },
 } satisfies Record<InboxKind, Politica>;
 
 /**
@@ -203,11 +208,19 @@ export async function resolverDestinosDosAvisos<T extends ReferenciaDoAviso>(
             : visiveis.get(item.ref_kind!)?.has(item.ref_id!)
               ? { estado: "disponivel", rotulo: ROTULO_POR_KIND[item.kind] ?? a.rotulo, href: a.href(item.ref_id!, funilPorLead.get(item.ref_id!), conversaPorCaso.get(item.ref_id!)) }
               : INDISPONIVEL;
-        } else if (item.ref_kind === "ai_budget" || item.ref_kind === "organization") {
+        } else if (item.ref_kind === "ai_budget") {
+          // A tela de uso/orçamento de IA do tenant saiu em 2026-10-22. O aviso
+          // continua existindo com a orientação (quem administra vê o consumo
+          // no painel de plataforma); o que não pode voltar é o botão para uma
+          // rota que responde 404.
+          destination = item.ref_id !== organizationId
+            ? INDISPONIVEL
+            : { estado: "sem_destino", orientacao: p.orientacao };
+        } else if (item.ref_kind === "organization") {
           destination = item.ref_id !== organizationId ? INDISPONIVEL
             : item.kind === "contact_proposal_expired" ? { estado: "sem_destino", orientacao: p.orientacao }
-            : !permite(papel, item.ref_kind === "ai_budget" ? "manager" : "agent") ? semPermissao("manager")
-            : { estado: "disponivel", href: item.ref_kind === "ai_budget" ? "/app/ai/usage" : "/app/radar", rotulo: item.ref_kind === "ai_budget" ? "Abrir uso de IA" : "Abrir Kanban" };
+            : !permite(papel, "agent") ? semPermissao("agent")
+            : { estado: "disponivel", href: "/app/radar", rotulo: "Abrir Kanban" };
         } else destination = { estado: "sem_destino", orientacao: p.orientacao };
       }
     }

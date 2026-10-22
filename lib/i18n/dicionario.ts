@@ -7887,15 +7887,10 @@ export const DICIONARIO: Traducoes = {
 
   // ─── Estado do material do acervo (components/ai/SourceStatusBadge.tsx) ───
   //
-  // A 1.8.0 reescreveu os seis rótulos e criou dois estados novos
-  // (`indexando`, `sem_credencial`). O `t(label)` do componente sobreviveu ao
-  // merge intacto — o que não sobreviveu foi a correspondência com o
-  // dicionário, porque as CHAVES mudaram. Mesma classe da seção acima.
+  // O componente saiu em 2026-10-22 com as telas do acervo. "O agente já sabe"
+  // continua porque a tela de webhooks também a usa; as outras três saíram com
+  // ele — conferido por grep, não por leitura.
   "O agente já sabe": { es: "El agente ya lo sabe" },
-  "Esperando a chave": { es: "Esperando la clave" },
-  "Entrou pela metade": { es: "Entró a medias" },
-  "Ainda não preparado": { es: "Todavía sin preparar" },
-  // `Arquivado` não entra aqui: já existe lá em cima, sem aspas na chave.
 
   // ─── Navegação do painel de plataforma (components/admin/AdminSidebar.tsx) ───
   //
@@ -9272,30 +9267,21 @@ export const DICIONARIO: Traducoes = {
 
   // ─── Relatório de atividades (/app/activities) ───
   //
-  // "acontecimento"/"acontecimentos" são o PLURAL da mesma contagem e entram
-  // como duas chaves porque a tela escolhe uma das duas — espanhol tem a mesma
-  // distinção, então nenhuma das duas pode faltar.
-  "O que aconteceu na operação no período — e quanto disso foi a equipe.": {
-    es: "Lo que pasó en la operación en el período — y cuánto de eso fue el equipo.",
-  },
+  // A TELA foi removida em 2026-10-22 (a API `reports/activities` ficou). As
+  // frases que só ela usava saíram junto; "Últimos", "A equipe" e "Quem fez"
+  // continuam porque outras telas também as usam — conferido por grep antes de
+  // apagar, não por leitura.
   Últimos: { es: "Últimos" },
-  "Erro ao carregar o relatório.": { es: "Error al cargar el informe." },
-  acontecimento: { es: "suceso" },
-  acontecimentos: { es: "sucesos" },
-  "Nada aconteceu neste período": { es: "No pasó nada en este período" },
-  "Nenhum acontecimento foi registrado na janela escolhida — nem por pessoas, nem pelos agentes. Aumente o período ou confira se o atendimento está de pé.":
-    {
-      es: "No se registró ningún suceso en la ventana elegida — ni por personas, ni por los agentes. Amplíe el período o revise si la atención está funcionando.",
-    },
-  "Ver conversas": { es: "Ver conversaciones" },
   "A equipe": { es: "El equipo" },
-  "Os agentes": { es: "Los agentes" },
   "Quem fez": { es: "Quién lo hizo" },
-  "O que foi feito": { es: "Qué se hizo" },
-  "Linha do tempo da operação": { es: "Línea de tiempo de la operación" },
-  "A lista mostra só os mais recentes.": { es: "La lista muestra solo los más recientes." },
-  "No período houve": { es: "En el período hubo" },
-  "acontecimentos.": { es: "sucesos." },
+  // Orientações da Central de Avisos para kinds legados (ver
+  // `lib/ai/inbox-destino.ts`) — precisam de es porque a tela as renderiza.
+  "Peça ao gestor para revisar as propostas de melhoria do assistente — esta versão não tem tela própria para elas.": {
+    es: "Pide al gestor que revise las propuestas de mejora del asistente — esta versión no tiene pantalla propia para ellas.",
+  },
+  "Peça ao gestor para revisar a calibragem do avaliador de qualidade do assistente.": {
+    es: "Pide al gestor que revise la calibración del evaluador de calidad del asistente.",
+  },
   "Carregando organização…": { es: "Cargando organización…" },
   "Gerenciar organizações": { es: "Administrar organizaciones" },
   "Não foi possível trocar de organização. Seu acesso pode ter mudado. Tente novamente.": { es: "No se pudo cambiar de organización. Su acceso puede haber cambiado. Inténtelo de nuevo." },
@@ -9420,14 +9406,10 @@ export const DICIONARIO: Traducoes = {
   "Quente": { es: "Caliente" },
   // ─── components/ai/GuardrailsEditor.tsx (KIND_LABELS) ───
   //
-  // As 4 chaves abaixo já nascem em INGLÊS, não em português — bug à parte de
-  // #651: a convenção do projeto é "a chave é o texto em português", e aqui
-  // não é. Fora do escopo deste PR (é a fonte que precisa mudar, não a
-  // tradução), sinalizado no PR para abrir issue própria.
-  "Regex output block": { es: "Bloqueo de salida por regex" },
-  "RAG must hit": { es: "RAG debe coincidir" },
-  "Regex input block": { es: "Bloqueo de entrada por regex" },
-  "Contact flag": { es: "Marca de contacto" },
+  // O editor de guardrails saiu em 2026-10-22 com as telas do agente; as
+  // quatro chaves em inglês (que já nasciam fora da convenção do projeto)
+  // saíram junto. "Falha ao avançar:" logo abaixo NÃO era dele: a tela de
+  // conexão do WhatsApp usa — por isso ficou.
   "Falha ao avançar:": { es: "Error al avanzar:" },
   "Nuvemshop": { es: "Nuvemshop" },
   "Billing": { es: "Facturación" },

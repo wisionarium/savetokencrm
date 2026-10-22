@@ -85,14 +85,15 @@ describe("destinos da Central", () => {
       href: `/app/inbox/${CONV}`,
     });
 
-    // Sem conversa legível (mock sem a coluna): Central, nunca link morto.
+    // Sem conversa legível (mock sem a coluna): a lista do inbox, nunca link
+    // morto para uma tela que não existe mais.
     const l = leitor();
     const [semConversa] = await resolverDestinosDosAvisos(l.client, ORG, "agent", [
       aviso("case_stale", "agent_case"),
     ]);
     expect(semConversa?.destination).toMatchObject({
       estado: "disponivel",
-      href: "/app/ai/inbox",
+      href: "/app/inbox",
     });
   });
   it("consulta por tipo e deduplica IDs, não N+1", async () => {
@@ -110,14 +111,13 @@ describe("destinos da Central", () => {
     const l = leitor(); const [item] = await resolverDestinosDosAvisos(l.client, ORG, role, [aviso("qr_rescan", "channel_session")]);
     expect(item?.destination.estado).toBe("sem_permissao"); expect(l.queries).toHaveLength(0);
   });
-  it("manager recebe uso; acervo sem tela vira indisponível, agent só orientação", async () => {
+  it("orçamento de IA e acervo sem tela viram orientação, não link morto", async () => {
     for (const role of ["agent", "manager"] as const) {
       const items = await resolverDestinosDosAvisos(leitor().client, ORG, role, [aviso("budget_warning", "ai_budget", ORG), aviso("conhecimento_nao_indexado", "ai_knowledge_source")]);
-      // Sem páginas de Conhecimento, o alerta segue existindo (orientação),
-      // mas sem botão: indisponível para todo papel.
-      expect(items.map((i) => i.destination.estado)).toEqual(
-        role === "agent" ? ["sem_permissao", "indisponivel"] : ["disponivel", "indisponivel"],
-      );
+      // Sem tela de uso/orçamento nem páginas de Conhecimento, o alerta segue
+      // existindo com a orientação, mas sem botão — para todo papel.
+      expect(items.map((i) => i.destination.estado)).toEqual(["sem_destino", "indisponivel"]);
+      expect(items[0]?.destination.orientacao).toBe("Peça ao gestor para revisar o limite e o uso de IA.");
     }
   });
   it.each([null, "not-a-uuid", missing])("ref %s não vira URL", async id => {
@@ -133,7 +133,10 @@ describe("destinos da Central", () => {
   it.each(["budget_exceeded", "risk_backlog_seeded", "reactivation_expired"])("%s aceita apenas org ativa", async kind => {
     const ref = kind === "budget_exceeded" ? "ai_budget" : "organization";
     const items = await resolverDestinosDosAvisos(leitor().client, ORG, "admin", [aviso(kind, ref, ORG), aviso(kind, ref, ID)]);
-    expect(items[0]?.destination.estado).toBe("disponivel"); expect(items[1]?.destination.estado).toBe("indisponivel");
+    // Orçamento de IA não tem mais tela: a org certa recebe a orientação, e a
+    // org errada continua indisponível.
+    expect(items[0]?.destination.estado).toBe(kind === "budget_exceeded" ? "sem_destino" : "disponivel");
+    expect(items[1]?.destination.estado).toBe("indisponivel");
   });
   it("kind/ref desconhecidos, pares inválidos e URLs arbitrárias falham fechados", async () => {
     const l = leitor(); const items = await resolverDestinosDosAvisos(l.client, ORG, "admin", [aviso("novo"), aviso("handoff", "https://evil.test"), aviso("handoff", "channel_session"), aviso("__proto__"), aviso("other", "__proto__")]);
@@ -170,14 +173,13 @@ describe("destinos da Central", () => {
   });
 });
 
-it('reparo do agente legado tem destino tipado somente para admin e entidade visível',async()=>{
- const item=aviso('other','ai_agent');
- const [admin]=await resolverDestinosDosAvisos(leitor().client,ORG,'admin',[item]);
- expect(admin?.destination).toMatchObject({estado:'disponivel',href:`/app/ai/agents/${ID}`});
- for(const role of ['viewer','agent','manager'] as const){
-  const [denied]=await resolverDestinosDosAvisos(leitor().client,ORG,role,[item]);
-  expect(denied?.destination.estado).toBe('sem_permissao');
+it("aviso de agente legado não oferece destino: a tela de agente não existe mais",async()=>{
+ const item=aviso("other","ai_agent");
+ for(const role of ["viewer","agent","manager","admin"] as const){
+  const l=leitor();
+  const [itemResolvido]=await resolverDestinosDosAvisos(l.client,ORG,role,[item]);
+  expect(itemResolvido?.destination.estado).toBe("indisponivel");
+  expect(itemResolvido?.destination).not.toHaveProperty("href");
+  expect(l.queries).toHaveLength(0);
  }
- const [foreign]=await resolverDestinosDosAvisos(leitor([]).client,ORG,'admin',[item]);
- expect(foreign?.destination.estado).toBe('indisponivel');
 });

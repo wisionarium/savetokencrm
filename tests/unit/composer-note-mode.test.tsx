@@ -17,8 +17,11 @@ vi.mock("@/hooks/inbox/useUploadMedia", () => ({
 vi.mock("@/hooks/inbox/useMessageTemplates", () => ({
   useMessageTemplates: () => ({ data: [], isLoading: false }),
 }));
-vi.mock("@/hooks/inbox/useDraftReply", () => ({
-  useDraftReply: () => ({ mutate: vi.fn(), isPending: false }),
+// `Composer` lê o nome de quem digita para o aviso de "está digitando". O
+// teste não monta o `AuthProvider` inteiro (que exigiria Supabase), então o
+// hook vem dublado — o alvo aqui é o modo nota, não a sessão.
+vi.mock("@/hooks/auth/AuthProvider", () => ({
+  useUser: () => ({ id: "user-1", full_name: "Atendente Teste" }),
 }));
 
 import { Composer } from "@/components/inbox/Composer";
@@ -40,7 +43,7 @@ describe("Composer + modo nota interna", () => {
 
   it("modo reply (default): envia normal via useSendMessage", () => {
     renderComposer();
-    fireEvent.change(screen.getByLabelText(/mensagem/i), { target: { value: "oi cliente" } });
+    fireEvent.change(screen.getByLabelText("Mensagem"), { target: { value: "oi cliente" } });
     fireEvent.click(screen.getByRole("button", { name: /^enviar$/i }));
 
     expect(sendMock).toHaveBeenCalledWith(
@@ -55,22 +58,20 @@ describe("Composer + modo nota interna", () => {
       /* simula request lento — onSuccess não é chamado */
     });
     renderComposer();
-    const input = screen.getByLabelText(/mensagem/i);
+    const input = screen.getByLabelText("Mensagem");
     fireEvent.change(input, { target: { value: "oi cliente" } });
     fireEvent.click(screen.getByRole("button", { name: /^enviar$/i }));
 
     expect(input).toHaveValue("");
   });
 
-  it("alterna pra modo nota interna: some anexo/rascunho/áudio, muda placeholder", () => {
+  it("alterna pra modo nota interna: some anexo/áudio, muda placeholder", () => {
     renderComposer();
     expect(screen.getByRole("button", { name: /anexar/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /sugerir resposta/i })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /nota interna/i }));
 
     expect(screen.queryByRole("button", { name: /anexar/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /sugerir resposta/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /gravar áudio/i })).not.toBeInTheDocument();
     expect(screen.getByPlaceholderText(/nota interna/i)).toBeInTheDocument();
   });

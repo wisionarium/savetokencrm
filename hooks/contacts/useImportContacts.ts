@@ -2,8 +2,8 @@
  * useImportContacts — POST multipart do CSV para /api/v1/contacts/import.
  *
  * Usa fetch cru (não o apiClient) porque o client serializa body como JSON e
- * não fala FormData — mesmo padrão de hooks/ai/useSkills.ts. Erro é sempre
- * ApiError para o diálogo mostrar `message` direto no toast.
+ * não fala FormData. Erro é sempre ApiError para o diálogo mostrar `message`
+ * direto no toast.
  */
 import { ApiError } from "@/lib/api/types";
 import type { ApiErrorBody } from "@/lib/api/types";

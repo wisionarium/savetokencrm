@@ -51,8 +51,11 @@ export default async function PublicLayout({ children }: { children: React.React
 
   return (
     <IdiomaProvider locale={locale}>
-      <div className="flex min-h-screen items-center justify-center bg-background p-6">
-        <div className="w-full max-w-sm space-y-6">
+      <div
+        suppressHydrationWarning
+        className="flex min-h-screen items-center justify-center bg-background p-6"
+      >
+        <div suppressHydrationWarning className="w-full max-w-sm space-y-6">
           {marca.logoUrl ? (
             <div className="flex justify-center">
               {/*

@@ -253,12 +253,15 @@ export function SignupForm({ convite }: { convite?: ConviteDoSignup }) {
         {isPending ? t("Criando conta...") : t("Criar conta")}
       </Button>
 
-      <div className="relative my-4 flex items-center justify-center">
-        <div className="w-full border-t border-border" />
-        <span className="bg-card px-2 text-xs uppercase text-muted-foreground">
-          {t("ou continue com")}
-        </span>
-        <div className="w-full border-t border-border" />
+      <div className="relative my-4">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-border" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-background px-2 text-muted-foreground whitespace-nowrap">
+            {t("ou continue com")}
+          </span>
+        </div>
       </div>
 
       <GoogleAuthButton

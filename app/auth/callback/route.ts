@@ -30,8 +30,9 @@ export async function GET(request: NextRequest) {
   const oauthError = url.searchParams.get("error");
   const requestId = request.headers.get("x-request-id") ?? crypto.randomUUID();
 
+  const origin = request.nextUrl.origin || env.NEXT_PUBLIC_APP_URL;
   const redirectTo = (path: string) =>
-    NextResponse.redirect(new URL(path, env.NEXT_PUBLIC_APP_URL));
+    NextResponse.redirect(new URL(path, origin));
 
   if (oauthError || !code) {
     return redirectTo("/login?error=oauth_error");

@@ -49,6 +49,14 @@ export default async function LoginPage({
           {t("Senha redefinida com sucesso. Entre com a nova senha.")}
         </div>
       )}
+      {error === "oauth_error" && (
+        <div
+          className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+          role="alert"
+        >
+          {t("Não foi possível autenticar com o Google. Tente novamente.")}
+        </div>
+      )}
       {error === "link_invalido" && (
         <div
           className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"

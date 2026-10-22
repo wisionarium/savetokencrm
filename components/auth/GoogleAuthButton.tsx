@@ -37,7 +37,7 @@ export function GoogleAuthButton({
       const qs = queryParams.toString();
       const callbackUrl = `${origin}/auth/callback${qs ? `?${qs}` : ""}`;
 
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
           redirectTo: callbackUrl,
@@ -49,11 +49,16 @@ export function GoogleAuthButton({
       });
 
       if (error) {
-        setErro(t("Não foi possível conectar com o Google."));
+        setErro(error.message || t("Não foi possível conectar com o Google."));
         setCarregando(false);
+        return;
       }
-    } catch {
-      setErro(t("Erro inesperado ao conectar com o Google."));
+
+      if (data?.url) {
+        window.location.href = data.url;
+      }
+    } catch (err: any) {
+      setErro(err?.message || t("Erro inesperado ao conectar com o Google."));
       setCarregando(false);
     }
   };

@@ -1,5 +1,5 @@
 /**
- * A ABA DIZ O NOME DA TELA — as 17 páginas de `/app/*` que caíam no default.
+ * A ABA DIZ O NOME DA TELA — as páginas de `/app/*` que caíam no default.
  *
  * ─── O defeito, e por que ele sobreviveu ──────────────────────────────────
  *
@@ -20,9 +20,10 @@
  * 1. **Nome próprio**: cada rota abre com o título curto que ela declara.
  * 2. **Não é o default**: a descrição da landing não aparece em título nenhum —
  *    é a assinatura exata do defeito.
- * 3. **Distinguíveis**: 17 rotas, 17 títulos diferentes. Sem isto, duas telas
- *    poderiam declarar o mesmo nome e o teste passaria pelas duas primeiras
- *    propriedades enquanto a aba continua sem servir para escolher.
+ * 3. **Distinguíveis**: uma lista de rotas, um título diferente por rota. Sem
+ *    isto, duas telas poderiam declarar o mesmo nome e o teste passaria pelas
+ *    duas primeiras propriedades enquanto a aba continua sem servir para
+ *    escolher.
  */
 import { expect, test } from "@playwright/test";
 
@@ -39,19 +40,13 @@ const TELAS: ReadonlyArray<readonly [string, string]> = [
   ["/app/kanban", "Funis"],
   ["/app/team", "Equipe"],
   ["/app/tasks", "Tarefas"],
-  ["/app/activities", "Atividades"],
   ["/app/settings", "Configurações"],
   ["/app/templates", "Respostas rápidas"],
   ["/app/webhooks", "Webhooks"],
-  ["/app/metrics", "Desempenho"],
   ["/app/radar", "Kanban"],
   ["/app/audit", "Audit Log"],
   ["/app/products", "Produtos"],
   ["/app/connections", "Conexões"],
-  // A tela do aviso de caso (onda 8). Entra aqui porque a lista é FIXA: rota
-  // fora dela nunca é medida, e uma tela sem `metadata.title` herda o título
-  // default do layout, que é a frase de venda inteira da landing.
-  ["/app/ai/cases/avisos", "Aviso no WhatsApp"],
 ];
 
 test("as telas do app dizem o próprio nome na aba, e nenhuma cai no título da landing", async ({

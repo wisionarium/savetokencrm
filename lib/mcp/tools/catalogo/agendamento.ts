@@ -148,11 +148,9 @@
  * O total serve de controle: se a soma dos pacotes não fizer sentido contra
  * `TOOL_CATALOG.length`, o instrumento está perdendo entrada.
  *
- * Medido: acrescentar esta capacidade a `atender` levaria o pacote a 19 e
- * quebraria `tests/e2e/capacidades-do-agente.spec.ts` em DOIS pontos — a
- * asserção de "falta 1 vaga" (viraria 2) e a de que liberar UMA vaga basta para
- * ligar o pacote (não bastaria). Isso não é motivo para escolher `vender`, mas é
- * o custo que a escolha por `atender` teria, e ele está aqui para quem reabrir.
+ * Medido: acrescentar esta capacidade a `atender` levaria o pacote para além do
+ * teto do papel. Isso não é motivo para escolher `vender`, mas é o custo que a
+ * escolha por `atender` teria, e ele está aqui para quem reabrir.
  *
  * **Decisão de pacote PRÓPRIO (`agendar`) segue pendente com o maestro** — foi
  * levantada em `CONTRATO-MCP-agenda.md` §7 antes de existir código. `vender` é o

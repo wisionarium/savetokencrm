@@ -202,7 +202,7 @@ NEXT_TELEMETRY_DISABLED=1
 # MANDA DADO para o Sentry de produção do projeto — mesma família do e2e que
 # escrevia no banco de produção. E o inverso morde igual: em 2026-08-10 a
 # organização do Sentry estava suspensa por cota, o ingest respondeu 429 a tudo, o
-# SDK cuspiu erro de console em toda tela e \`olhar-telas-do-epico\` reprovou. A cor
+# SDK cuspiu erro de console em toda tela e a suíte reprovou. A cor
 # do CI não pode depender do estado de cobrança de um terceiro.
 #
 # Consequência aceita: com \`off\` o cliente não inicializa, então a suíte NÃO

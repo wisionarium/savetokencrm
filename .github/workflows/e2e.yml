@@ -445,23 +445,16 @@ jobs:
     # porque era onde o caso instável caía — "onde o problema aparece" não é
     # "onde a folga acabou".
     #
-    # UM arquivo muda de lista, e é o menor movimento que equilibra:
-    #
-    #   `agente-novo-e-uso` (102–120s)  PARTE_2 → PARTE_1, onde já moram
-    #       `agente-papeis-operador` e as outras telas de agente.
-    #
-    # Previsão (é previsão; a rodada deste PR é que mede): ~1060s × ~1003s de
-    # Playwright, com a diferença caindo de ~300s para ~60s. Mover TAMBÉM
-    # `capacidades-do-agente` (99–102s) inverteria o desequilíbrio — 958 × 1105.
+    # Em 2026-10-22 as specs `agente-novo-e-uso`, `agente-papeis-operador` e
+    # `capacidades-do-agente` saíram junto com as telas do agente. Os números e a
+    # movimentação acima são o registro da medição de 2026-09-18; o equilíbrio
+    # entre as partes precisa ser REMEDIDO na próxima rodada que mexer nesta
+    # divisão — não herdado desta conta.
     #
     # ⚠️ `navegacao` (281–305s, 25% da parte 2) continua onde está: o bloco
     # acima documenta que ela REPROVA na parte 1 por estado do banco daquela
     # parte (run 35345305473). A alavanca óbvia pelo relógio é justamente a
     # proibida pela medição.
-    #
-    # NÃO MEDIDO: se `agente-novo-e-uso` passa no estado de banco da parte 1 —
-    # é exatamente o que derrubou a tentativa com `navegacao`, e quem responde é
-    # a rodada deste PR, não esta previsão.
 
     # ── A próxima alavanca, quando esta acabar ──────────────────────────────
     #
@@ -550,6 +543,11 @@ jobs:
     #          extensoes-versao (49s), marca-logo (67s), suporte-temporario (57s),
     #          olhar-telas-do-epico (51s)                             −380s
     #
+    # (As specs `followup-builder`, `followup-journey` e `olhar-telas-do-epico`
+    # saíram em 2026-10-22 com as telas que provavam. Os subtotais acima ficam
+    # como registro da medição daquela data e precisam ser refeitos antes da
+    # próxima repartição — não são a conta de hoje.)
+    #
     # Famílias inteiras (`inbox-*`, `followup-*`, `extensoes-*`) andam juntas:
     # vizinhança compartilha estado de banco dentro da parte, e separar irmãs é
     # como se descobre isso do jeito caro.
@@ -625,8 +623,6 @@ jobs:
         confirmar-dado-do-contato.spec.ts
         credenciais-de-ia.spec.ts
         risk-radar.spec.ts invite-lifecycle.spec.ts system-update.spec.ts
-        agente-novo-e-uso.spec.ts
-        agente-papeis-operador.spec.ts
         followup-linguagem.spec.ts followup-ramos.spec.ts
         wizard-do-funcionario.spec.ts mfa-opcional.spec.ts inbox-responder-citando.spec.ts
         agenda-tela-do-produto.spec.ts
@@ -639,10 +635,8 @@ jobs:
         motivos-de-perda-do-funil.spec.ts
         importar-leads-planilha.spec.ts
         prova-painel-provedores.spec.ts
-        relatorio-de-atividades.spec.ts
         canal-mudo-avisa-na-central.spec.ts
         qa-l12-troca-de-funil.spec.ts
-        qa-l12-agente-ia.spec.ts
       # ⚠️ A ORDEM DESTA LISTA NÃO DECIDE A ORDEM DE EXECUÇÃO. O Playwright
       # ordena os arquivos por CAMINHO, não pela ordem em que são passados na
       # linha de comando. Medido no run 31838253496: `marca-logo.spec.ts` estava
@@ -705,7 +699,7 @@ jobs:
       #
       # Por que isso não quebra ninguém, medido e não presumido: as specs que
       # criam enrollment e depois conferem `current_node_id` são
-      # `followup-journey`, `followup-queue` e `followup-dossie` (PARTE_2, outro
+      # `followup-queue` e `followup-dossie` (PARTE_2, outro
       # processo, depois) e `followup-ramos` (PARTE_1). A ordem de execução é por
       # CAMINHO — ver o bloco acima —, e `followup-ramos` < `relogio-http-...`,
       # então ela já terminou quando o tick roda. Nenhuma spec posterior da
@@ -725,8 +719,6 @@ jobs:
         agente-organiza-operacao.spec.ts
         central-de-avisos-capacidades.spec.ts
         distribuicao-atendimento.spec.ts
-        capacidades-do-agente.spec.ts
-        escopo-de-funil-do-agente.spec.ts
         followup-tempo-adaptativo.spec.ts
         gatilho-de-etapa.spec.ts
         gatilho-de-caso.spec.ts
@@ -806,7 +798,7 @@ jobs:
       # `gatilho-de-etapa`) entraram nas listas de execução, e não aqui, porque a
       # medição não dá motivo para excluí-las: grep de waha/resend/nuvemshop/redis
       # devolve **0 em todas as cinco** (controle positivo: `vps-fresh-onboarding`
-      # devolve 17). Usam o endpoint de cron, como a `followup-journey` que já roda.
+      # devolve 17). Usam o endpoint de cron.
       #
       # ⚠️ O QUE NÃO ESTÁ MEDIDO: elas passam LOCALMENTE, e verde local não é verde
       # de CI. Nenhuma delas rodou num job ainda — foram escritas nesta missão e
@@ -932,7 +924,6 @@ jobs:
       # todas. Os 3 arquivos que o cancelamento impediu de medir vêm junto, porque
       # eles são justamente o fim da fila.
       SPECS_PARTE_3: >-
-        autonomia-assistida.spec.ts
         roteamento-por-canal.spec.ts
         whatsapp-pareamento-por-codigo.spec.ts
         central-avisos-destino.spec.ts
@@ -966,7 +957,6 @@ jobs:
         qa-l12-tags-radar.spec.ts
         extensoes-recuperacao.spec.ts
         extensoes-portas-novas.spec.ts
-        motivo-do-publicar-na-tela.spec.ts
         followup-cartoes.spec.ts
         followup-modelos-de-clinica.spec.ts
         presenca-do-atendente.spec.ts
@@ -1038,8 +1028,6 @@ jobs:
         qa-l12-inbox.spec.ts
         filtro-por-marcador-pela-tela.spec.ts
         funil-arquivado-volta-pela-tela.spec.ts
-        followup-builder.spec.ts
-        followup-journey.spec.ts
         followup-dossie.spec.ts
         followup-queue.spec.ts
         qa-l12-funil.spec.ts
@@ -1048,7 +1036,6 @@ jobs:
         extensoes-versao.spec.ts
         marca-logo.spec.ts
         suporte-temporario.spec.ts
-        olhar-telas-do-epico.spec.ts
 
       # ─── FORA_DO_CI — as duas que ficaram, e o motivo continua onde sempre ───
       #
@@ -1300,8 +1287,8 @@ jobs:
           #
           # Sem isto, o SDK do browser tuneliza por /monitoring (next.config.ts:71)
           # para o Sentry real do projeto, que devolve 429 por cota. Os 429 caem
-          # no console, e `olhar-telas-do-epico` — a ÚNICA spec que afirma "não
-          # cospe erro no console" — reprova nas 7 telas de uma vez.
+          # no console, e as specs que afirmam "não cospe erro no console"
+          # reprovam de uma vez.
           # Medido em 2026-08-10 capturando a URL: /monitoring?o=4509908078559232,
           # que é o org id do DEFAULT_SENTRY_DSN (lib/sentry/dsn.ts:17).
           SENTRY_DSN: "off"
@@ -1337,14 +1324,12 @@ jobs:
       # A maioria das specs roda o próprio seed num `beforeAll`. Estas TRÊS não
       # — ou o cabeçalho manda rodar à mão, ou a fixture é de outra spec.
       #
-      # `seed-e2e-followup-agent` (credencial de IA + sessão de canal) é o caso
-      # sutil: `followup-builder` o roda no próprio `beforeAll`, mas
-      # `agente-novo-e-uso` PRECISA das mesmas fixtures e vem ANTES na ordem
-      # alfabética — em banco fresco os comboboxes de credencial e canal abrem
-      # com a opção desabilitada e o clique estoura por timeout. Medido: o
-      # ensaio local passou porque o banco tinha as fixtures de uma rodada
-      # anterior; o CI, fresco, reprovou. Rodar aqui torna a precondição
-      # explícita em vez de depender da ordem dos arquivos.
+      # `seed-e2e-followup-agent` (credencial de IA + sessão de canal) precisa
+      # existir antes da suíte: `gatilho-de-caso` e `gatilho-de-etapa` leem
+      # essas fixtures, e em banco fresco os comboboxes de credencial e canal
+      # abrem com a opção desabilitada. Rodar aqui torna a precondição explícita
+      # em vez de depender da ordem dos arquivos — e de duas specs correndo o
+      # mesmo seed.
       #
       # `--env-file` só na segunda, e a diferença não é capricho: o seed de
       # capacidades importa `lib/env.ts` (via lib/ai/embed.ts), que lê

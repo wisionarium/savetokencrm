@@ -11,7 +11,8 @@
  *
  * As três ausentes eram justamente as novas, e uma delas era
  * `agente-papeis-operador.spec.ts` — a prova de tela do épico dos três papéis do
- * agente, apresentada no handoff daquele épico como "7/7", que **nunca rodou em
+ * agente (removida em 2026-10-22, junto com as telas do agente), apresentada no
+ * handoff daquele épico como "7/7", que **nunca rodou em
  * job nenhum**. O número era afirmação do autor, não medição do CI.
  *
  * O modo de falha é o que dói: **cobertura parcial silenciosa se lê como cobertura

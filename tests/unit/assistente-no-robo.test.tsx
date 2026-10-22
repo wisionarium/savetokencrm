@@ -10,8 +10,8 @@ import { ConversationHeader } from "@/components/inbox/ConversationHeader";
  * Decisão de produto (mock do dono): o COMPONENTE é o mesmo
  * (`ReplyReviewPanel`, mesma query, mesmo fluxo) — só mudou de endereço. Este
  * arquivo vigia o endereço: o botão existe no header e o painel abre nele, com
- * o fluxo gerar→revisar intacto. O fluxo em si continua coberto pelos specs
- * `autonomia-assistida` e `qa-sugestao-rejeitada-e-motivo`.
+ * o fluxo gerar→revisar intacto. O fluxo em si continua coberto pelo spec
+ * `qa-sugestao-rejeitada-e-motivo`.
  */
 
 vi.mock("@/hooks/inbox/useClaimConversation", () => ({

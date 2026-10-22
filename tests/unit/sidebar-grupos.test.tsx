@@ -52,189 +52,53 @@ function expandirGrupo(nome: string) {
   fireEvent.click(screen.getByRole("button", { name: nome }));
 }
 
-describe("Sidebar agrupado", () => {
-  it("renderiza os títulos de grupo na ordem de uso (Canais saiu do menu)", () => {
+describe("Sidebar plano e desagrupado", () => {
+  it("renderiza todos os itens do menu diretamente expostos, sem cabeçalhos colapsáveis", () => {
     comoPapel("admin");
     render(<Sidebar collapsed={false} />);
-    const titulos = screen
-      .getAllByRole("heading")
-      .map((el) => el.textContent?.trim())
-      .filter(Boolean);
-    // Organização não tem título aqui: seu hub (Configurações) vive no rodapé
-    // fixo, fora da área que rola — medido, ele caía fora da dobra até em 1080px.
-    // Canais não tem título desde 2026-10-06: Conexões e Webhooks foram para o
-    // hub Configurações e a Nuvemshop segue só no ⌘K — grupo sem item no menu
-    // é omitido, não órfão. Fluxos tem bandeja própria desde 2026-10-06.
-    // Agente de IA e Análise saíram inteiros do produto (decisão do dono):
-    // Ferramentas entra no lugar dos insumos de quem atende.
-    expect(titulos).toEqual(["Atendimento", "CRM", "Ferramentas", "Fluxos"]);
-  });
-
-  it("tudo nasce recolhido ao abrir — um bloco por vez, sem exceção", () => {
-    comoPapel("admin");
-    render(<Sidebar collapsed={false} />);
-    // Nem o Inbox aparece de cara: bandeja cheia é o que se quer evitar.
-    expect(screen.queryByRole("link", { name: /Inbox/ })).toBeNull();
-    expect(screen.queryByRole("link", { name: "Respostas rápidas" })).toBeNull();
-    expect(screen.queryByRole("link", { name: "Funis" })).toBeNull();
-    expect(screen.queryByRole("link", { name: /Audit Log/ })).toBeNull();
-  });
-
-  it("Ferramentas reúne Respostas rápidas e Galeria — e Agente de IA não existe mais", () => {
-    comoPapel("admin");
-    render(<Sidebar collapsed={false} />);
-    expect(screen.queryByRole("button", { name: "Agente de IA" })).toBeNull();
-    expect(screen.queryByRole("button", { name: "Análise" })).toBeNull();
-    expandirGrupo("Ferramentas");
-    expect(screen.getByRole("link", { name: "Respostas rápidas" })).toHaveAttribute(
-      "href",
-      "/app/templates",
-    );
+    // Todos os itens visíveis aparecem de cara numa lista plana
+    expect(screen.getByRole("link", { name: /Inbox/ })).toHaveAttribute("href", "/app/inbox");
+    expect(screen.getByRole("link", { name: "Contatos" })).toHaveAttribute("href", "/app/contacts");
+    expect(screen.getByRole("link", { name: "Tarefas" })).toHaveAttribute("href", "/app/tasks");
+    expect(screen.getByRole("link", { name: "Produtos" })).toHaveAttribute("href", "/app/products");
+    expect(screen.getByRole("link", { name: "Respostas rápidas" })).toHaveAttribute("href", "/app/templates");
     expect(screen.getByRole("link", { name: "Galeria" })).toHaveAttribute("href", "/app/galeria");
-    // As telas do bloco antigo não existem em lugar nenhum do menu.
+    expect(screen.getByRole("link", { name: "Fluxos" })).toHaveAttribute("href", "/app/ai/fluxos");
+  });
+
+  it("itens removidos e legados não aparecem no menu", () => {
+    comoPapel("admin");
+    render(<Sidebar collapsed={false} />);
     expect(screen.queryByRole("link", { name: "Agentes" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Alertas" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Desempenho" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Atividades" })).toBeNull();
-  });
-
-  it("a bandeja Fluxos leva à página dos 3 fluxos", () => {
-    comoPapel("admin");
-    render(<Sidebar collapsed={false} />);
-    expect(screen.queryByRole("link", { name: "Fluxos" })).toBeNull();
-    expandirGrupo("Fluxos");
-    expect(screen.getByRole("link", { name: "Fluxos" })).toHaveAttribute(
-      "href",
-      "/app/ai/fluxos",
-    );
-  });
-
-  it("o CRM no menu traz o dia a dia — Funis e Etapas do funil saíram do bloco", () => {
-    comoPapel("admin");
-    render(<Sidebar collapsed={false} />);
-    expect(screen.queryByRole("link", { name: "Etapas do funil" })).toBeNull();
-    expandirGrupo("CRM");
-    // Saem do MENU, não do produto (ver catalogo.ts): o ⌘K e os links internos
-    // seguem levando às duas telas, mas o bloco do CRM fica com o dia a dia.
-    expect(screen.queryByRole("link", { name: "Etapas do funil" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Funis" })).toBeNull();
-    expect(screen.getByRole("link", { name: "Contatos" })).toHaveAttribute(
-      "href",
-      "/app/contacts",
-    );
-  });
-
-  it("Audit Log foi para Configurações — e Canais saiu do menu, com Nuvemshop só no ⌘K", () => {
-    comoPapel("admin");
-    render(<Sidebar collapsed={false} />);
-    // Análise saiu inteira do produto: o Audit Log foi para o hub Organização,
-    // na seção "Dados e acesso", ao lado de LGPD e API Tokens — a porta é
-    // "Configurações", no rodapé do sidebar (não um bloco navegável).
-    expect(screen.queryByRole("button", { name: "Análise" })).toBeNull();
     expect(screen.queryByRole("link", { name: /Audit Log/ })).toBeNull();
-
-    // CANAIS SAIU do menu em 2026-10-06 (decisão do dono): Conexões e Webhooks
-    // foram para o hub Configurações, e a Nuvemshop segue só no ⌘K.
-    // Some do MENU, não do produto: as rotas seguem de pé e o ⌘K continua
-    // achando (`searchable()` filtra por papel, nunca por `sidebar`).
-    expect(screen.queryByRole("button", { name: "Canais" })).toBeNull();
     expect(screen.queryByRole("link", { name: /Nuvemshop/ })).toBeNull();
     expect(screen.queryByRole("link", { name: "Conexões" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Webhooks" })).toBeNull();
   });
 
-  it("Configurações fica no rodapé, nunca dependendo de scroll", () => {
+  it("Configurações fica no rodapé fixo, fora da navegação principal", () => {
     comoPapel("admin");
     render(<Sidebar collapsed={false} />);
     const config = screen.getByRole("link", { name: /Configurações/ });
     expect(config).toHaveAttribute("href", "/app/settings");
-    // Fora da <nav> que rola.
     const nav = screen.getByRole("navigation", { name: "Navegação principal" });
     expect(nav.contains(config)).toBe(false);
   });
 
-  it("não deixa cabeçalho órfão quando a permissão esvazia o grupo", () => {
-    // CANAIS é todo manager+/admin. Um agent não pode ver o título sozinho —
-    // Fluxos também é manager+, mesma regra.
-    comoPapel("agent");
-    render(<Sidebar collapsed={false} />);
-    const titulos = screen.getAllByRole("heading").map((el) => el.textContent?.trim());
-    expect(titulos).not.toContain("Canais");
-    expect(titulos).not.toContain("Fluxos");
-    expect(titulos).toContain("Atendimento");
-    expect(titulos).toContain("Ferramentas");
-  });
-
-  it("sem botões Ver tudo: todo destino do menu se alcança expandindo o bloco", () => {
-    comoPapel("admin");
-    render(<Sidebar collapsed={false} />);
-    // Nenhum grupo oferece atalho cumulativo — o bloco É o caminho.
-    expect(screen.queryByRole("link", { name: /Ver tudo/ })).toBeNull();
-    for (const grupo of ["CRM", "Ferramentas", "Fluxos"]) expandirGrupo(grupo);
-    expect(screen.getByRole("link", { name: "Produtos" })).toHaveAttribute(
-      "href",
-      "/app/products",
-    );
-    expect(screen.getByRole("link", { name: "Galeria" })).toHaveAttribute(
-      "href",
-      "/app/galeria",
-    );
-    expect(screen.getByRole("link", { name: "Fluxos" })).toHaveAttribute(
-      "href",
-      "/app/ai/fluxos",
-    );
-    // Conhecimento, Memória, Skills e Casos saíram da navegação; Follow-ups
-    // mora nas abas de Fluxos; Credenciais, Provedores, Roteadores, Conexões
-    // e Webhooks moram em Configurações (fora do menu lateral).
-    expect(screen.queryByRole("link", { name: "Conhecimento" })).toBeNull();
-    expect(screen.queryByRole("link", { name: "Credenciais" })).toBeNull();
-    expect(screen.queryByRole("link", { name: "Follow-ups" })).toBeNull();
-  });
-
-  it("colapsado esconde os títulos mas mantém os links", () => {
+  it("colapsado mantém o link acessível", () => {
     comoPapel("admin");
     render(<Sidebar collapsed />);
-    expect(screen.queryAllByRole("heading")).toHaveLength(0);
     expect(screen.getByRole("link", { name: /Inbox/ })).toBeTruthy();
-  });
-
-  it("recolhido mostra UM ícone por grupo — o principal — e nada mais", () => {
-    comoPapel("admin");
-    render(<Sidebar collapsed />);
-    // O rail é vitrine, não inventário: o clique navega direto ao principal e
-    // o resto mora no hover (que revela o menu), no ⌘K e por URL. ~22 ícones
-    // num rail de 64px era o "confuso" que o dono mediu no print.
-    for (const [nome, href] of [
-      ["Inbox", "/app/inbox"],
-      ["Contatos", "/app/contacts"],
-      ["Respostas rápidas", "/app/templates"],
-      ["Fluxos", "/app/ai/fluxos"],
-    ] as const) {
-      expect(screen.getByRole("link", { name: nome })).toHaveAttribute("href", href);
-    }
-    for (const nome of [
-      "Galeria",
-      "Tarefas",
-      "Produtos",
-      "Funis",
-      "Agentes",
-      "Desempenho",
-    ]) {
-      expect(
-        screen.queryByRole("link", { name: nome }),
-        `o "${nome}" vazou para o rail — ele mora no hover/⌘K, não aqui`,
-      ).toBeNull();
-    }
   });
 
   it("marca a rota atual com aria-current", () => {
     comoPapel("admin");
     render(<Sidebar collapsed={false} />);
-    expandirGrupo("Atendimento");
     expect(screen.getByRole("link", { name: /Inbox/ })).toHaveAttribute("aria-current", "page");
-    // "Kanban" saiu da interface e "Funis" saiu do menu; o bloco do CRM abre em
-    // Contatos, que não é a rota atual.
-    expandirGrupo("CRM");
     expect(screen.getByRole("link", { name: "Contatos" })).not.toHaveAttribute("aria-current");
   });
 });

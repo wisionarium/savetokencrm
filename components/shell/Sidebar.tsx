@@ -12,7 +12,7 @@ import { VersionFooter } from "@/components/shell/VersionFooter";
 import { LogotipoDoProduto, SimboloDoProduto } from "@/components/branding/MarcaDoProduto";
 import { logoDaMarca, marcaEhADoProduto } from "@/lib/branding";
 import { useMarcaDaInstalacao } from "@/lib/branding/contexto";
-import { GRUPO_NO_RODAPE, principaisDoRail, sidebarGroups } from "@/lib/navigation/registry";
+import { GRUPO_NO_RODAPE, sidebarGroups } from "@/lib/navigation/registry";
 
 interface SidebarContentProps {
   collapsed: boolean;
@@ -52,12 +52,6 @@ export function SidebarContent({
   // 1280x768, ele caía fora da dobra mesmo em telas de 1080px.
   const grupos = useMemo(() => todos.filter((g) => g.group.id !== GRUPO_NO_RODAPE), [todos]);
   const rodape = todos.find((g) => g.group.id === GRUPO_NO_RODAPE)?.group.hub;
-  /**
-   * RAIL (mock do dono): um ícone por grupo. Memoizado porque deriva dos grupos
-   * já projetados para o papel — papel sem item visível no grupo some do rail
-   * sem nenhum `if` de papel aqui.
-   */
-  const rail = useMemo(() => principaisDoRail(grupos), [grupos]);
 
   /**
    * Lista plana de todos os itens do sidebar — sem cabeçalhos de grupo, sem

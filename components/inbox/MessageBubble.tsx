@@ -166,14 +166,18 @@ export const MessageBubble = memo(function MessageBubble({
           isBareSticker
             ? "px-0 py-0"
             : cn(
-                // Visual WhatsApp (novo visual): saída verde, entrada clara.
+                // Visual WhatsApp (novo visual), com a paleta combinada com o
+                // dono do produto (2026-10-23):
+                //   fundo do fio  claro #EFEAE2 · escuro #0B141A
+                //   recebida      clara #FFFFFF  · escura  #202C33
+                //   enviada       clara #D9FDD3  · escura  #005C4B
                 // Tons fixos de conversa (não da marca): a bolha imita o
                 // mensageiro onde a conversa acontece, e a marca segue na
-                // casca (accent). `dark:` cobre o modo escuro do mock.
+                // casca (accent). `dark:` responde a `data-theme="dark"`.
                 "rounded-2xl px-3 py-2 shadow-sm",
                 isOutbound
                   ? "rounded-br-sm bg-[#d9fdd3] text-[#111b21] dark:bg-[#005c4b] dark:text-[#e9edef]"
-                  : "rounded-bl-sm bg-white text-[#111b21] dark:bg-[#1f2c34] dark:text-[#e9edef]",
+                  : "rounded-bl-sm bg-white text-[#111b21] dark:bg-[#202c33] dark:text-[#e9edef]",
               ),
           isFailed && "border border-destructive",
         )}

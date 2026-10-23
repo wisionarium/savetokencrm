@@ -86,6 +86,18 @@ function dayLabel(d: Date, t: (texto: string) => string = (texto) => texto, loca
   return format(d, "dd/MM/yyyy", { locale: locale });
 }
 
+/**
+ * O FUNDO DO FIO, nos dois temas — paleta combinada com o dono em 2026-10-23
+ * (bege acinzentado claro / cinza-quase-preto escuro, como no mensageiro).
+ *
+ * Vive num const e não em cada `return` porque TODOS os estados desta tela são
+ * a mesma área: mensagens, vazio, carregando e erro. Sem isto, quatro dos cinco
+ * caminhos pintavam a casca (#faf9f6 claro, #161510 escuro) e o fio nascia como
+ * um retângulo de outra cor em volta do bege.
+ */
+const fundoDoFio =
+  "bg-[#efeae2] dark:bg-[#0b141a] dark:bg-[radial-gradient(rgba(255,255,255,0.045)_1px,transparent_1px)] dark:bg-[size:18px_18px]";
+
 export function ChatThread({ conversationId, onResponder, dono, contatoId, disparandoFluxo }: Props) {
   const localeDaData = useLocaleDeData();
   const t = useT();
@@ -240,7 +252,7 @@ export function ChatThread({ conversationId, onResponder, dono, contatoId, dispa
     return (
       <div
         {...sinalDoCanal}
-        className="flex h-full items-center justify-center text-sm text-muted-foreground"
+        className={`flex h-full items-center justify-center text-sm text-muted-foreground ${fundoDoFio}`}
       >
         {t("Selecione uma conversa")}
       </div>
@@ -249,7 +261,7 @@ export function ChatThread({ conversationId, onResponder, dono, contatoId, dispa
 
   if (q.isLoading) {
     return (
-      <div {...sinalDoCanal} className="space-y-3 p-4">
+      <div {...sinalDoCanal} className={`space-y-3 p-4 ${fundoDoFio}`}>
         {[1, 2, 3, 4].map((i) => (
           <Skeleton key={i} className="h-12 w-2/3" />
         ))}
@@ -261,7 +273,7 @@ export function ChatThread({ conversationId, onResponder, dono, contatoId, dispa
     return (
       <div
         {...sinalDoCanal}
-        className="flex h-full flex-col items-center justify-center gap-2 text-sm text-muted-foreground"
+        className={`flex h-full flex-col items-center justify-center gap-2 text-sm text-muted-foreground ${fundoDoFio}`}
       >
         <p>{t("Erro ao carregar mensagens.")}</p>
         <Button size="sm" variant="outline" onClick={() => q.refetch()}>
@@ -275,7 +287,7 @@ export function ChatThread({ conversationId, onResponder, dono, contatoId, dispa
     return (
       <div
         {...sinalDoCanal}
-        className="flex h-full items-center justify-center text-sm text-muted-foreground"
+        className={`flex h-full items-center justify-center text-sm text-muted-foreground ${fundoDoFio}`}
       >
         {t("Nenhuma mensagem nesta conversa.")}
       </div>
@@ -301,7 +313,7 @@ export function ChatThread({ conversationId, onResponder, dono, contatoId, dispa
       */}
       <div
         ref={scrollerRef}
-        className="flex-1 overflow-y-auto bg-background py-2 dark:bg-[#0b141a] dark:bg-[radial-gradient(rgba(255,255,255,0.045)_1px,transparent_1px)] dark:bg-[size:18px_18px]"
+        className={`flex-1 overflow-y-auto py-2 ${fundoDoFio}`}
       >
         {q.hasNextPage && (
           <div className="flex justify-center py-2">

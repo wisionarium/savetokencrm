@@ -573,13 +573,8 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
                   contatoId={selectedConversation.contacts?.id ?? null}
                 />
               </div>
-              {/* O zoom do fio é gesto de desktop (pílula flutuante, alvo fino).
-                  No celular o fio rola normal e o gesto de pinça já é do
-                  navegador — então a pílula nem se monta abaixo de `md`. */}
-              <div className="hidden md:block">
-                <ZoomDoFio userId={user.id ?? null} />
-              </div>
             </div>
+
             <RetentionNotice conversationId={selectedConversation.id} />
             {motivoDaJanela && (
               <JanelaFechadaAviso

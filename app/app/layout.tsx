@@ -23,6 +23,7 @@ import { listarConexoesCaidas, type ConexaoCaida } from "@/lib/channels/health";
 import { VoiceCallProvider } from "@/components/voice/VoiceCallContext";
 import { acessoFoiRevogado } from "@/lib/auth/vinculo-revogado";
 import { ProBanner } from "@/components/pro/ProBanner";
+import { SupportBotWidget } from "@/components/support/SupportBotWidget";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user = await loadAuthUser();
@@ -253,6 +254,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         ) : (
           shell
         )}
+        <SupportBotWidget />
       </div>
       </ProvedorDeCoresDasEtiquetas>
     </AuthProvider>

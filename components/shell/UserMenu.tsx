@@ -14,7 +14,8 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { SeletorDeIdioma } from "@/components/shell/SeletorDeIdioma";
 import { useT } from "@/hooks/i18n/useT";
-import { SignOut } from "@/lib/ui/icons";
+import Link from "next/link";
+import { SignOut, ShieldCheck } from "@/lib/ui/icons";
 
 function initials(name: string | null, email: string): string {
   if (name && name.trim()) {
@@ -50,6 +51,17 @@ export function UserMenu() {
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
+          {user.is_platform_admin && (
+            <>
+              <DropdownMenuItem asChild>
+                <Link href="/admin/tenants" className="flex items-center gap-2 font-medium text-blue-600 dark:text-blue-400">
+                  <ShieldCheck size={16} />
+                  {t("Painel Super Admin (Master)")}
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+            </>
+          )}
           <DropdownMenuItem disabled={isPending} onClick={() => startTransition(async () => { await signOut(); })}>
             <SignOut size={16} className="mr-2" aria-hidden />
             {t("Sair")}

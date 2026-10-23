@@ -717,6 +717,8 @@ export const AUDIT_ACTIONS = [
   // meio dos renames — e "quem trouxe este funil de volta, e quando" é a
   // pergunta que o painel de auditoria só responde filtrando por `action`.
   "pipeline.unarchived",
+  /** Chamado de suporte aberto pelo cliente através do bot ou painel. */
+  "support.ticket_created",
 ] as const;
 
 /** Um código de auditoria. Derivado de `AUDIT_ACTIONS` — não redigite a lista. */

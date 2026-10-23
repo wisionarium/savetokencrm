@@ -5,6 +5,39 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createTicket } from "@/app/actions/support/createTicket";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+
+export function openSupportChat() {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("open-support-bot"));
+  }
+}
+
+export function SupportBotButton({
+  className,
+  variant = "outline",
+}: {
+  className?: string;
+  variant?: "default" | "outline" | "secondary" | "ghost";
+}) {
+  return (
+    <Button
+      type="button"
+      variant={variant}
+      onClick={() => openSupportChat()}
+      className={cn("flex items-center gap-2", className)}
+    >
+      <svg className="h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+        <rect x="3" y="11" width="18" height="10" rx="3" />
+        <circle cx="12" cy="5" r="2" />
+        <path d="M12 7v4" />
+        <line x1="8" y1="16" x2="8.01" y2="16" strokeWidth={3} />
+        <line x1="16" y1="16" x2="16.01" y2="16" strokeWidth={3} />
+      </svg>
+      <span>Suporte & Atendimento</span>
+    </Button>
+  );
+}
 
 interface Message {
   id: string;
@@ -23,6 +56,14 @@ const OPCOES_RAPIDAS = [
 
 export function SupportBotWidget() {
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    function handleOpen() {
+      setOpen(true);
+    }
+    window.addEventListener("open-support-bot", handleOpen);
+    return () => window.removeEventListener("open-support-bot", handleOpen);
+  }, []);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "initial-1",
@@ -100,8 +141,8 @@ export function SupportBotWidget() {
 
   return (
     <>
-      {/* Botão Flutuante Redondo no Canto Direito */}
-      <div className="fixed bottom-5 right-5 z-40">
+      {/* Botão Flutuante Redondo no Canto Direito - apenas Desktop */}
+      <div className="fixed bottom-5 right-5 z-40 hidden md:block">
         <button
           type="button"
           onClick={() => setOpen(!open)}
@@ -134,7 +175,7 @@ export function SupportBotWidget() {
 
       {/* Janela de Chat Flutuante */}
       {open && (
-        <div className="fixed bottom-22 right-5 z-40 flex h-[520px] w-[370px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border bg-background shadow-2xl animate-in fade-in slide-in-from-bottom-5 duration-200">
+        <div className="fixed bottom-4 right-4 md:bottom-22 md:right-5 z-50 flex h-[520px] w-[calc(100vw-2rem)] md:w-[370px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border bg-background shadow-2xl animate-in fade-in slide-in-from-bottom-5 duration-200">
           {/* Header do Chat */}
           <div className="flex items-center justify-between border-b bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3 text-white">
             <div className="flex items-center gap-3">

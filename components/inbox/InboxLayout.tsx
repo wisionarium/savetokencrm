@@ -414,8 +414,8 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
         // TopBar e o `p-6`.
         "grid h-[100dvh] w-full grid-cols-1 pt-[env(safe-area-inset-top)] md:h-[calc(100dvh-3.5rem-2*var(--space-6))] md:pt-0",
         painelAberto
-          ? "md:grid-cols-[232px_minmax(0,1fr)_264px] xl:grid-cols-[272px_1fr_296px] 2xl:grid-cols-[300px_1fr_320px]"
-          : "md:grid-cols-[232px_minmax(0,1fr)_32px] xl:grid-cols-[272px_1fr_32px] 2xl:grid-cols-[300px_1fr_32px]",
+          ? "md:grid-cols-[280px_minmax(0,1fr)_264px] xl:grid-cols-[320px_1fr_296px] 2xl:grid-cols-[360px_1fr_320px]"
+          : "md:grid-cols-[280px_minmax(0,1fr)_32px] xl:grid-cols-[320px_1fr_32px] 2xl:grid-cols-[360px_1fr_32px]",
       )}
       // A CONVERSA ABERTA ESCONDE O RODAPÉ. O CSS lê daqui
       // (`app/globals.css`, `html:has([data-conversa-aberta])`): no fio, a

@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button";
 import { ProUnlockModal } from "./ProUnlockModal";
 
 export function ProBanner({ isPro }: { isPro: boolean }) {
+  // Ocultado temporariamente a pedido para finalização do layout
+  return null;
+
   const [modalOpen, setModalOpen] = useState(false);
 
   if (isPro) return null;

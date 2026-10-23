@@ -17,6 +17,7 @@ import { rotuloDaAba } from "@/lib/navigation/mobile";
 import { sidebarGroups } from "@/lib/navigation/registry";
 import { CaretRight, Gear, MagnifyingGlass, SignOut, X } from "@/lib/ui/icons";
 import { cn } from "@/lib/utils";
+import { SupportBotButton } from "@/components/support/SupportBotWidget";
 
 /**
  * O CONTEÚDO DA TELA "MAIS".
@@ -191,6 +192,16 @@ export function TelaMais() {
               </div>
             ))}
           </nav>
+        </section>
+
+        <section aria-labelledby="mais-suporte" className="space-y-2">
+          <h2
+            id="mais-suporte"
+            className="px-1 text-xs font-medium tracking-wider text-muted-foreground uppercase"
+          >
+            {t("Ajuda")}
+          </h2>
+          <SupportBotButton className="w-full justify-start py-5 text-sm" />
         </section>
 
         <section className="space-y-2">

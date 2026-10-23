@@ -6,7 +6,7 @@ import { useLocaleDeData } from "@/hooks/i18n/useLocaleDeData";
 import type { Locale } from "date-fns";
 import { format, formatDistanceToNowStrict } from "date-fns";
 import { useT } from "@/hooks/i18n/useT";
-import { Phone, Robot } from "@/lib/ui/icons";
+import { Checks, Phone, Robot } from "@/lib/ui/icons";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ChipDeEtiqueta } from "@/components/tags/ChipDeEtiqueta";
@@ -89,8 +89,19 @@ function relativeTime(iso: string | null, locale: Locale): string {
   const now = new Date();
   const sameDay = d.toDateString() === now.toDateString();
   if (sameDay) return format(d, "HH:mm");
-  const diff = (now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24);
-  if (diff < 7) return formatDistanceToNowStrict(d, { addSuffix: false, locale: locale });
+
+  const ontem = new Date(now);
+  ontem.setDate(now.getDate() - 1);
+  if (d.toDateString() === ontem.toDateString()) return "ontem";
+
+  const diffDays = Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
+  if (diffDays < 7) {
+    try {
+      return format(d, "EEEE", { locale });
+    } catch {
+      return format(d, "dd/MM");
+    }
+  }
   return format(d, "dd/MM");
 }
 
@@ -198,31 +209,29 @@ export const ConversationListItem = memo(function ConversationListItem({
     inbound_total: conversation.inbound_total ?? null,
   });
 
+  const isOutbound = Boolean(
+    conversation.last_outbound_at &&
+      (!conversation.last_inbound_at ||
+        new Date(conversation.last_outbound_at) >= new Date(conversation.last_inbound_at)),
+  );
+
   return (
     <button
       type="button"
       data-conversation-id={conversation.id}
       onClick={() => onSelect(conversation.id)}
       className={cn(
-        "group relative flex w-full items-start gap-3 border-b border-border/70 px-3 py-2.5 text-left transition-colors hover:bg-surface-elevated",
+        "group relative flex w-full items-center gap-3 border-b border-border/70 px-3.5 py-3 text-left transition-colors hover:bg-surface-elevated/70",
         "focus-visible:outline-hidden focus-visible:bg-surface-elevated",
-        // Selecionado pinta com `accent-soft` (o mesmo fundo dos badges da tela),
-        // e NÃO com `accent-50`: o stop 50 é tom fixo claro nos dois temas
-        // (branco no escuro, lavado no claro). O soft se adapta — `#dde5f1` no
-        // claro, navy `#1c2d43` no escuro — e já é superfície medida pela régua.
         isSelected && "bg-accent-soft hover:bg-accent-soft",
       )}
       aria-current={isSelected ? "true" : undefined}
     >
       {isSelected && (
-        <span className="absolute inset-y-0 left-0 w-0.5 bg-accent" aria-hidden />
+        <span className="absolute inset-y-0 left-0 w-1 bg-accent rounded-r" aria-hidden />
       )}
       <div className="relative shrink-0">
-        <Avatar className="h-14 w-14">
-          {/* Só monta a <img> quando existe arquivo: sem isso o browser pediria
-              a rota para TODO contato da lista e levaria 404 em cada um sem
-              foto — que é a maioria. O AvatarFallback do Radix já cobre o caso
-              de a imagem não carregar, então as iniciais nunca somem. */}
+        <Avatar className="h-12 w-12 ring-2 ring-emerald-500/80 ring-offset-2 ring-offset-background transition-all">
           {c?.avatar_storage_path && !c?.is_anonymized ? (
             <AvatarImage
               src={`/api/v1/contacts/${c.id}/avatar`}
@@ -230,7 +239,7 @@ export const ConversationListItem = memo(function ConversationListItem({
               className="object-cover"
             />
           ) : null}
-          <AvatarFallback className="bg-surface-elevated text-sm font-medium text-text-muted">
+          <AvatarFallback className="bg-surface-elevated text-xs font-semibold text-text-muted">
             {iniciaisDoContato(displayName, phoneFallback)}
           </AvatarFallback>
         </Avatar>
@@ -241,27 +250,15 @@ export const ConversationListItem = memo(function ConversationListItem({
           )}
           aria-hidden
         />
-        {/*
-          SELO DE CANAL (novo visual): o número DA EMPRESA por onde a conversa
-          chegou, como emblema do avatar. Só quando há canal resolvido — sem
-          dado, sem selo (emblema sem fonte seria enfeite). Todos os canais
-          de mensagem do produto são WhatsApp, então o emblema é único; se um dia
-          entrar outro mensageiro, este ponto vira mapa canal→ícone.
-        */}
         {canal && (
           <span
-            className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-background bg-[#25d366] text-white"
+            className="absolute -bottom-1 -right-1 flex h-4.5 w-4.5 items-center justify-center rounded-full border-2 border-background bg-[#25d366] text-white shadow-xs"
             title={rotuloCanal ?? t("WhatsApp")}
             aria-hidden
           >
-            <Phone size={10} weight="fill" aria-hidden />
+            <Phone size={9} weight="fill" aria-hidden />
           </span>
         )}
-        {/*
-          CHAMA NO AVATAR (novo visual): lead quente ganha a chama no canto do
-          avatar, como no mock. A linha de selos continua existindo (tags,
-          dono, bloqueio) — a chama aqui é o ALERTA, lá é o contexto.
-        */}
         {engajamento.nivel === "quente" && engajamento.motivo && (
           <span className="absolute -left-1 -top-1" title={engajamento.motivo}>
             <ChamaDeEngajamento motivo={engajamento.motivo} />
@@ -269,84 +266,73 @@ export const ConversationListItem = memo(function ConversationListItem({
         )}
       </div>
 
-      <div className="min-w-0 flex-1">
-        {naFila && (
-          <div className="mb-1 flex items-center gap-1.5">
-            {/* `min-h` e não `h`: com a escala +5px o número cresceu e altura
-                fixa cortaria o descendente — piso de 16px, cresce junto. */}
+      <div className="min-w-0 flex-1 flex flex-col justify-center">
+        {/* Linha 1: Nome do Contato + Hora/Data */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 min-w-0 flex-1">
+            {naFila && (
+              <span
+                className="inline-flex min-h-4 min-w-4 items-center justify-center rounded-full bg-accent-soft px-1 text-[10px] font-semibold tabular-nums text-accent shrink-0"
+                aria-label={`${t("Posição")} ${queuePosition} ${t("na fila")}`}
+              >
+                {queuePosition}º
+              </span>
+            )}
             <span
-              className="inline-flex min-h-4 min-w-4 items-center justify-center rounded-full bg-accent-soft px-1 text-[10px] font-medium tabular-nums text-accent"
-              aria-label={`${t("Posição")} ${queuePosition} ${t("na fila")}`}
+              className={cn(
+                "truncate text-[13.5px] tracking-tight",
+                unread > 0 ? "font-semibold text-text" : "font-medium text-text",
+                c?.is_anonymized && "font-normal italic text-text-muted",
+              )}
             >
-              {queuePosition}º
-            </span>
-            <span className="text-[11px] text-text-muted">
-              {waitingLabel(conversation, t, localeDaData)}
+              {displayName}
             </span>
           </div>
-        )}
-        {/*
-          PRESENÇA (placeholder, novo visual): o mock mostra Online/offline por
-          linha, e HOJE não há fonte de presença (sem heartbeat, sem realtime
-          presence). O ponto cinza marca o LUGAR — "desconhecido", nunca um
-          estado inventado — com o motivo no tooltip. Quando a fonte existir,
-          este ponto vira verde/cinza pelos dados.
-        */}
-        <div className="flex items-baseline justify-between gap-2">
+
           <span
-            className="min-w-0 truncate text-[11px] text-text-muted"
-            // O mesmo lugar da tela mostra duas coisas diferentes conforme a aba:
-            // na Fila é "desde quando o cliente ESPERA" (a mensagem mais antiga sem
-            // resposta — #990), nas outras é "há quanto tempo a conversa mexeu". O
-            // rótulo existe só onde a leitura muda. É a DATA da espera (a pílula
-            // acima já diz o "há quanto tempo") — mesma régua da ordenação.
+            className={cn(
+              "shrink-0 text-[11px] tabular-nums",
+              unread > 0 ? "font-medium text-emerald-600 dark:text-emerald-400" : "text-text-muted",
+            )}
             title={naFila ? t("Desde quando o cliente espera resposta") : undefined}
           >
             {horaDaOrdem ? relativeTime(horaDaOrdem, localeDaData) : ""}
           </span>
-          <span
-            className="flex shrink-0 items-center gap-1 text-[11px] text-text-subtle"
-            title={t("Presença (em breve)")}
-            aria-label={t("Presença desconhecida")}
-          >
-            <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40" aria-hidden />
-            {t("offline")}
-          </span>
         </div>
-        <div className="flex items-baseline justify-between gap-2">
-          <span
+
+        {/* Linha 2: Prévia da Mensagem (com ícone de check/robô) + Badge de Não Lidas */}
+        <div className="mt-0.5 flex items-center justify-between gap-2">
+          <p
             className={cn(
-              // Caixa alta por CSS (o dado continua intacto — é só o desenho do mock).
-              "truncate text-sm uppercase",
-              unread > 0 ? "font-semibold text-text" : "font-medium text-text",
-              c?.is_anonymized && "font-normal normal-case italic text-text-muted",
+              "min-w-0 flex-1 truncate text-[12.5px] flex items-center gap-1",
+              unread > 0 ? "font-medium text-text" : "text-text-muted",
             )}
           >
-            {displayName}
-          </span>
+            {isAi && mostrarAutomatico ? (
+              <Robot size={13} weight="duotone" className="shrink-0 text-text-muted inline" aria-hidden />
+            ) : isOutbound ? (
+              <Checks size={14} weight="bold" className="shrink-0 text-[#53bdeb] inline" aria-hidden />
+            ) : null}
+            <span className="truncate">{truncated}</span>
+          </p>
+
           {unread > 0 && (
-            <span className="inline-flex min-h-[18px] min-w-[18px] shrink-0 items-center justify-center rounded-full bg-accent px-1.5 text-[10px] font-semibold tabular-nums text-accent-foreground">
+            <span className="inline-flex min-h-[18px] min-w-[18px] shrink-0 items-center justify-center rounded-full bg-emerald-500 px-1.5 text-[10px] font-bold tabular-nums text-white shadow-xs">
               {unread}
             </span>
           )}
         </div>
 
-        <div className="mt-0.5 flex items-center justify-between gap-2">
-          <p
-            className={cn(
-              "min-w-0 truncate text-[13px]",
-              unread > 0 ? "text-text" : "text-text-muted",
-            )}
-          >
-            {isAi && mostrarAutomatico ? (
-              <Robot size={12} weight="duotone" className="mr-1 inline align-[-2px]" aria-hidden />
-            ) : null}
-            {truncated}
-          </p>
-        </div>
+        {/* Linha de Fila (tempo de espera se estiver na aba de fila) */}
+        {naFila && (
+          <div className="mt-1 flex items-center gap-1 text-[10px] text-text-muted">
+            <span>{waitingLabel(conversation, t, localeDaData)}</span>
+          </div>
+        )}
 
-        {(temSelos || engajamento.nivel === "quente") && (
-          <div className="mt-1.5 flex flex-wrap items-center gap-1">
+        {/* Linha de Etiquetas/Selos (apenas se existirem) */}
+        {(temSelos || (engajamento.nivel === "quente" && engajamento.motivo)) && (
+          <div className="mt-1 flex flex-wrap items-center gap-1">
             {visibleTags.map((t) => (
               <ChipDeEtiqueta key={t} tag={t} className="min-h-4 px-1.5 text-[10px]" />
             ))}

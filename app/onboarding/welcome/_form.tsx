@@ -101,7 +101,7 @@ export function WelcomeForm({ defaultOrgName }: { defaultOrgName: string }) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="timezone">{t("Onde você atende")}</Label>
+        <Label htmlFor="timezone">{t("Onde você atende (Região / Fuso)")}</Label>
         <Select value={timezone} onValueChange={setTimezone}>
           <SelectTrigger id="timezone">
             <SelectValue />
@@ -116,8 +116,50 @@ export function WelcomeForm({ defaultOrgName }: { defaultOrgName: string }) {
         </Select>
         <input type="hidden" name="timezone" value={timezone} />
         <p className="text-xs text-muted-foreground">
-          {t("Decide o horário em que seu funcionário pode falar com clientes.")}
+          {t("Define a referência de horário para atendimento dos seus clientes.")}
         </p>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-2 sm:col-span-2">
+          <Label htmlFor="dias_funcionamento">{t("Dias de atendimento")}</Label>
+          <Select defaultValue="Segunda a Sexta" name="dias_funcionamento">
+            <SelectTrigger id="dias_funcionamento">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Segunda a Sexta">{t("Segunda a Sexta-feira")}</SelectItem>
+              <SelectItem value="Segunda a Sábado">{t("Segunda a Sábado")}</SelectItem>
+              <SelectItem value="Todos os dias">{t("Todos os dias (Segunda a Domingo)")}</SelectItem>
+              <SelectItem value="Plantão 24h">{t("Plantão 24 horas")}</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            {t("Os dias em que sua empresa opera para receber clientes.")}
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="horario_inicio">{t("Horário de abertura")}</Label>
+          <Input
+            id="horario_inicio"
+            name="horario_inicio"
+            type="time"
+            defaultValue="08:00"
+            required
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="horario_fim">{t("Horário de encerramento")}</Label>
+          <Input
+            id="horario_fim"
+            name="horario_fim"
+            type="time"
+            defaultValue="18:00"
+            required
+          />
+        </div>
       </div>
 
       <label className="flex items-start gap-2 text-sm">

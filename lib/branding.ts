@@ -118,7 +118,7 @@ export const LOGO_DA_TECLA = "/marca/tecla.png";
  */
 export function logoDaMarca(nome: string, logoUrl: string | null): string | null {
   if (logoUrl) return logoUrl;
-  return /^tecla$/i.test(nome.trim()) ? LOGO_DA_TECLA : null;
+  return /tecla/i.test(nome.trim()) ? LOGO_DA_TECLA : null;
 }
 
 export function branding(): Branding {

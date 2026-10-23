@@ -3,130 +3,88 @@
 import { useTransition } from "react";
 import { toast } from "sonner";
 import { useT } from "@/hooks/i18n/useT";
-
 import { Button } from "@/components/ui/button";
 import { finishOnboarding } from "@/app/actions/onboarding/finishOnboarding";
 import type { ItemDoResumo } from "@/lib/onboarding/passos";
-import type { PecaDoSistema } from "@/lib/onboarding/o-que-mais-existe";
 
 export function DoneClient({
+  orgName,
   itens,
-  pecas,
 }: {
+  orgName: string;
   itens: ItemDoResumo[];
-  pecas: PecaDoSistema[];
 }) {
   const t = useT();
   const [pending, startTransition] = useTransition();
-  const pendentes = itens.filter((i) => !i.feito);
 
   return (
-    <div className="space-y-6 rounded-lg border bg-background p-6">
-      <div className="space-y-1 text-center">
-        <h2 className="text-2xl font-semibold tracking-tight">{t("Tudo pronto!")}</h2>
-        <p className="text-sm text-muted-foreground">
-          {pendentes.length === 0
-            ? t("Seu funcionário está montado. Daqui em diante é só acompanhar.")
-            : t("Seu funcionário já está de pé. O que ficou para depois continua te esperando.")}
+    <div className="mx-auto max-w-lg space-y-8 rounded-2xl border bg-card p-8 text-center shadow-lg transition-all animate-in fade-in-50 zoom-in-95">
+      <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-10 w-10"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2.5}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
+      </div>
+
+      <div className="space-y-2">
+        <h2 className="text-3xl font-bold tracking-tight text-foreground">
+          {t("Parabéns!")}
+        </h2>
+        <p className="text-base text-muted-foreground">
+          {t("Sua empresa")} <strong className="text-foreground">{orgName}</strong>{" "}
+          {t("está configurada com sucesso no Tecla CRM.")}
         </p>
       </div>
 
-      <ul className="mx-auto max-w-sm space-y-2 text-left text-sm">
-        {itens.map((it) => (
-          <li key={it.segmento} className="flex items-center gap-2">
-            <span
-              aria-hidden
-              className={
-                "inline-block h-2 w-2 rounded-full " +
-                (it.feito ? "bg-success" : "bg-muted-foreground/30")
-              }
-            />
-            <span className={it.feito ? "" : "text-muted-foreground"}>
-              {t(it.rotulo)}
-              {/*
-                "Pulado" é escolha da pessoa; "ainda não" é o que ela não
-                chegou a fazer. Antes tudo que não estivesse feito virava
-                "(pulado)", inclusive passo que a instalação nunca ofereceu —
-                o wizard cobrando o que ninguém pediu.
-              */}
-              {it.pulado ? ` (${t("você pulou")})` : it.feito ? "" : ` (${t("ainda não")})`}
-            </span>
-          </li>
-        ))}
-      </ul>
-
-      {/*
-        O wizard acabava aqui, com um botão que entregava a pessoa numa caixa de
-        conversas vazia. Ela tinha acabado de montar um funcionário e não fazia
-        ideia de que existe um lugar onde ele pede ajuda, outro que mostra quem
-        esfriou, outro onde ele propõe as próprias melhorias. Descobrir isso
-        ficava por conta da curiosidade — e quase ninguém volta para explorar
-        menu.
-      */}
-      <section className="space-y-3 border-t pt-6">
-        <div>
-          <h3 className="text-sm font-medium">{t("O que mais tem aqui")}</h3>
-          <p className="text-xs text-muted-foreground">
-            {t("Você não precisa mexer em nada disso agora. É só para saber que existe.")}
-          </p>
-        </div>
-        {/*
-          Cada peça abre e mostra COMO funciona, em passos. Uma frase basta para
-          dizer que a peça existe; não basta para o follow-up, que é a peça mais
-          técnica do produto e a que mais assusta pelo nome — quem lê "volta a
-          falar com quem sumiu" sem saber que o retorno PARA quando o cliente
-          responde imagina um robô perseguindo cliente, e desliga justamente o
-          que mais recupera venda.
-
-          Fechado por padrão: quem acabou de montar o funcionário não precisa ler
-          seis tutoriais agora. O que ele precisa é saber que a explicação existe
-          e está a um clique.
-        */}
-        <ul className="grid gap-2 sm:grid-cols-2">
-          {pecas.map((p) => (
-            <li key={p.href} className="rounded-md border p-3">
-              <a href={p.href} className="text-sm font-medium underline-offset-2 hover:underline">
-                {t(p.comoChamar)}
-              </a>
-              <span className="ml-1 text-xs text-muted-foreground">({t(p.label)})</span>
-              <p className="mt-1 text-xs text-muted-foreground">{t(p.porQue)}</p>
-
-              <details className="group mt-2">
-                <summary className="cursor-pointer list-none text-xs text-muted-foreground underline underline-offset-2">
-                  {t("Como funciona")}
-                </summary>
-                <ol className="mt-2 space-y-1.5">
-                  {p.comoFunciona.map((passo, i) => (
-                    <li key={passo} className="flex gap-2 text-xs text-muted-foreground">
-                      <span
-                        aria-hidden
-                        className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border text-[10px]"
-                      >
-                        {i + 1}
-                      </span>
-                      <span>{t(passo)}</span>
-                    </li>
-                  ))}
-                </ol>
-              </details>
+      <div className="rounded-xl border bg-muted/40 p-5 text-left text-sm">
+        <p className="mb-3 font-semibold text-foreground">
+          {t("Etapas concluídas:")}
+        </p>
+        <ul className="space-y-2.5">
+          {itens.map((it) => (
+            <li key={it.segmento} className="flex items-center gap-3">
+              <span
+                className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+                  it.feito
+                    ? "bg-emerald-600 text-white"
+                    : "bg-muted-foreground/30 text-muted-foreground"
+                }`}
+              >
+                {it.feito ? "✓" : "–"}
+              </span>
+              <span className={it.feito ? "font-medium text-foreground" : "text-muted-foreground"}>
+                {t(it.rotulo)}
+                {it.pulado ? ` (${t("configurar depois")})` : it.feito ? " (" + t("concluído") + ")" : ""}
+              </span>
             </li>
           ))}
         </ul>
-      </section>
+      </div>
 
-      <div className="flex justify-center">
+      <div className="space-y-3 pt-2">
         <Button
           type="button"
+          size="lg"
+          className="w-full text-base font-semibold shadow-md"
           disabled={pending}
           onClick={() =>
             startTransition(async () => {
               const res = await finishOnboarding();
-              if (res && !res.ok) toast.error(`${t("Falha:")} ${res.error}`);
+              if (res && !res.ok) toast.error(`${t("Falha ao concluir:")} ${res.error}`);
             })
           }
         >
-          {pending ? t("Finalizando...") : t("Começar a usar")}
+          {pending ? t("Acessando o painel...") : t("Começar agora")} →
         </Button>
+        <p className="text-xs text-muted-foreground">
+          {t("Você será direcionado diretamente ao painel de atendimento.")}
+        </p>
       </div>
     </div>
   );

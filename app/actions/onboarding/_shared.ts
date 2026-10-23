@@ -70,7 +70,7 @@ export async function loadOnboardingState(orgId: string): Promise<{
 export async function patchOnboardingState(
   orgId: string,
   patch: Partial<OnboardingState>,
-  extra?: { display_name?: string; timezone?: string },
+  extra?: { display_name?: string; timezone?: string; settings?: Record<string, unknown> },
 ): Promise<void> {
   const admin = createAdminClient();
   const { state } = await loadOnboardingState(orgId);
@@ -78,6 +78,15 @@ export async function patchOnboardingState(
   const update: Record<string, unknown> = { onboarding_state: merged };
   if (extra?.display_name) update.display_name = extra.display_name;
   if (extra?.timezone) update.timezone = extra.timezone;
+  if (extra?.settings) {
+    const { data: currentOrg } = await admin
+      .from("organizations")
+      .select("settings")
+      .eq("id", orgId)
+      .maybeSingle();
+    const currentSettings = (currentOrg?.settings as Record<string, unknown>) ?? {};
+    update.settings = { ...currentSettings, ...extra.settings };
+  }
   const { error } = await admin.from("organizations").update(update).eq("id", orgId);
   if (error) throw new OnboardingError("db_error", error.message);
 }

@@ -58,54 +58,10 @@ export const PASSOS: readonly PassoDoOnboarding[] = [
   },
   {
     segmento: "connect-whatsapp",
-    // O telefone é a primeira peça concreta do funcionário, e é o passo que
-    // pede o celular na mão — o instalador já avisa para deixá-lo aberto.
-    rotulo: "O telefone dele",
+    rotulo: "WhatsApp Oficial",
     existe: () => true,
     cumprido: (s) => marcado(s.whatsapp),
     pulado: (s) => foiPulado(s.whatsapp),
-  },
-  {
-    segmento: "connect-nuvemshop",
-    rotulo: "Sua loja",
-    existe: (ctx) => ctx.lojaLigada,
-    cumprido: (s) => marcado(s.nuvemshop),
-    pulado: (s) => foiPulado(s.nuvemshop),
-  },
-  {
-    segmento: "setup-ai",
-    rotulo: "Treinar",
-    existe: () => true,
-    cumprido: (s) => marcado(s.ai),
-    pulado: (s) => foiPulado(s.ai),
-  },
-  {
-    segmento: "funil",
-    // O quadro vem DEPOIS de treinar de propósito: a sugestão sai da chave que a
-    // pessoa acabou de confirmar funcionando, e é o mesmo cérebro que vai
-    // atender. Pedir o quadro antes obrigaria a montá-lo no escuro.
-    rotulo: "Onde ele organiza",
-    existe: () => true,
-    cumprido: (s) => marcado(s.funil),
-    pulado: (s) => foiPulado(s.funil),
-  },
-  {
-    segmento: "testar",
-    // O wizard terminava entregando a pessoa num inbox vazio. Ver o
-    // funcionário responder ANTES de acabar é o que transforma "configurei um
-    // sistema" em "contratei alguém" — e é onde o erro aparece antes do
-    // primeiro cliente real, não depois.
-    rotulo: "Ver ele atender",
-    existe: () => true,
-    cumprido: (s) => marcado(s.teste),
-    pulado: (s) => foiPulado(s.teste),
-  },
-  {
-    segmento: "invite-team",
-    rotulo: "Quem trabalha com ele",
-    existe: () => true,
-    cumprido: (s) => marcado(s.team),
-    pulado: (s) => foiPulado(s.team),
   },
 ] as const;
 

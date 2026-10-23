@@ -30,17 +30,14 @@ export default async function ConnectWhatsappPage() {
   return (
     <div className="space-y-6">
       <header>
-        <h2 className="text-2xl font-semibold tracking-tight">{traduzir("Dê um telefone a ele", idioma)}</h2>
+        <h2 className="text-2xl font-semibold tracking-tight">{traduzir("Conecte seu WhatsApp Oficial (Meta)", idioma)}</h2>
         <p className="text-sm text-muted-foreground">
           {traduzir(
-            "É por este número que ele vai atender seus clientes. Se você conecta pelo celular, tenha ele por perto.",
+            "Configure o número oficial da sua empresa via Cloud API da Meta para realizar e receber atendimentos profissionais.",
             idioma,
           )}
         </p>
       </header>
-      <p className="text-sm text-muted-foreground">
-        {traduzir("Novos canais começam em modo de teste. Após concluir a configuração, abra Conexões para autorizar seus números de teste ou liberar o público.", idioma)}
-      </p>
       <ConnectWhatsappClient
         wahaConfigured={wahaConfigured}
         sessionName={nomeCurtoDaSessao(activeOrg.orgId)}

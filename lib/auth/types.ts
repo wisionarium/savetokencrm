@@ -191,4 +191,8 @@ export interface ActiveOrg {
    * `window.__PUBLIC_ENV__`, de onde `branding()` a lê.
    */
   marca?: { readonly nome?: string; readonly logoUrl?: string | null };
+  /**
+   * Indica se a organização possui o Plano PRO ativo (desbloqueado).
+   */
+  is_pro?: boolean;
 }

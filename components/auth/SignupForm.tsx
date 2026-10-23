@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useTransition, useState } from "react";
+import { useTransition, useState, useEffect } from "react";
 
 import { useT } from "@/hooks/i18n/useT";
 import {
@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { signUp } from "@/app/actions/auth/signUp";
+import { resendSignUpEmail } from "@/app/actions/auth/resendEmail";
 import { GoogleAuthButton } from "@/components/auth/GoogleAuthButton";
 
 /**
@@ -37,6 +38,17 @@ export function SignupForm({ convite }: { convite?: ConviteDoSignup }) {
   const [serverError, setServerError] = useState<string | null>(null);
   const [contaExistente, setContaExistente] = useState(false);
   const [sentTo, setSentTo] = useState<string | null>(null);
+  const [resending, setResending] = useState(false);
+  const [resendCountdown, setResendCountdown] = useState(0);
+  const [resendStatus, setResendStatus] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (resendCountdown <= 0) return;
+    const interval = setInterval(() => {
+      setResendCountdown((prev) => (prev <= 1 ? 0 : prev - 1));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [resendCountdown]);
 
   const {
     register,
@@ -144,17 +156,66 @@ export function SignupForm({ convite }: { convite?: ConviteDoSignup }) {
     );
   }
 
+
+
+  const handleResend = async () => {
+    if (!sentTo || resendCountdown > 0 || resending) return;
+    try {
+      setResending(true);
+      setResendStatus(null);
+      const res = await resendSignUpEmail(sentTo);
+      if (res.ok) {
+        setResendStatus(t("E-mail reenviado com sucesso! Confira sua caixa de entrada."));
+        setResendCountdown(30);
+      } else if (res.error === "rate_limited") {
+        setResendStatus(t("Muitas tentativas. Aguarde alguns instantes."));
+        setResendCountdown(30);
+      } else {
+        setResendStatus(t("Não foi possível reenviar. Tente novamente mais tarde."));
+      }
+    } catch {
+      setResendStatus(t("Erro ao reenviar e-mail."));
+    } finally {
+      setResending(false);
+    }
+  };
+
   if (sentTo) {
     return (
       <div
-        className="space-y-2 rounded-md border bg-muted/40 px-4 py-6 text-center"
+        className="space-y-4 rounded-md border bg-card px-4 py-6 text-center shadow-xs"
         role="status"
       >
-        <p className="text-sm font-medium">{t("Confirme seu e-mail")}</p>
-        <p className="text-sm text-muted-foreground">
-          {t("Enviamos um link de confirmação para")} <strong>{sentTo}</strong>.{" "}
-          {t("Abra o e-mail e clique no link para ativar sua conta.")}
-        </p>
+        <div className="space-y-1">
+          <p className="text-base font-semibold">{t("Confirme seu e-mail")}</p>
+          <p className="text-sm text-muted-foreground">
+            {t("Enviamos um link de confirmação para")} <strong>{sentTo}</strong>.{" "}
+            {t("Abra o e-mail e clique no link para ativar sua conta.")}
+          </p>
+        </div>
+
+        {resendStatus && (
+          <p className="text-xs font-medium text-primary">
+            {resendStatus}
+          </p>
+        )}
+
+        <div className="pt-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={resending || resendCountdown > 0}
+            onClick={handleResend}
+            className="w-full text-xs font-medium"
+          >
+            {resendCountdown > 0
+              ? `${t("Aguarde")} ${resendCountdown}s ${t("para reenviar")}`
+              : resending
+              ? t("Reenviando…")
+              : t("Não recebeu? Reenviar e-mail")}
+          </Button>
+        </div>
       </div>
     );
   }

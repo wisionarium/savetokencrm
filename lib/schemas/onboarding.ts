@@ -21,6 +21,9 @@ export const welcomeSchema = z.object({
    */
   o_que_faz: z.string().max(280).optional(),
   timezone: z.string().min(1).default("America/Sao_Paulo"),
+  dias_funcionamento: z.string().max(100).optional(),
+  horario_inicio: z.string().max(10).optional(),
+  horario_fim: z.string().max(10).optional(),
   accepted_terms_at: z.string().datetime().optional(),
 });
 export type WelcomeInput = z.infer<typeof welcomeSchema>;
@@ -66,6 +69,9 @@ export const onboardingStateSchema = z.object({
       display_name: z.string(),
       /** O ramo, na palavra do dono. Alimenta o prompt e o quadro de clientes. */
       o_que_faz: z.string().optional(),
+      dias_funcionamento: z.string().optional(),
+      horario_inicio: z.string().optional(),
+      horario_fim: z.string().optional(),
     })
     .optional(),
   whatsapp: z

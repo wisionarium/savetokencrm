@@ -2,6 +2,8 @@
 import { TenantSwitcher } from "./TenantSwitcher";
 import { UserMenu } from "./UserMenu";
 import { SearchTrigger } from "./SearchTrigger";
+import { useActiveOrg } from "@/hooks/auth/AuthProvider";
+import { ProButton } from "@/components/pro/ProBanner";
 
 /**
  * A BARRA DE TOPO — e só no computador.
@@ -16,6 +18,9 @@ import { SearchTrigger } from "./SearchTrigger";
  * exatamente como era.
  */
 export function TopBar() {
+  const activeOrg = useActiveOrg();
+  const isPro = Boolean(activeOrg?.is_pro);
+
   return (
     <header className="sticky top-0 z-20 hidden h-14 items-center justify-between gap-2 border-b bg-background/95 px-3 backdrop-blur md:flex md:gap-4 md:px-6">
       <div className="flex min-w-0 items-center gap-2">
@@ -24,7 +29,8 @@ export function TopBar() {
       <div className="flex min-w-0 flex-1 justify-center md:max-w-md">
         <SearchTrigger />
       </div>
-      <div className="flex shrink-0 items-center gap-2">
+      <div className="flex shrink-0 items-center gap-3">
+        {!isPro && <ProButton />}
         <UserMenu />
       </div>
     </header>

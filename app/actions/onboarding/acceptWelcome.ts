@@ -29,6 +29,9 @@ export async function acceptWelcome(formData: FormData): Promise<AcceptWelcomeRe
     display_name: String(formData.get("display_name") ?? "").trim(),
     o_que_faz: String(formData.get("o_que_faz") ?? "").trim() || undefined,
     timezone: String(formData.get("timezone") ?? "America/Sao_Paulo"),
+    dias_funcionamento: String(formData.get("dias_funcionamento") ?? "").trim() || undefined,
+    horario_inicio: String(formData.get("horario_inicio") ?? "").trim() || undefined,
+    horario_fim: String(formData.get("horario_fim") ?? "").trim() || undefined,
     accepted_terms_at: new Date().toISOString(),
   };
 
@@ -51,9 +54,22 @@ export async function acceptWelcome(formData: FormData): Promise<AcceptWelcomeRe
           timezone: input.timezone,
           display_name: input.display_name,
           ...(input.o_que_faz ? { o_que_faz: input.o_que_faz } : {}),
+          ...(input.dias_funcionamento ? { dias_funcionamento: input.dias_funcionamento } : {}),
+          ...(input.horario_inicio ? { horario_inicio: input.horario_inicio } : {}),
+          ...(input.horario_fim ? { horario_fim: input.horario_fim } : {}),
         },
       },
-      { display_name: input.display_name, timezone: input.timezone },
+      {
+        display_name: input.display_name,
+        timezone: input.timezone,
+        settings: {
+          business_hours: {
+            dias: input.dias_funcionamento ?? "Segunda a Sexta",
+            horario_inicio: input.horario_inicio ?? "08:00",
+            horario_fim: input.horario_fim ?? "18:00",
+          },
+        },
+      },
     );
   } catch (err) {
     if (err instanceof OnboardingError) return { ok: false, error: "db_error", details: err.message };

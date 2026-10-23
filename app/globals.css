@@ -704,42 +704,6 @@
   font-size: calc(16px * var(--zoom-fio, 0.9));
 }
 
-/* ─────────────────────────────────────────────────────────────────────────
-   PAREDE DO FIO DA CONVERSA — imagem da marca a 6% por cima da cor.
-
-   A COR mora em `fundoDoFio` (components/inbox/ChatThread.tsx): bege
-   #EFEAE2 no claro, cinza #0B141A no escuro. Esta camada entra DEPOIS da cor
-   e ANTES das mensagens — a ordem pedida pelo dono em 2026-10-23.
-
-   `isolation: isolate` + `z-index: -1` é o que compra essa ordem sem mexer em
-   nenhuma camada da árvore: o pseudo-elemento fica ACIMA do background do
-   próprio nó (que pinta primeiro) e ABAIXO de todo o conteúdo em fluxo, que é
-   o que pinta depois de um z-index negativo dentro do mesmo stacking context.
-   Sem o `isolation`, o z negativo escaparia para o stacking context mais perto
-   e a imagem sumiria atrás do fundo colorido.
-
-   `position: relative` em quem rola é perigoso aqui, por isso o nó que recebe
-   esta classe é a RAIZ do fio (que não rola) — nunca o scroller: um ::before
-   dentro de um contêiner de scroll acompanha o scroll e cobriria só a primeira
-   tela. A imagem é parede, não mensagem.
-
-   `opacity` único (6%), calibrado na faixa 5–7% que o dono pediu. Em 6% sobre
-   cor sólida, o custo do WebP (lossy) é invisível — por isso a imagem sai em
-   ~208 KB em vez dos 805 KB do PNG original. */
-.fundo-do-fio {
-  position: relative;
-  isolation: isolate;
-}
-.fundo-do-fio::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background: url("/marca/tecla-background.webp") center / cover no-repeat;
-  opacity: 0.06;
-}
-
 
 @layer base {
   /* O preflight do v4 não pinta mais borda por padrão (`border: 0 solid`, cor

@@ -95,15 +95,12 @@ function dayLabel(d: Date, t: (texto: string) => string = (texto) => texto, loca
  * caminhos pintavam a casca (#faf9f6 claro, #161510 escuro) e o fio nascia como
  * um retângulo de outra cor em volta do bege.
  *
- * A `.fundo-do-fio` é a chave da IMAGEM da marca por cima desta cor (regra em
- * `app/globals.css`): a cor é desta string, a imagem é da regra — separadas de
- * propósito, para trocar o papel de parede sem tocar em nenhum componente, e
- * para o 6% valer igualmente nos cinco caminhos de uma vez.
- *
- * O pontilhado `radial-gradient` que existia aqui só no escuro saiu: desde
- * 2026-10-23 a imagem é a camada de cima nos DOIS temas.
+ * A imagem da marca (`Tecla_Background`) ocupou esta camada por um dia, em 6%
+ * por cima da cor, e saiu: o dono avaliou em tela e não gostou. O que fica é a
+ * cor pura nos dois temas, com o pontilhado sutil só no escuro.
  */
-const fundoDoFio = "fundo-do-fio bg-[#efeae2] dark:bg-[#0b141a]";
+const fundoDoFio =
+  "bg-[#efeae2] dark:bg-[#0b141a] dark:bg-[radial-gradient(rgba(255,255,255,0.045)_1px,transparent_1px)] dark:bg-[size:18px_18px]";
 
 export function ChatThread({ conversationId, onResponder, dono, contatoId, disparandoFluxo }: Props) {
   const localeDaData = useLocaleDeData();
@@ -320,9 +317,9 @@ export function ChatThread({ conversationId, onResponder, dono, contatoId, dispa
       */}
       <div
         ref={scrollerRef}
-        // SEM fundo aqui de propósito: a cor e a imagem são da RAIZ (fundoDoFio),
-        // que não rola. Se o scroller as carregasse, o ::before acompanharia o
-        // scroll e cobriria só a primeira tela de mensagens.
+        // SEM fundo aqui de propósito: a cor é da RAIZ (fundoDoFio), que não
+        // rola. Mover isto para o scroller duplicaria a cor num nó que sobe e
+        // desce junto com as mensagens.
         className="flex-1 overflow-y-auto py-2"
       >
         {q.hasNextPage && (

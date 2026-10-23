@@ -94,9 +94,16 @@ function dayLabel(d: Date, t: (texto: string) => string = (texto) => texto, loca
  * a mesma área: mensagens, vazio, carregando e erro. Sem isto, quatro dos cinco
  * caminhos pintavam a casca (#faf9f6 claro, #161510 escuro) e o fio nascia como
  * um retângulo de outra cor em volta do bege.
+ *
+ * A `.fundo-do-fio` é a chave da IMAGEM da marca por cima desta cor (regra em
+ * `app/globals.css`): a cor é desta string, a imagem é da regra — separadas de
+ * propósito, para trocar o papel de parede sem tocar em nenhum componente, e
+ * para o 6% valer igualmente nos cinco caminhos de uma vez.
+ *
+ * O pontilhado `radial-gradient` que existia aqui só no escuro saiu: desde
+ * 2026-10-23 a imagem é a camada de cima nos DOIS temas.
  */
-const fundoDoFio =
-  "bg-[#efeae2] dark:bg-[#0b141a] dark:bg-[radial-gradient(rgba(255,255,255,0.045)_1px,transparent_1px)] dark:bg-[size:18px_18px]";
+const fundoDoFio = "fundo-do-fio bg-[#efeae2] dark:bg-[#0b141a]";
 
 export function ChatThread({ conversationId, onResponder, dono, contatoId, disparandoFluxo }: Props) {
   const localeDaData = useLocaleDeData();
@@ -305,7 +312,7 @@ export function ChatThread({ conversationId, onResponder, dono, contatoId, dispa
   }
 
   return (
-    <div {...sinalDoCanal} className="flex h-full flex-col">
+    <div {...sinalDoCanal} className={`flex h-full flex-col ${fundoDoFio}`}>
       {/*
         PAPEL DE PAREDE (novo visual): pontilhado sutil só no escuro, como no
         mensageiro. Só `dark:` — no claro o fundo segue o da casca. Sem asset:
@@ -313,7 +320,10 @@ export function ChatThread({ conversationId, onResponder, dono, contatoId, dispa
       */}
       <div
         ref={scrollerRef}
-        className={`flex-1 overflow-y-auto py-2 ${fundoDoFio}`}
+        // SEM fundo aqui de propósito: a cor e a imagem são da RAIZ (fundoDoFio),
+        // que não rola. Se o scroller as carregasse, o ::before acompanharia o
+        // scroll e cobriria só a primeira tela de mensagens.
+        className="flex-1 overflow-y-auto py-2"
       >
         {q.hasNextPage && (
           <div className="flex justify-center py-2">

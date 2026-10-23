@@ -573,6 +573,13 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
                   contatoId={selectedConversation.contacts?.id ?? null}
                 />
               </div>
+              {/* IRMÃ da pílula: clica fora do elemento que escala, para o
+                  alvo do clique não mudar de tamanho enquanto se ajusta.
+                  `md` só porque o gesto é de desktop — abaixo disso o pinço
+                  do navegador já dá o zoom da tela inteira. */}
+              <div className="hidden md:block">
+                <ZoomDoFio userId={user.id ?? null} />
+              </div>
             </div>
 
             <RetentionNotice conversationId={selectedConversation.id} />

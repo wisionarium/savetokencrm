@@ -1,6 +1,20 @@
 "use client";
 
 import { useState } from "react";
+import {
+  ChatCircle,
+  ImageSquare,
+  VideoCamera,
+  FileText,
+  Clock,
+  Plus,
+  Trash,
+  UploadSimple,
+  X as ClearIcon,
+  CircleNotch,
+  Code,
+  Smiley,
+} from "@phosphor-icons/react/dist/ssr";
 
 import { Label } from "@/components/ui/label";
 import {
@@ -11,6 +25,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { actionConfigSchema } from "@/lib/followup/graph-schema";
 import { MODOS_DA_ACAO, opcoes, type ModoDaAcao } from "@/lib/followup/vocabulario";
 import { useMessageTemplates } from "@/hooks/inbox/useMessageTemplates";
@@ -18,12 +34,6 @@ import { useT } from "@/hooks/i18n/useT";
 
 import type { ConfigOf } from "./shared";
 
-/**
- * O seletor de modelo, no lugar dos dois `<Input>` que pediam um UUID colado à
- * mão. Trata os três estados em vez de fingir que a lista sempre chega:
- * carregando, vazia e erro — porque um seletor vazio sem explicação é o mesmo
- * beco sem saída que o campo de UUID era, só que mais bonito.
- */
 function SeletorDeModelo({
   id,
   valor,
@@ -74,11 +84,6 @@ function SeletorDeModelo({
     </Select>
   );
 }
-
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { createClient } from "@/lib/supabase/browser";
-import { UploadSimple, X as ClearIcon, ImageSquare, CircleNotch } from "@/lib/ui/icons";
 
 export function ActionForm({
   config,
@@ -135,6 +140,12 @@ export function ActionForm({
 
   const fields = { body, mediaUrl, promptHint, fallbackTemplateId, templateId };
 
+  const insertVariable = (variable: string) => {
+    const updated = body ? `${body} ${variable}` : variable;
+    setBody(updated);
+    commit({ mode, ...fields, body: updated });
+  };
+
   const handleFileUpload = async (file: File) => {
     if (!file.type.startsWith("image/")) return;
     setIsUploading(true);
@@ -180,9 +191,28 @@ export function ActionForm({
   };
 
   return (
-    <div className="space-y-3" onPaste={handlePaste}>
-      <div className="space-y-2">
-        <Label htmlFor="action-mode">{t("Como escrever a mensagem")}</Label>
+    <div className="space-y-4" onPaste={handlePaste}>
+      {/* Seletor de Tipo de Mensagem / Canal (estilo Image 4) */}
+      <div className="space-y-1.5">
+        <Label htmlFor="channel-type" className="text-xs font-semibold text-text-muted">
+          {t("Tipo de Mensagem")}
+        </Label>
+        <Select defaultValue="whatsapp">
+          <SelectTrigger id="channel-type" className="h-9 rounded-xl">
+            <SelectValue placeholder="WhatsApp" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="whatsapp">WhatsApp</SelectItem>
+            <SelectItem value="sms">SMS</SelectItem>
+            <SelectItem value="instagram">Instagram Direct</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-1.5">
+        <Label htmlFor="action-mode" className="text-xs font-semibold text-text-muted">
+          {t("Modo de Envio")}
+        </Label>
         <Select
           value={mode}
           onValueChange={(v) => {
@@ -191,7 +221,7 @@ export function ActionForm({
             commit({ mode: next, ...fields });
           }}
         >
-          <SelectTrigger id="action-mode">
+          <SelectTrigger id="action-mode" className="h-9 rounded-xl">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -206,11 +236,99 @@ export function ActionForm({
 
       {mode === "text" ? (
         <>
-          <div className="space-y-2 rounded-lg border border-border p-3 bg-muted/10">
+          {/* Card Editor de Mensagem com Textarea e Variáveis (Image 4) */}
+          <div className="rounded-2xl border border-primary/30 bg-surface p-3 shadow-xs space-y-2.5">
+            <div className="relative">
+              <Textarea
+                id="action-body"
+                maxLength={4000}
+                rows={4}
+                value={body}
+                placeholder={t("Mensagem...")}
+                className="resize-none border-none p-0 focus-visible:ring-0 text-xs text-text shadow-none bg-transparent"
+                onChange={(e) => {
+                  setBody(e.target.value);
+                  commit({ mode, ...fields, body: e.target.value });
+                }}
+              />
+              <div className="flex items-center justify-between border-t border-border/40 pt-2 mt-2">
+                <span className="text-[10px] text-text-muted">
+                  {body.length} / 4000
+                </span>
+                <div className="flex items-center gap-1">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 rounded-md text-text-muted hover:text-text hover:bg-muted"
+                    onClick={() => insertVariable("😊")}
+                    title={t("Inserir emoji")}
+                  >
+                    <Smiley size={14} />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 rounded-md text-text-muted hover:text-text hover:bg-muted"
+                    onClick={() => insertVariable("{{primeiro_nome}}")}
+                    title={t("Inserir variável")}
+                  >
+                    <Code size={14} />
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Chips de Variáveis Rápidas */}
+            <div className="flex flex-wrap gap-1 border-t border-border/30 pt-2">
+              {[
+                { tag: "{{primeiro_nome}}", label: "Nome" },
+                { tag: "{{telefone}}", label: "Telefone" },
+                { tag: "{{empresa}}", label: "Empresa" },
+                { tag: "{{email}}", label: "E-mail" },
+              ].map((v) => (
+                <button
+                  key={v.tag}
+                  type="button"
+                  onClick={() => insertVariable(v.tag)}
+                  className="rounded-md bg-muted px-2 py-0.5 text-[10px] font-medium text-text-muted hover:bg-accent/20 hover:text-accent transition-colors"
+                >
+                  +{v.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Botões Rápidos de Ação (Image 4) */}
+            <div className="space-y-1.5 pt-1">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full justify-center text-xs h-8 rounded-xl font-medium"
+                onClick={() => insertVariable("\n[1] Falar com Atendente")}
+              >
+                <Plus size={13} className="mr-1" />
+                {t("Adicionar Botão")}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="w-full justify-center text-xs h-8 rounded-xl font-normal text-text-muted hover:text-text"
+                onClick={() => insertVariable("\n[Opção 1] Sim | [Opção 2] Não")}
+              >
+                + {t("Resposta Rápida")}
+              </Button>
+            </div>
+          </div>
+
+          {/* Anexo de Imagem (opcional) */}
+          <div className="space-y-2 rounded-2xl border border-border/80 p-3 bg-muted/10">
             <div className="flex items-center justify-between">
               <Label className="flex items-center gap-1.5 text-xs font-semibold">
-                <ImageSquare size={16} className="text-accent" />
-                {t("Imagem do produto (opcional)")}
+                <ImageSquare size={16} className="text-primary" />
+                {t("Imagem / Mídia")}
               </Label>
               {mediaUrl && (
                 <Button
@@ -230,9 +348,9 @@ export function ActionForm({
             </div>
 
             {mediaUrl ? (
-              <div className="relative overflow-hidden rounded border border-border bg-black/5">
+              <div className="relative overflow-hidden rounded-xl border border-border bg-black/5">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={mediaUrl} alt="Preview" className="h-32 w-full object-cover rounded" />
+                <img src={mediaUrl} alt="Preview" className="h-32 w-full object-cover rounded-xl" />
               </div>
             ) : (
               <div className="flex flex-col gap-2">
@@ -241,7 +359,7 @@ export function ActionForm({
                     type="url"
                     placeholder={t("Cole a URL da imagem ou dê Ctrl+V...")}
                     value={mediaUrl}
-                    className="text-xs"
+                    className="text-xs h-9 rounded-xl"
                     onChange={(e) => {
                       const val = e.target.value;
                       setMediaUrl(val);
@@ -259,7 +377,7 @@ export function ActionForm({
                         if (file) void handleFileUpload(file);
                       }}
                     />
-                    <div className="flex h-9 items-center gap-1 rounded-md border border-input bg-background px-3 text-xs font-medium hover:bg-accent hover:text-accent-foreground">
+                    <div className="flex h-9 items-center gap-1 rounded-xl border border-input bg-background px-3 text-xs font-medium hover:bg-accent hover:text-accent-foreground">
                       {isUploading ? (
                         <CircleNotch size={14} className="animate-spin" />
                       ) : (
@@ -269,38 +387,23 @@ export function ActionForm({
                     </div>
                   </label>
                 </div>
-                <p className="text-[11px] text-text-muted">
-                  {t("Você pode colar uma imagem (Ctrl+V), escolher um arquivo local do PC/Celular ou colar um link.")}
-                </p>
               </div>
             )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="action-body">{t("Texto com especificações")}</Label>
-            <Textarea
-              id="action-body"
-              maxLength={4000}
-              rows={4}
-              value={body}
-              onChange={(e) => {
-                setBody(e.target.value);
-                commit({ mode, ...fields, body: e.target.value });
-              }}
-            />
-            <p className="text-xs text-text-muted">
-              {t("Sai exatamente assim, sem IA.")}
-            </p>
           </div>
         </>
       ) : mode === "ai_message" ? (
         <>
           <div className="space-y-2">
-            <Label htmlFor="action-prompt-hint">{t("Instrução para a IA")}</Label>
+            <Label htmlFor="action-prompt-hint" className="text-xs font-semibold text-text-muted">
+              {t("Instrução para a IA")}
+            </Label>
             <Textarea
               id="action-prompt-hint"
               maxLength={1000}
+              rows={4}
+              className="rounded-xl text-xs"
               value={promptHint}
+              placeholder={t("Ex: Parabenizar o cliente pelo interesse e perguntar se prefere atendimento online ou presencial.")}
               onChange={(e) => {
                 setPromptHint(e.target.value);
                 commit({ mode, ...fields, promptHint: e.target.value });
@@ -308,7 +411,9 @@ export function ActionForm({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="action-fallback">{t("Se a IA não conseguir escrever, mandar este modelo")}</Label>
+            <Label htmlFor="action-fallback" className="text-xs font-semibold text-text-muted">
+              {t("Fallback: Se a IA falhar, enviar este modelo")}
+            </Label>
             <SeletorDeModelo
               id="action-fallback"
               valor={fallbackTemplateId}
@@ -322,7 +427,9 @@ export function ActionForm({
         </>
       ) : (
         <div className="space-y-2">
-          <Label htmlFor="action-template-id">{t("Modelo de mensagem")}</Label>
+          <Label htmlFor="action-template-id" className="text-xs font-semibold text-text-muted">
+            {t("Modelo de Mensagem (WhatsApp HSM)")}
+          </Label>
           <SeletorDeModelo
             id="action-template-id"
             valor={templateId}

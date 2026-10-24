@@ -17,6 +17,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ReplyReviewPanel } from "@/components/inbox/composer/ReplyReviewPanel";
 import { JanelaSelo } from "@/components/inbox/JanelaSelo";
+import { ZoomDoFio } from "./ZoomDoFio";
 import {
   Archive,
   ArrowRight,
@@ -407,25 +408,30 @@ export function ConversationHeader({ conversation, onAbrirPerfil }: Props) {
           ("Sem responsável ∨", segunda linha) continua ao lado, intocado: o
           botão PERGUNTA, o dono INFORMA.
         */}
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-8 w-8 p-0"
-              aria-label={t("Assistente do agente")}
-              title={t("Sugerir resposta com o agente")}
-            >
-              <Robot size={16} weight="duotone" aria-hidden />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent align="end" className="w-96">
-            <ReplyReviewPanel
-              conversationId={conversation.id}
-              disabled={assistenciaBloqueada}
-            />
-          </PopoverContent>
-        </Popover>
+        <div className="flex flex-col items-center gap-0.5">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-8 w-8 p-0"
+                aria-label={t("Assistente do agente")}
+                title={t("Sugerir resposta com o agente")}
+              >
+                <Robot size={16} weight="duotone" aria-hidden />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-96">
+              <ReplyReviewPanel
+                conversationId={conversation.id}
+                disabled={assistenciaBloqueada}
+              />
+            </PopoverContent>
+          </Popover>
+          <div className="hidden md:block">
+            <ZoomDoFio userId={user.id ?? null} />
+          </div>
+        </div>
         {/*
           OS 5 NO KEBAB (⋮) — decisão de produto (mock do dono, refinada pelo
           dono): `Assumir, Transferir, Lembrar, Fechar, Arquivar` vivem neste

@@ -216,6 +216,23 @@ export function TelaMais() {
             {t("Sair")}
           </Button>
           <VersionFooter collapsed={false} />
+          <div className="flex items-center justify-center gap-2 pt-2 text-[11px] text-muted-foreground/70">
+            <Link
+              href="/legal/terms"
+              target="_blank"
+              className="hover:underline hover:text-foreground transition-colors"
+            >
+              {t("Termos de Uso")}
+            </Link>
+            <span>•</span>
+            <Link
+              href="/legal/privacy"
+              target="_blank"
+              className="hover:underline hover:text-foreground transition-colors"
+            >
+              {t("Política de Privacidade")}
+            </Link>
+          </div>
         </section>
       </div>
     </div>

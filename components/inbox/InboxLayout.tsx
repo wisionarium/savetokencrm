@@ -19,7 +19,6 @@ import { InboxFilters, type InboxFiltersValue, type InboxTab } from "./InboxFilt
 import { ChatThread } from "./ChatThread";
 import { Composer, type ComposerHandle } from "./Composer";
 import { ConversationHeader } from "./ConversationHeader";
-import { ZoomDoFio } from "./ZoomDoFio";
 import { RetentionNotice } from "./RetentionNotice";
 import { CRMSidePanel } from "./CRMSidePanel";
 import type { Message as ConversationMensagem } from "@/lib/types/messaging";
@@ -573,13 +572,6 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
                   contatoId={selectedConversation.contacts?.id ?? null}
                 />
               </div>
-              {/* IRMÃ da pílula: clica fora do elemento que escala, para o
-                  alvo do clique não mudar de tamanho enquanto se ajusta.
-                  `md` só porque o gesto é de desktop — abaixo disso o pinço
-                  do navegador já dá o zoom da tela inteira. */}
-              <div className="hidden md:block">
-                <ZoomDoFio userId={user.id ?? null} />
-              </div>
             </div>
 
             <RetentionNotice conversationId={selectedConversation.id} />
@@ -597,6 +589,7 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
               janelaFechada={motivoDaJanela}
               disabled={selectedConversation.status === "closed"}
               contactName={selectedConversation.contacts?.name ?? null}
+              contact={selectedConversation.contacts ?? null}
               respondendo={respondendo}
               onCancelarResposta={() => setRespondendo(null)}
               onFluxoDisparandoChange={setFluxoDisparando}

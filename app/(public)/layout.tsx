@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { LogotipoDoProduto } from "@/components/branding/MarcaDoProduto";
 import { logoDaMarca, marcaEhADoProduto } from "@/lib/branding";
 import { marcaDaSaida } from "@/lib/branding/saida";
@@ -103,6 +104,25 @@ export default async function PublicLayout({ children }: { children: React.React
             </div>
           ) : null}
           {children}
+          <footer className="pt-2 text-center">
+            <div className="flex items-center justify-center gap-2 text-[11px] text-muted-foreground/75">
+              <Link
+                href="/legal/terms"
+                target="_blank"
+                className="hover:underline hover:text-foreground transition-colors"
+              >
+                Termos de Uso
+              </Link>
+              <span>•</span>
+              <Link
+                href="/legal/privacy"
+                target="_blank"
+                className="hover:underline hover:text-foreground transition-colors"
+              >
+                Política de Privacidade
+              </Link>
+            </div>
+          </footer>
         </div>
       </div>
     </IdiomaProvider>

@@ -254,6 +254,27 @@ export function SidebarContent({
           </Link>
         )}
         <VersionFooter collapsed={collapsed} onNavigate={onNavigate} />
+        {!collapsed && (
+          <div className="flex items-center gap-1.5 px-3 py-1 text-[10px] text-muted-foreground/60">
+            <Link
+              href="/legal/terms"
+              target="_blank"
+              onClick={onNavigate}
+              className="hover:underline hover:text-foreground transition-colors"
+            >
+              {t("Termos")}
+            </Link>
+            <span>•</span>
+            <Link
+              href="/legal/privacy"
+              target="_blank"
+              onClick={onNavigate}
+              className="hover:underline hover:text-foreground transition-colors"
+            >
+              {t("Privacidade")}
+            </Link>
+          </div>
+        )}
         {showCollapseControl && (
           <button
             type="button"

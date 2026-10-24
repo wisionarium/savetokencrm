@@ -5,7 +5,6 @@ import {
   ReactFlow,
   ReactFlowProvider,
   Background,
-  Controls,
   ConnectionLineType,
   addEdge,
   useNodesState,
@@ -44,12 +43,20 @@ import { useFollowupFlow, type FollowupFlowDetailRow } from "@/hooks/followup/us
 import { useT } from "@/hooks/i18n/useT";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
-import { Plus, X } from "@/lib/ui/icons";
+import {
+  Plus,
+  X,
+  Eye,
+  MagnifyingGlassPlus,
+  MagnifyingGlassMinus,
+  Sparkle,
+} from "@/lib/ui/icons";
 import { NodeConfigPanel } from "./NodeConfigPanel";
 import { EdgeConfigPanel } from "./EdgeConfigPanel";
 import { EtapasDoFluxoProvider, useEtapasDoFluxo } from "./EtapasDoFluxo";
 import { NodePalette } from "./NodePalette";
 import { PublishBar } from "./PublishBar";
+import { QuickAddNodeMenu } from "./QuickAddNodeMenu";
 import { NODE_VISUALS } from "./nodes/nodeVisuals";
 import { TriggerNode } from "./nodes/TriggerNode";
 import { WaitNode } from "./nodes/WaitNode";
@@ -63,8 +70,6 @@ import { EndNode } from "./nodes/EndNode";
 const EMPTY_GRAPH: FlowGraph = { nodes: [], edges: [] };
 const DND_MIME = "application/x-followup-node-type";
 
-// Defined outside the component — React Flow warns (and re-mounts nodes) if
-// nodeTypes is a fresh object every render.
 const nodeTypes: NodeTypes = {
   trigger: TriggerNode,
   wait: WaitNode,
@@ -85,8 +90,6 @@ function FlowCanvasInner({ flowId, initialData }: Props) {
   const t = useT();
   const { nomes } = useEtapasDoFluxo();
   const { data: flow } = useFollowupFlow(flowId, { initialData });
-  // `initial` seeds React Flow state ONCE on mount — it must NOT react to
-  // `flow` changing on every refetch (that would clobber in-progress edits).
   const initial = useMemo(
     () => toReactFlow(initialData.draft_graph ?? EMPTY_GRAPH),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -95,15 +98,26 @@ function FlowCanvasInner({ flowId, initialData }: Props) {
   const [nodes, setNodes, onNodesChange] = useNodesState<RFNode>(initial.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState<RFEdge>(initial.edges);
   const [savedGraph, setSavedGraph] = useState<FlowGraph>(initialData.draft_graph ?? EMPTY_GRAPH);
-  // Continue after the largest persisted suffix. Starting again at 1 makes a
-  // newly-created node/edge reuse an existing React Flow key and visually
-  // replace a connection in older drafts.
   const nextId = useRef(nextSequenceId(initial.nodes.map((node) => node.id)));
   const nextEdgeId = useRef(nextSequenceId(initial.edges.map((edge) => edge.id)));
-  const { screenToFlowPosition, fitView } = useReactFlow();
+  const { screenToFlowPosition, fitView, zoomIn, zoomOut } = useReactFlow();
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
   const [paletteOpen, setPaletteOpen] = useState(false);
+
+  // Controle de arrasto para o vazio (estilo Manychat Quick Add)
+  const connectingRef = useRef<{
+    nodeId: string;
+    handleId: string | null;
+    handleType: string | null;
+  } | null>(null);
+
+  const [quickAddMenu, setQuickAddMenu] = useState<{
+    sourceNodeId: string | null;
+    sourceHandleId: string | null;
+    flowPosition: { x: number; y: number };
+    screenPosition: { x: number; y: number };
+  } | null>(null);
 
   const liveGraph = useMemo(() => fromReactFlow(nodes, edges), [nodes, edges]);
   const dirty = useMemo(() => !graphsEqual(liveGraph, savedGraph), [liveGraph, savedGraph]);
@@ -118,7 +132,6 @@ function FlowCanvasInner({ flowId, initialData }: Props) {
     setNodes((nds) => nds.map((n) => (n.data.errors ? { ...n, data: { ...n.data, errors: undefined } } : n)));
   }, [setNodes]);
 
-  // Node and edge selection are mutually exclusive — opening one panel closes the other's.
   const onNodeClick = useCallback<NodeMouseHandler<RFNode>>((_, node) => {
     setSelectedNodeId(node.id);
     setSelectedEdgeId(null);
@@ -130,6 +143,7 @@ function FlowCanvasInner({ flowId, initialData }: Props) {
   const onPaneClick = useCallback(() => {
     setSelectedNodeId(null);
     setSelectedEdgeId(null);
+    setQuickAddMenu(null);
   }, []);
 
   const updateNodeData = useCallback(
@@ -152,11 +166,6 @@ function FlowCanvasInner({ flowId, initialData }: Props) {
   const selectedEdgeSource = selectedEdge ? (nodes.find((n) => n.id === selectedEdge.source) ?? null) : null;
   const selectedEdgeTarget = selectedEdge ? (nodes.find((n) => n.id === selectedEdge.target) ?? null) : null;
 
-  // Wire label: derived at render time from `data.condition`, never persisted on the edge
-  // itself — `condition` alone stays the source of truth the mapper round-trips.
-  // Num nó que ramifica o texto vem do RAMO (o rótulo que o usuário leu na
-  // bolinha de onde arrastou), não da condição crua: `conditionLabel` sozinho
-  // mostraria o id do ramo, que não é palavra nenhuma para quem não programa.
   const edgesForRender = useMemo(
     () =>
       edges.map((e) => {
@@ -177,9 +186,6 @@ function FlowCanvasInner({ flowId, initialData }: Props) {
     [edges, nodes, selectedEdgeId, t, nomes],
   );
 
-  // Quais saídas do nó selecionado já têm aresta. Quem sabe isso é o canvas —
-  // o formulário não vê o grafo, e sem esse dado ele trocaria o modo do nó
-  // deixando ligações órfãs sem conseguir dizer quantas.
   const ramosLigadosDoSelecionado = useMemo(() => {
     if (!selectedNode) return [];
     const source = toFlowNode(selectedNode);
@@ -191,10 +197,6 @@ function FlowCanvasInner({ flowId, initialData }: Props) {
 
   const onConnect = useCallback(
     (connection: Connection) => {
-      // A bolinha de onde o usuário arrastou É a saída escolhida: o React Flow
-      // devolve o id do ramo em `sourceHandle`. Antes a aresta nascia sempre
-      // `always` e o usuário tinha que ir ao painel dizer de novo, de qual regra
-      // ela saía — o que, com uma bolinha só, era impossível de expressar.
       const source = nodes.find((n) => n.id === connection.source);
       const fromBranch =
         source && connection.sourceHandle
@@ -211,6 +213,84 @@ function FlowCanvasInner({ flowId, initialData }: Props) {
       setEdges((eds) => addEdge(newEdge, eds));
     },
     [setEdges, nodes],
+  );
+
+  const onConnectStart = useCallback(
+    (_: unknown, params: { nodeId: string | null; handleId: string | null; handleType: string | null }) => {
+      if (params.nodeId) {
+        connectingRef.current = {
+          nodeId: params.nodeId,
+          handleId: params.handleId ?? null,
+          handleType: params.handleType ?? null,
+        };
+      }
+    },
+    [],
+  );
+
+  const onConnectEnd = useCallback(
+    (event: MouseEvent | TouchEvent) => {
+      if (!connectingRef.current) return;
+      const target = event.target as HTMLElement | null;
+      const isPane = target?.classList.contains("react-flow__pane") || target?.closest(".react-flow__pane");
+
+      if (isPane) {
+        const clientX = "clientX" in event ? event.clientX : (event as TouchEvent).changedTouches?.[0]?.clientX ?? 0;
+        const clientY = "clientY" in event ? event.clientY : (event as TouchEvent).changedTouches?.[0]?.clientY ?? 0;
+        const flowPosition = screenToFlowPosition({ x: clientX, y: clientY });
+
+        setQuickAddMenu({
+          sourceNodeId: connectingRef.current.nodeId,
+          sourceHandleId: connectingRef.current.handleId,
+          flowPosition,
+          screenPosition: { x: clientX, y: clientY },
+        });
+      }
+      connectingRef.current = null;
+    },
+    [screenToFlowPosition],
+  );
+
+  const handleQuickAdd = useCallback(
+    (type: NodeType, presetConfig?: Record<string, unknown>) => {
+      if (!quickAddMenu) return;
+      const { sourceNodeId, sourceHandleId, flowPosition } = quickAddMenu;
+      const visual = NODE_VISUALS[type];
+      const newNodeId = `${type}-${nextId.current++}`;
+      const newNode: RFNode = {
+        id: newNodeId,
+        type,
+        position: flowPosition,
+        data: {
+          label: t(visual.defaultLabel),
+          config: (presetConfig ?? visual.defaultConfig()) as RFNodeData["config"],
+        },
+      };
+
+      setNodes((nds) => nds.concat(newNode));
+
+      if (sourceNodeId) {
+        const sourceNode = nodes.find((n) => n.id === sourceNodeId);
+        const fromBranch =
+          sourceNode && sourceHandleId
+            ? conditionForBranch(toFlowNode(sourceNode), sourceHandleId)
+            : null;
+        const newEdge: RFEdge = {
+          id: `edge-${nextEdgeId.current++}`,
+          source: sourceNodeId,
+          target: newNodeId,
+          sourceHandle: sourceHandleId,
+          targetHandle: null,
+          data: { priority: 0, condition: fromBranch ?? { type: "always" } },
+        };
+        setEdges((eds) => addEdge(newEdge, eds));
+      }
+
+      setSelectedNodeId(newNodeId);
+      setSelectedEdgeId(null);
+      setQuickAddMenu(null);
+    },
+    [quickAddMenu, nodes, setNodes, setEdges, t],
   );
 
   const isDispatchFlow = Boolean(initialData.inbox_enabled || flow?.inbox_enabled);
@@ -255,79 +335,74 @@ function FlowCanvasInner({ flowId, initialData }: Props) {
     [setEdges],
   );
 
-  const onDeleteSelection = useCallback(() => {
-    if (selectedNodeId) deleteNode(selectedNodeId);
-    else if (selectedEdgeId) deleteEdge(selectedEdgeId);
-  }, [selectedNodeId, selectedEdgeId, deleteNode, deleteEdge]);
-
-  const onAutoFit = useCallback(() => {
-    if (nodes.length === 0) return;
-    const sizes = new Map<string, { width: number; height: number }>();
-    for (const n of nodes) {
-      sizes.set(n.id, {
-        width: n.measured?.width ?? LAYOUT_NODE_WIDTH,
-        height: n.measured?.height ?? estimateNodeSize(toFlowNode(n)).height,
-      });
-    }
-    const laid = layoutFlowGraph(liveGraph, sizes, nomes);
-    const pos = new Map(laid.nodes.map((n) => [n.id, n.position]));
-    setNodes((nds) =>
-      nds.map((n) => {
-        const p = pos.get(n.id);
-        return p ? { ...n, position: p } : n;
-      }),
-    );
-    window.setTimeout(() => {
-      void fitView({ padding: 0.2, duration: 200 });
-    }, 0);
-  }, [nodes, liveGraph, setNodes, fitView]);
-
-  const onDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
+  const onDragOver = useCallback((event: React.DragEvent) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
   }, []);
 
   const onDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      const type = e.dataTransfer.getData(DND_MIME) as NodeType | "";
+    (event: React.DragEvent) => {
+      event.preventDefault();
+      const type = event.dataTransfer.getData(DND_MIME) as NodeType;
       if (!type) return;
-      const rawConfig = e.dataTransfer.getData("application/x-followup-node-config");
-      let presetConfig: Record<string, unknown> | undefined;
-      if (rawConfig) {
+
+      const position = screenToFlowPosition({ x: event.clientX, y: event.clientY });
+      let config: Record<string, unknown> | undefined;
+      const configJson = event.dataTransfer.getData("application/x-followup-node-config");
+      if (configJson) {
         try {
-          presetConfig = JSON.parse(rawConfig) as Record<string, unknown>;
+          config = JSON.parse(configJson) as Record<string, unknown>;
         } catch {
-          // fallback default
+          // ignore
         }
       }
-      const position = screenToFlowPosition({ x: e.clientX, y: e.clientY });
-      addNodeAt(type, position, presetConfig);
+      addNodeAt(type, position, config);
     },
     [screenToFlowPosition, addNodeAt],
   );
 
+  const autoLayout = useCallback(() => {
+    if (nodes.length === 0) return;
+    const sizes = new Map(
+      nodes.map((node) => {
+        const height = node.measured?.height ?? estimateNodeSize(toFlowNode(node)).height;
+        return [node.id, { width: LAYOUT_NODE_WIDTH, height }];
+      }),
+    );
+    const layout = layoutFlowGraph(liveGraph, sizes, nomes);
+    const posMap = new Map(layout.nodes.map((n) => [n.id, n.position]));
+    setNodes((nds) =>
+      nds.map((node) => {
+        const next = posMap.get(node.id);
+        return next ? { ...node, position: next } : node;
+      }),
+    );
+    setTimeout(() => fitView({ duration: 300, padding: 0.2 }), 50);
+  }, [nodes, liveGraph, nomes, setNodes, fitView]);
+
   return (
-    <div className="flex h-full min-h-[600px] w-full flex-col">
-      {flow && (
-        <PublishBar
-          flowId={flowId}
-          flow={flow}
-          graph={liveGraph}
-          dirty={dirty}
-          selection={selectedNode ? "node" : selectedEdge ? "edge" : null}
-          onDeleteSelection={onDeleteSelection}
-          onSaved={setSavedGraph}
-          onPublishErrors={markNodeErrors}
-          onPublishSuccess={clearNodeErrors}
-          onAutoFit={onAutoFit}
-          canAutoFit={nodes.length > 0}
-        />
-      )}
-      <div className="flex flex-1 overflow-hidden">
-        <NodePalette onAdd={onPaletteAdd} isDispatchFlow={isDispatchFlow} />
-        {/* Abaixo de `lg` a paleta fixa de 224px não cabe do lado do canvas —
-            vira um drawer, disparado por este botão flutuante. */}
+    <div className="flex h-full flex-col overflow-hidden bg-bg">
+      <PublishBar
+        flowId={flowId}
+        flow={flow ?? initialData}
+        graph={liveGraph}
+        dirty={dirty}
+        selection={selectedNode ? "node" : selectedEdge ? "edge" : null}
+        onDeleteSelection={() => {
+          if (selectedNode) deleteNode(selectedNode.id);
+          else if (selectedEdge) deleteEdge(selectedEdge.id);
+        }}
+        onSaved={(graph) => {
+          setSavedGraph(graph);
+          clearNodeErrors();
+        }}
+        onPublishErrors={markNodeErrors}
+        onPublishSuccess={clearNodeErrors}
+        onAutoFit={autoLayout}
+        canAutoFit={nodes.length > 0}
+      />
+
+      <div className="relative flex flex-1 overflow-hidden" data-testid="flow-canvas">
         <Sheet open={paletteOpen} onOpenChange={setPaletteOpen}>
           <SheetContent side="left" className="w-72 max-w-[85vw] gap-0 p-0 lg:hidden">
             <SheetTitle className="sr-only">{t("Adicionar nó")}</SheetTitle>
@@ -342,7 +417,7 @@ function FlowCanvasInner({ flowId, initialData }: Props) {
           </SheetContent>
         </Sheet>
 
-        <div className="relative h-full flex-1" data-testid="flow-canvas" onDragOver={onDragOver} onDrop={onDrop}>
+        <div className="relative h-full flex-1" data-testid="flow-canvas-viewport" onDragOver={onDragOver} onDrop={onDrop}>
           <ReactFlow
             nodes={nodes}
             edges={edgesForRender}
@@ -350,56 +425,116 @@ function FlowCanvasInner({ flowId, initialData }: Props) {
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
+            onConnectStart={onConnectStart}
+            onConnectEnd={onConnectEnd}
             onNodeClick={onNodeClick}
             onEdgeClick={onEdgeClick}
             onPaneClick={onPaneClick}
             defaultEdgeOptions={{ type: "smoothstep" }}
             connectionLineType={ConnectionLineType.SmoothStep}
             fitView={initial.nodes.length > 0}
+            className="bg-bg/40"
           >
-            {!isDispatchFlow && <Background />}
-            <Controls />
+            {!isDispatchFlow && <Background gap={18} size={1} color="var(--color-border)" />}
           </ReactFlow>
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            className="absolute bottom-4 left-4 z-10 shadow-md lg:hidden"
-            onClick={() => setPaletteOpen(true)}
-          >
-            <Plus size={14} aria-hidden /> {t("Adicionar nó")}
-          </Button>
-        </div>
 
-        {/*
-          Docked panel em telas grandes (`lg:`) — NÃO é overlay ali: o canvas
-          continua clicável, então trocar de nó/aresta selecionado funciona com
-          o painel aberto. Abaixo de `lg` os 384px (`w-96`) sozinhos já passavam
-          da largura de QUALQUER celular, e como o pai é `overflow-hidden`, o
-          painel não ganhava scroll — ficava certo, cortado, inacessível. Vira
-          bottom sheet (`fixed`, ancorado embaixo, com teto de altura e X pra
-          fechar) só nesse intervalo de tela.
-        */}
-        {selectedNode && (
-          <aside
-            className="fixed inset-x-0 bottom-0 z-40 flex max-h-[75vh] flex-col overflow-hidden rounded-t-lg border-t border-border bg-surface shadow-lg lg:static lg:z-auto lg:h-full lg:w-96 lg:max-h-none lg:shrink-0 lg:rounded-none lg:border-l lg:border-t-0 lg:shadow-none"
-            data-testid="node-config-sheet"
-          >
-            {/* Barra própria pro X, não sobreposta ao conteúdo — um botão
-                flutuante por cima do cabeçalho do painel colidiria com rótulo
-                comprido (texto sobre texto). */}
-            <div className="flex shrink-0 justify-end p-2 lg:hidden">
+          {/* Menu Contextual ao soltar no vazio ou clicar em '+' (Manychat style) */}
+          {quickAddMenu && (
+            <QuickAddNodeMenu
+              position={quickAddMenu.screenPosition}
+              onSelect={handleQuickAdd}
+              onClose={() => setQuickAddMenu(null)}
+              title={quickAddMenu.sourceNodeId ? t("Conectar próximo passo") : t("Novo passo")}
+            />
+          )}
+
+          {/* Barra Flutuante de Controles Inferior Direita (Image 3 e 4) */}
+          <div className="absolute bottom-6 right-6 z-30 flex items-center gap-2.5">
+            <div className="flex items-center gap-1 rounded-2xl border border-border/80 bg-surface/90 p-1.5 shadow-xl backdrop-blur-md">
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
+                className="h-8 w-8 rounded-xl text-text-muted hover:text-text hover:bg-muted transition-colors"
+                onClick={() => fitView({ duration: 400 })}
+                title={t("Ajustar visualização")}
+              >
+                <Eye size={16} />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-xl text-text-muted hover:text-text hover:bg-muted transition-colors"
+                onClick={() => zoomIn({ duration: 300 })}
+                title={t("Aumentar zoom")}
+              >
+                <MagnifyingGlassPlus size={16} />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-xl text-text-muted hover:text-text hover:bg-muted transition-colors"
+                onClick={() => zoomOut({ duration: 300 })}
+                title={t("Diminuir zoom")}
+              >
+                <MagnifyingGlassMinus size={16} />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-xl text-text-muted hover:text-text hover:bg-muted transition-colors"
+                onClick={() => fitView({ duration: 400 })}
+                title={t("Centralizar fluxo")}
+              >
+                <Sparkle size={16} />
+              </Button>
+            </div>
+
+            {/* Botão FAB '+' azul vibrante estilizado Manychat */}
+            <Button
+              type="button"
+              className="h-11 w-11 rounded-2xl bg-primary text-primary-foreground shadow-2xl transition-all duration-200 hover:scale-105 hover:bg-primary/90 active:scale-95"
+              onClick={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                setQuickAddMenu({
+                  sourceNodeId: null,
+                  sourceHandleId: null,
+                  flowPosition: screenToFlowPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 }),
+                  screenPosition: { x: rect.left - 290, y: rect.top - 240 },
+                });
+              }}
+              title={t("Adicionar novo passo")}
+            >
+              <Plus size={22} weight="bold" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Drawer / Inspector Lateral (Estilo Image 4) */}
+        {selectedNode && (
+          <aside
+            className="fixed inset-x-0 bottom-0 z-40 flex max-h-[85vh] flex-col overflow-hidden rounded-t-2xl border-t border-border bg-surface shadow-2xl lg:static lg:z-auto lg:h-full lg:w-96 lg:max-h-none lg:shrink-0 lg:rounded-none lg:border-l lg:border-t-0 lg:shadow-none animate-in slide-in-from-right-4 duration-200"
+            data-testid="node-config-sheet"
+          >
+            <div className="flex shrink-0 items-center justify-between border-b border-border/60 px-4 py-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-text-muted">{t("Configurações do Passo")}</span>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 rounded-lg text-text-muted hover:text-text hover:bg-muted"
                 onClick={() => setSelectedNodeId(null)}
                 aria-label={t("Fechar")}
               >
                 <X size={16} aria-hidden />
               </Button>
             </div>
-            <div className="flex-1 overflow-y-auto p-4 pt-0 lg:pt-4">
+            <div className="flex-1 overflow-y-auto p-4">
               <NodeConfigPanel
                 key={selectedNode.id}
                 node={selectedNode}
@@ -413,21 +548,23 @@ function FlowCanvasInner({ flowId, initialData }: Props) {
 
         {selectedEdge && (
           <aside
-            className="fixed inset-x-0 bottom-0 z-40 flex max-h-[75vh] flex-col overflow-hidden rounded-t-lg border-t border-border bg-surface shadow-lg lg:static lg:z-auto lg:h-full lg:w-96 lg:max-h-none lg:shrink-0 lg:rounded-none lg:border-l lg:border-t-0 lg:shadow-none"
+            className="fixed inset-x-0 bottom-0 z-40 flex max-h-[85vh] flex-col overflow-hidden rounded-t-2xl border-t border-border bg-surface shadow-2xl lg:static lg:z-auto lg:h-full lg:w-96 lg:max-h-none lg:shrink-0 lg:rounded-none lg:border-l lg:border-t-0 lg:shadow-none animate-in slide-in-from-right-4 duration-200"
             data-testid="edge-config-sheet"
           >
-            <div className="flex shrink-0 justify-end p-2 lg:hidden">
+            <div className="flex shrink-0 items-center justify-between border-b border-border/60 px-4 py-3">
+              <span className="text-xs font-semibold text-text-muted">{t("Regra de Conexão")}</span>
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
+                className="h-7 w-7 rounded-lg text-text-muted hover:text-text hover:bg-muted"
                 onClick={() => setSelectedEdgeId(null)}
                 aria-label={t("Fechar")}
               >
                 <X size={16} aria-hidden />
               </Button>
             </div>
-            <div className="flex-1 overflow-y-auto p-4 pt-0 lg:pt-4">
+            <div className="flex-1 overflow-y-auto p-4">
               <EdgeConfigPanel
                 key={selectedEdge.id}
                 sourceNode={selectedEdgeSource ? toFlowNode(selectedEdgeSource) : undefined}

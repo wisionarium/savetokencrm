@@ -228,19 +228,6 @@ export function PublishBar({
       <div className="flex flex-wrap items-center gap-2">
         <TriggerConfigControl flowId={flowId} triggerConfig={flow.trigger_config} />
 
-        <Select value={flow.handoff_policy} onValueChange={(v) => handoffPolicy.mutate(v as FollowupFlowDetailRow["handoff_policy"])}>
-          <SelectTrigger className="w-56" aria-label={t("Política de handoff")}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {(Object.keys(HANDOFF_LABEL) as Array<keyof typeof HANDOFF_LABEL>).map((k) => (
-              <SelectItem key={k} value={k}>
-                {t(HANDOFF_LABEL[k])}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
         <Button
           type="button"
           variant="outline"

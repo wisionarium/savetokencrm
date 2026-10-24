@@ -23,13 +23,37 @@ import { Plus, PencilSimple, Trash } from "@/lib/ui/icons";
 import { apiClient } from "@/lib/api/client";
 import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { useMessageTemplates, type MessageTemplate } from "@/hooks/inbox/useMessageTemplates";
+import { cleanTemplateSymbols } from "@/lib/inbox/template-vars";
 import { TemplateFormDialog } from "./TemplateFormDialog";
 
 const TEMPLATES_KEY = ["message-templates"];
 
+
 interface Props {
   canShare: boolean;
   currentUserId: string;
+}
+
+function renderTemplatePreview(body: string) {
+  const cleaned = cleanTemplateSymbols(body);
+  const parts = cleaned.split(/(?=[@][a-zA-Z0-9_]+)|(?<=[@][a-zA-Z0-9_]+)/g);
+  return (
+    <>
+      {parts.map((part, i) => {
+        if (part.startsWith("@")) {
+          return (
+            <span
+              key={i}
+              className="inline-flex items-center rounded bg-primary/10 px-1 py-0.5 font-medium text-primary text-xs"
+            >
+              {part}
+            </span>
+          );
+        }
+        return part;
+      })}
+    </>
+  );
 }
 
 export function TemplatesClient({ canShare, currentUserId }: Props) {
@@ -92,7 +116,9 @@ export function TemplatesClient({ canShare, currentUserId }: Props) {
                       {t(template.owner_user_id ? "Pessoal" : "Compartilhado")}
                     </Badge>
                   </div>
-                  <p className="line-clamp-2 text-sm text-muted-foreground">{template.body}</p>
+                  <p className="line-clamp-2 text-sm text-muted-foreground">
+                    {renderTemplatePreview(template.body)}
+                  </p>
                 </div>
                 {canModify && (
                   <div className="flex shrink-0 gap-1">

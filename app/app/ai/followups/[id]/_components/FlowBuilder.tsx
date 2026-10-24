@@ -26,15 +26,6 @@ interface Props {
 }
 
 export function FlowBuilder({ flowId, initialData }: Props) {
-  // Fluxos de disparo (inbox) ganham o editor simplificado em estilo nodes;
-  // fluxos de IA continuam no canvas xyflow completo.
-  if (initialData.inbox_enabled) {
-    return (
-      <div className="flex h-full min-h-[600px] flex-1 flex-col" data-testid="flow-builder-shell">
-        <DispatchFlowEditor flowId={flowId} initialData={initialData} />
-      </div>
-    );
-  }
   return (
     <div className="flex h-full min-h-[600px] flex-1 flex-col" data-testid="flow-builder-shell">
       <FlowCanvas flowId={flowId} initialData={initialData} />

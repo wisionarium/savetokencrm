@@ -9,12 +9,24 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   useConnectOfficialChannel,
   useOfficialChannel,
   useRegistrarWebhookOficial,
+  useRotacionarWebhookOficial,
 } from "@/hooks/channels/useOfficialChannel";
 import { copyToClipboard } from "@/lib/clipboard";
 import { useT } from "@/hooks/i18n/useT";
+import { ArrowsClockwise } from "@/lib/ui/icons";
 import { ChannelAiAccess } from "./ChannelAiAccess";
 
 /** Campo somente-leitura com botão de copiar — o que o operador cola na Meta. */
@@ -22,28 +34,36 @@ function ParaColar({
   rotulo,
   valor,
   semValor,
+  extra,
 }: {
   rotulo: string;
   valor: string | null;
   /** O que dizer quando não há valor para mostrar — que nem sempre é "falta configurar". */
   semValor?: React.ReactNode;
+  extra?: React.ReactNode;
 }) {
   const t = useT();
   if (!valor) {
     return (
       <div className="flex flex-col gap-1">
-        <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          {rotulo}
-        </span>
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            {rotulo}
+          </span>
+          {extra}
+        </div>
         {semValor}
       </div>
     );
   }
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-        {rotulo}
-      </span>
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          {rotulo}
+        </span>
+        {extra}
+      </div>
       <div className="flex items-center gap-2">
         <code className="flex-1 overflow-x-auto rounded-md bg-muted px-2 py-1.5 text-xs">{valor}</code>
         <Button
@@ -66,6 +86,8 @@ export function CanalOficialClient() {
   const { data, isPending } = useOfficialChannel();
   const conectar = useConnectOfficialChannel();
   const registrarWebhook = useRegistrarWebhookOficial();
+  const rotacionarWebhook = useRotacionarWebhookOficial();
+  const [confirmarRotacao, setConfirmarRotacao] = useState(false);
   const [form, setForm] = useState({ phone_number_id: "", waba_id: "", token: "" });
 
   const estado = data?.data;
@@ -158,7 +180,23 @@ export function CanalOficialClient() {
             </div>
           ) : null}
 
-          <ParaColar rotulo={t("URL de callback")} valor={estado.webhook.callbackUrl} />
+          <ParaColar
+            rotulo={t("URL de callback")}
+            valor={estado.webhook.callbackUrl}
+            extra={
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-6 gap-1 px-2 text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => setConfirmarRotacao(true)}
+                title={t("Gerar um novo link de callback e invalidar o anterior")}
+              >
+                <ArrowsClockwise size={12} />
+                {t("Gerar novo link")}
+              </Button>
+            }
+          />
           <ParaColar
             rotulo={t("Token de verificação")}
             valor={estado.webhook.verifyToken}
@@ -258,6 +296,52 @@ export function CanalOficialClient() {
           </Button>
         </form>
       </Card>
+
+      <AlertDialog open={confirmarRotacao} onOpenChange={setConfirmarRotacao}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("Gerar novo link de callback do Webhook?")}</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2 text-left">
+              <span>
+                {t("Tem certeza? Ao confirmar, o link de callback anterior será")}{" "}
+                <strong className="text-foreground">{t("imediatamente invalidado")}</strong>.
+              </span>
+              <span>
+                {t(
+                  "Um novo token exclusivo será gerado para o webhook deste canal com base no domínio atual.",
+                )}
+              </span>
+              <span className="block text-xs text-muted-foreground">
+                {t(
+                  "Se o canal oficial estiver conectado com a Meta, o CRM atualizará o registro na Meta automaticamente.",
+                )}
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={rotacionarWebhook.isPending}>{t("Cancelar")}</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={rotacionarWebhook.isPending}
+              onClick={async (e) => {
+                e.preventDefault();
+                try {
+                  const res = await rotacionarWebhook.mutateAsync();
+                  if (res?.data?.registrado) {
+                    toast.success(t("Novo link de callback gerado e registrado na Meta com sucesso!"));
+                  } else {
+                    toast.success(t("Novo link de callback gerado com sucesso!"));
+                  }
+                  setConfirmarRotacao(false);
+                } catch {
+                  toast.error(t("Erro ao rotacionar webhook."));
+                }
+              }}
+            >
+              {rotacionarWebhook.isPending ? t("Gerando…") : t("Confirmar e gerar novo link")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

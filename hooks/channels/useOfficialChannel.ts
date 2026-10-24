@@ -99,3 +99,19 @@ export function useRegistrarWebhookOficial() {
     },
   });
 }
+
+/**
+ * Rotaciona e gera um NOVO token de webhook, invalidando o anterior e
+ * reapontando o webhook na Meta para o novo endereço com o domínio em vigor.
+ */
+export function useRotacionarWebhookOficial() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async () =>
+      apiClient.post<{ data: RegistroDoWebhook }>("/api/v1/channels/official/webhook", { rotacionar: true }),
+    onError: showApiError,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["official-channel"] });
+    },
+  });
+}

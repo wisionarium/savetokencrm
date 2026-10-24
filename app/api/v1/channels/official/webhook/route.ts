@@ -69,11 +69,22 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   if (!sessao || !sessao.meta_phone_number_id || !sessao.meta_waba_id || !sessao.meta_token_encrypted) {
     return fail("invalid_request", "no_meta_channel", 422, { requestId });
   }
-  if (!sessao.webhook_path_token) {
-    // Sessão sem token de caminho é sessão que a migration 0099 (ou o gerador do
-    // INSERT) não alcançou: sem ele não há URL a registrar. Dizer isso é melhor que
-    // mandar a Meta chamar `/api/v1/webhooks/meta/null`.
-    return fail("invalid_request", "channel_without_webhook_path", 422, { requestId });
+
+  let rotacionar = false;
+  try {
+    const body = await req.json();
+    rotacionar = Boolean(body?.rotacionar || body?.rotate);
+  } catch {
+    // Body vazio ou inválido segue como tentativa padrão sem rotação
+  }
+
+  let tokenAtual = sessao.webhook_path_token;
+  if (rotacionar || !tokenAtual) {
+    tokenAtual = randomUUID().replace(/-/g, "");
+    await admin
+      .from("channel_sessions")
+      .update({ webhook_path_token: tokenAtual })
+      .eq("id", sessao.id);
   }
 
   const desfecho = await registrarWebhookDaSessao({
@@ -82,7 +93,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     phoneNumberId: sessao.meta_phone_number_id,
     wabaId: sessao.meta_waba_id,
     tokenCifrado: sessao.meta_token_encrypted,
-    webhookPathToken: sessao.webhook_path_token,
+    webhookPathToken: tokenAtual,
     base: basePublicaDaInstalacao(req),
     requestId,
   });
@@ -95,6 +106,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     url: desfecho.url,
     erro: desfecho.erro,
     em: desfecho.em,
-    callbackUrl: `${basePublicaDaInstalacao(req)}/api/v1/webhooks/meta/${sessao.webhook_path_token}`,
+    callbackUrl: `${basePublicaDaInstalacao(req)}/api/v1/webhooks/meta/${tokenAtual}`,
   });
 }

@@ -85,10 +85,10 @@ export function FlowsList({ initialData, canWrite, filterMode = "ai" }: Props) {
 
   const allFlows = data ?? [];
 
-  // Filtrar os fluxos de acordo com a aba ativa
+  // No modo de disparo, todos os fluxos configurados são tratados como fluxos de disparo
   const tabFlows =
     filterMode === "disparo"
-      ? allFlows.filter((f) => f.inbox_enabled)
+      ? allFlows
       : allFlows.filter((f) => !f.inbox_enabled);
 
   // Filtrar por busca
@@ -102,16 +102,11 @@ export function FlowsList({ initialData, canWrite, filterMode = "ai" }: Props) {
     </Button>
   );
 
-  const newFlowButton =
-    filterMode === "disparo" ? (
-      <Button onClick={() => router.push("/app/ai/followups/novo-disparo")} className="w-full sm:w-auto">
-        <Plus size={14} aria-hidden className="mr-2" /> {t("Novo fluxo de disparo")}
-      </Button>
-    ) : (
-      <Button onClick={() => setDialogOpen(true)} variant="outline" className="w-full sm:w-auto">
-        <Plus size={14} aria-hidden className="mr-2" /> {t("Novo fluxo de IA")}
-      </Button>
-    );
+  const newFlowButton = (
+    <Button onClick={() => setDialogOpen(true)} className="w-full sm:w-auto">
+      <Plus size={14} aria-hidden className="mr-2" /> {t("Novo fluxo de disparo")}
+    </Button>
+  );
 
   const dialogos = canWrite && (
     <>
@@ -463,10 +458,6 @@ export function FlowsList({ initialData, canWrite, filterMode = "ai" }: Props) {
                     <div>
                       <dt className="text-text-muted">{t("Versão")}</dt>
                       <dd className="font-mono">{flow.active_version_id ? "publicada" : "—"}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-text-muted">Handoff</dt>
-                      <dd className="font-mono">{flow.handoff_policy}</dd>
                     </div>
                   </dl>
                   <p className="mt-auto pt-2 text-xs text-text-muted">

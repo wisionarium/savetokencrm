@@ -15,12 +15,23 @@ import { env } from "@/lib/env";
 
 /** Aceita `NextRequest` e qualquer objeto com estas duas peças (testes). */
 export function basePublicaDaInstalacao(req: { headers: Headers; nextUrl: URL }): string {
+  const origin = req.headers.get("origin");
+  const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host") ?? req.nextUrl.host;
+  const proto = req.headers.get("x-forwarded-proto") ?? (req.nextUrl.protocol ? req.nextUrl.protocol.replace(":", "") : "https");
+  const hostUrl = origin ?? (host ? `${proto}://${host}` : null);
+
   const configurada = env.NEXT_PUBLIC_APP_URL;
-  const usavel = configurada && !configurada.includes("placeholder.invalid") ? configurada : null;
-  const base = usavel ?? req.headers.get("origin") ?? `${req.nextUrl.protocol}//${req.nextUrl.host}`;
-  // A barra final virou responsabilidade DESTE módulo ao unificar as três cópias: o
-  // caminho é colado com `/`, e um `NEXT_PUBLIC_APP_URL` terminado em barra produzia
-  // `https://crm.exemplo.com//api/v1/...` — que a Meta aceita no painel e recusa no
-  // override do número (`(#100) Invalid callback URL`).
+  const usavel =
+    configurada && !configurada.includes("placeholder.invalid") && !configurada.includes("localhost")
+      ? configurada
+      : null;
+
+  // Se a requisição vem de um domínio público/remoto (não localhost), prioriza o domínio da própria requisição
+  const base =
+    (hostUrl && !hostUrl.includes("localhost") ? hostUrl : null) ??
+    usavel ??
+    configurada ??
+    `${req.nextUrl.protocol}//${req.nextUrl.host}`;
+
   return base.replace(/\/+$/, "");
 }

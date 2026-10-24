@@ -62,6 +62,14 @@ interface Props {
   onCancelarResposta?: () => void;
   /** Nome do contato da conversa, para interpolar {{nome}}/{{primeiro_nome}} do template escolhido. */
   contactName?: string | null;
+  /** Dados do contato para interpolar @telefone, @nome, @primeiro_nome, @tags, etc. */
+  contact?: {
+    name?: string | null;
+    display_name?: string | null;
+    phone_number?: string | null;
+    email?: string | null;
+    tags?: string[] | null;
+  } | null;
   /**
    * O fluxo de disparo está no ar (POST ainda não voltou). Sobe para o layout,
    * que acende "disparando fluxo…" no thread — o diálogo mora aqui, o fio mora
@@ -79,6 +87,7 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
     blockedReason,
     janelaFechada,
     contactName,
+    contact,
     currentContactId,
     respondendo,
     onCancelarResposta,
@@ -223,7 +232,12 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
   }
 
   function applyTemplate(t: MessageTemplate) {
-    const filled = interpolateTemplate(t.body, { name: contactName ?? null });
+    const filled = interpolateTemplate(t.body, {
+      name: contactName ?? contact?.name ?? contact?.display_name ?? null,
+      phone_number: contact?.phone_number ?? null,
+      email: contact?.email ?? null,
+      tags: contact?.tags ?? null,
+    });
     setText(filled);
     setMenuDismissed(true);
     const ta = taRef.current;

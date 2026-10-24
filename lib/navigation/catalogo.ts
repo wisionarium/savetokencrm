@@ -202,6 +202,15 @@ export const NAV_CATALOG = [
     sidebar: true,
   },
   {
+    href: "/app/automacoes",
+    label: "Automações",
+    description: "Automações em nodes estilo ManyChat: boas-vindas, mensagens automáticas, timers, delays e etapas.",
+    icon: "TreeStructure",
+    group: "fluxos",
+    minRole: "manager",
+    sidebar: true,
+  },
+  {
     // Sem `sidebar`: a porta é a aba "Fluxo de follow-up" de /app/ai/fluxos.
     // Segue no registro (e no ⌘K) como rota interna.
     href: "/app/ai/followups",

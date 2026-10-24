@@ -159,12 +159,13 @@ describe("sidebarGroups", () => {
 
   it("Fluxos tem bandeja própria com os 3 fluxos — fora de Agentes", () => {
     const fluxos = sidebarGroups(true, null).find((g) => g.group.id === "fluxos");
-    expect(fluxos?.items.map((i) => i.href)).toEqual(["/app/ai/fluxos"]);
+    expect(fluxos?.items.map((i) => i.href)).toEqual(["/app/ai/fluxos", "/app/automacoes"]);
     expect(NAV_GROUPS.find((g) => g.id === "fluxos")?.hub).toBeUndefined();
     // As rotas antigas seguem no grupo Fluxos e no ⌘K, como rotas internas.
     for (const href of ["/app/ai/followups", "/app/ai/followups/novo-disparo"] as const)
       expect(dest(href).group).toBe("fluxos");
     expect(searchable(true, null).map((d) => d.href)).toContain("/app/ai/followups");
+    expect(searchable(true, null).map((d) => d.href)).toContain("/app/automacoes");
   });
 
   it("os grupos Agente de IA e Análise saíram do registro", () => {

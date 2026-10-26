@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { CanalOficialClient } from "./CanalOficialClient";
+import { CanalInstagramClient } from "./CanalInstagramClient";
 import { CanalParceiroClient } from "./CanalParceiroClient";
 import { CanalVozClient } from "./CanalVozClient";
 import { ConnectionsClient } from "./ConnectionsClient";
@@ -48,11 +49,13 @@ export function ConexoesShell({
   const aba =
     abaParam === "oficial"
       ? "oficial"
-      : abaParam === "parceiro"
-        ? "parceiro"
-        : abaParam === "voz"
-          ? "voz"
-          : "numeros";
+      : abaParam === "instagram"
+        ? "instagram"
+        : abaParam === "parceiro"
+          ? "parceiro"
+          : abaParam === "voz"
+            ? "voz"
+            : "numeros";
   const sub = params.get("sub") === "templates" ? "templates" : "conexao";
 
   const irPara = (proximaAba: string, proximaSub?: string): void => {
@@ -80,6 +83,7 @@ export function ConexoesShell({
             ele reprova igual. */}
         <TabsTrigger value="numeros">{t("Números por QR")}</TabsTrigger>
         <TabsTrigger value="oficial">{t("API Oficial (Meta)")}</TabsTrigger>
+        <TabsTrigger value="instagram">{t("Instagram Direct")}</TabsTrigger>
         {/* "Provedor parceiro" e não a marca: o rótulo da marca vem do servidor
             (`lib/channels/connect`), porque a tela não pode nomear provider — e
             porque no dia em que houver um segundo parceiro esta aba não muda.
@@ -87,6 +91,10 @@ export function ConexoesShell({
         <TabsTrigger value="parceiro">{t("Provedor parceiro")}</TabsTrigger>
         <TabsTrigger value="voz">{t("Chamada de voz")}</TabsTrigger>
       </TabsList>
+
+      <TabsContent value="instagram" className="mt-0">
+        <CanalInstagramClient />
+      </TabsContent>
 
       <TabsContent value="numeros" className="mt-0">
         <ConnectionsClient wahaConfigured={wahaConfigured} />

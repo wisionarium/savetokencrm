@@ -6,6 +6,8 @@
  */
 import { NextResponse, type NextRequest } from "next/server";
 import { logger } from "@/lib/logger";
+import { replyToInstagramComment } from "@/lib/channels/instagram/comment-reply";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -57,8 +59,82 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       entryCount: rawBody?.entry?.length ?? 0,
     });
 
-    // TODO: Processamento de eventos (messages, messaging_postbacks, comments)
-    // A Meta exige resposta 200 rápida para evitar retentativas.
+    if (Array.isArray(rawBody?.entry)) {
+      const supabase = createAdminClient();
+      for (const entry of rawBody.entry) {
+        const changes = entry.changes || [];
+        for (const change of changes) {
+          if (change.field === "comments" && change.value) {
+            const commentVal = change.value;
+            const commentId = commentVal.id;
+            const commentText = (commentVal.text || "").toLowerCase().trim();
+            const mediaId = commentVal.media?.id;
+            const username = commentVal.from?.username || "";
+
+            logger.info("instagram_comment_received", {
+              commentId,
+              mediaId,
+              commentTextSnippet: commentText.slice(0, 30),
+              from: username,
+            });
+
+            const { data: orgs } = await supabase
+              .from("organizations")
+              .select("id, settings");
+
+            for (const org of orgs || []) {
+              const settings = (org.settings as Record<string, unknown>) || {};
+              const insta = settings.instagram_connection as Record<string, string> | undefined;
+              const automations = (settings.instagram_automations as Array<{
+                id: string;
+                is_active: boolean;
+                target_type: "all_posts" | "specific_post";
+                post_id?: string | null;
+                keywords: string[];
+                reply_comment_text: string;
+                dm_message_text: string;
+              }>) || [];
+
+              if (!insta?.page_access_token || !insta?.page_id) continue;
+
+              for (const auto of automations) {
+                if (!auto.is_active) continue;
+
+                if (auto.target_type === "specific_post" && auto.post_id && auto.post_id !== mediaId) {
+                  continue;
+                }
+
+                const kws: string[] = auto.keywords || [];
+                const matched =
+                  kws.length === 0 ||
+                  kws.some((k) => k && commentText.includes(k.toLowerCase().trim()));
+
+                if (matched) {
+                  const dmText = (auto.dm_message_text || "").replace(
+                    /@(primeiro_nome|nome)/gi,
+                    username || "amigo",
+                  );
+                  const publicText = (auto.reply_comment_text || "").replace(
+                    /@(primeiro_nome|nome)/gi,
+                    username || "amigo",
+                  );
+
+                  await replyToInstagramComment({
+                    commentId,
+                    publicReplyText: publicText,
+                    dmText,
+                    pageId: insta.page_id,
+                    pageAccessToken: insta.page_access_token,
+                  });
+                  break;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
     return new NextResponse("EVENT_RECEIVED", { status: 200 });
   } catch (error) {
     logger.error("instagram_webhook_error", {

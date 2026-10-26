@@ -7,6 +7,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { logger } from "@/lib/logger";
 import { exchangeInstagramCode } from "@/lib/channels/instagram/oauth";
+import { loadAuthUser, resolveActiveOrg } from "@/lib/auth/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -48,6 +50,59 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     hasInstagram: Boolean(primaryAccount?.instagramBusinessId),
     username: primaryAccount?.instagramUsername,
   });
+
+  // Salva conexão na organização
+  const state = params.get("state") || "";
+  let targetOrgId = state.startsWith("org_") ? state.replace("org_", "") : null;
+
+  if (!targetOrgId) {
+    try {
+      const user = await loadAuthUser();
+      if (user) {
+        const activeOrg = await resolveActiveOrg(user);
+        targetOrgId = activeOrg?.orgId ?? null;
+      }
+    } catch {
+      // fallback silencioso
+    }
+  }
+
+  if (targetOrgId && primaryAccount) {
+    try {
+      const supabase = createAdminClient();
+      const { data: orgData } = await supabase
+        .from("organizations")
+        .select("settings")
+        .eq("id", targetOrgId)
+        .single();
+
+      const currentSettings = (orgData?.settings as Record<string, unknown>) || {};
+      await supabase
+        .from("organizations")
+        .update({
+          settings: {
+            ...currentSettings,
+            instagram_connection: {
+              connected_at: new Date().toISOString(),
+              page_id: primaryAccount.pageId,
+              page_name: primaryAccount.pageName,
+              page_access_token: primaryAccount.pageAccessToken,
+              instagram_business_id: primaryAccount.instagramBusinessId || null,
+              instagram_username: primaryAccount.instagramUsername || null,
+              instagram_name: primaryAccount.instagramName || null,
+              profile_picture_url: primaryAccount.profilePictureUrl || null,
+            },
+          },
+        })
+        .eq("id", targetOrgId);
+
+      logger.info("instagram_connection_persisted_to_org", { orgId: targetOrgId });
+    } catch (persistErr) {
+      logger.error("instagram_connection_persist_error", {
+        error: persistErr instanceof Error ? persistErr.message : String(persistErr),
+      });
+    }
+  }
 
   return NextResponse.redirect(`${baseUrl}/app/connections?aba=instagram&sucesso=conectado`);
 }

@@ -856,6 +856,11 @@ const HOSTS_DECLARADOS: Record<string, EntradaDeHost> = {
     motivo:
       "endpoint padrão do adapter do canal de mensagens, com override por ZERNIO_API_BASE_URL. Fixo de propósito: instalação que não configura nada tem de funcionar.",
   },
+  "www.facebook.com": {
+    categoria: "FORNECEDOR",
+    motivo:
+      "tela de consentimento do OAuth do Facebook/Meta: para onde o operador da conta é redirecionado para autorizar o app a gerenciar DMs e comentários do Instagram.",
+  },
   // ── painel do fornecedor: texto de tela apontando para o endereço DELE ────
   "platform.openai.com": {
     categoria: "CONSOLE",

@@ -5,7 +5,6 @@ import {
   Manrope,
   Atkinson_Hyperlegible,
   Source_Serif_4,
-  IBM_Plex_Sans,
   IBM_Plex_Mono,
   JetBrains_Mono,
 } from "next/font/google";
@@ -51,12 +50,11 @@ export const sourceSerif = Source_Serif_4({
   variable: "--font-source-serif",
 });
 
-export const plexSans = IBM_Plex_Sans({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  display: "swap",
-  variable: "--font-plex-sans",
-});
+// IBM_Plex_Sans com multiplos pesos causa crash no Turbopack (Next 16 bug de query única).
+// O fallback via CSS font-family resolve no showcase sem quebrar o build do Vercel.
+export const plexSans = {
+  variable: "",
+};
 
 export const plexMono = IBM_Plex_Mono({
   subsets: ["latin"],
@@ -78,7 +76,6 @@ export const allFontVariables = [
   manrope.variable,
   atkinson.variable,
   sourceSerif.variable,
-  plexSans.variable,
   plexMono.variable,
   jetbrains.variable,
-].join(" ");
+].filter(Boolean).join(" ");

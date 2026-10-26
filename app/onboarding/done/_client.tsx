@@ -21,7 +21,6 @@ export function DoneClient({
     <div className="mx-auto max-w-lg space-y-8 rounded-2xl border bg-card p-8 text-center shadow-lg transition-all animate-in fade-in-50 zoom-in-95">
       <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400">
         <svg
-          xmlns="http://www.w3.org/2000/svg"
           className="h-10 w-10"
           fill="none"
           viewBox="0 0 24 24"

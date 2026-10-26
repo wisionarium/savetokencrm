@@ -112,7 +112,6 @@ const KNOWN_DEBT: { reason: string; files: string[] }[] = [
       // (#118) Emite `waha_sessions_count` na resposta do admin.
       "app/api/v1/admin/tenants/[id]/route.ts",
       "app/design/sections/SectionPatterns.tsx",
-      "app/onboarding/connect-whatsapp/_client.tsx",
       "components/admin/dashboard/AlertItem.tsx",
       "components/admin/dashboard/KPICards.tsx",
       "components/admin/tenants/HealthGrid.tsx",

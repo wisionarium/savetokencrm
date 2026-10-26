@@ -9,6 +9,7 @@ import { logger } from "@/lib/logger";
 import { exchangeInstagramCode } from "@/lib/channels/instagram/oauth";
 import { loadAuthUser, resolveActiveOrg } from "@/lib/auth/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { appendInstagramLog } from "@/lib/channels/instagram/logs";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -21,8 +22,17 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
   const baseUrl = req.nextUrl.origin;
 
+  const state = params.get("state") || "";
+  let targetOrgId = state.startsWith("org_") ? state.replace("org_", "") : null;
+
   if (error || !code) {
     logger.warn("instagram_oauth_callback_failed", { error, errorDescription });
+    await appendInstagramLog(targetOrgId, {
+      level: "error",
+      category: "oauth",
+      title: "Autorização do Facebook/Meta não concluída",
+      details: errorDescription || error || "O usuário cancelou o login ou a Meta retornou erro.",
+    });
     return NextResponse.redirect(
       `${baseUrl}/app/connections?aba=instagram&erro=${encodeURIComponent(
         errorDescription || error || "auth_cancelled",
@@ -52,9 +62,6 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   });
 
   // Salva conexão na organização
-  const state = params.get("state") || "";
-  let targetOrgId = state.startsWith("org_") ? state.replace("org_", "") : null;
-
   if (!targetOrgId) {
     try {
       const user = await loadAuthUser();
@@ -97,9 +104,22 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         .eq("id", targetOrgId);
 
       logger.info("instagram_connection_persisted_to_org", { orgId: targetOrgId });
+
+      await appendInstagramLog(targetOrgId, {
+        level: "success",
+        category: "oauth",
+        title: `Conta do Instagram conectada: @${primaryAccount.instagramUsername || primaryAccount.pageName}`,
+        details: `Página "${primaryAccount.pageName}" (ID: ${primaryAccount.pageId}) vinculada com sucesso. Instagram Business ID: ${primaryAccount.instagramBusinessId || "Detectado"}.`,
+      });
     } catch (persistErr) {
       logger.error("instagram_connection_persist_error", {
         error: persistErr instanceof Error ? persistErr.message : String(persistErr),
+      });
+      await appendInstagramLog(targetOrgId, {
+        level: "error",
+        category: "oauth",
+        title: "Erro ao salvar conexão no banco de dados",
+        details: persistErr instanceof Error ? persistErr.message : String(persistErr),
       });
     }
   }

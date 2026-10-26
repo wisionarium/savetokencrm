@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { CanalOficialClient } from "./CanalOficialClient";
 import { CanalInstagramClient } from "./CanalInstagramClient";
+import { LogsDiagnosticoClient } from "./LogsDiagnosticoClient";
 import { CanalParceiroClient } from "./CanalParceiroClient";
 import { CanalVozClient } from "./CanalVozClient";
 import { ConnectionsClient } from "./ConnectionsClient";
@@ -51,11 +52,13 @@ export function ConexoesShell({
       ? "oficial"
       : abaParam === "instagram"
         ? "instagram"
-        : abaParam === "parceiro"
-          ? "parceiro"
-          : abaParam === "voz"
-            ? "voz"
-            : "numeros";
+        : abaParam === "logs"
+          ? "logs"
+          : abaParam === "parceiro"
+            ? "parceiro"
+            : abaParam === "voz"
+              ? "voz"
+              : "numeros";
   const sub = params.get("sub") === "templates" ? "templates" : "conexao";
 
   const irPara = (proximaAba: string, proximaSub?: string): void => {
@@ -84,6 +87,7 @@ export function ConexoesShell({
         <TabsTrigger value="numeros">{t("Números por QR")}</TabsTrigger>
         <TabsTrigger value="oficial">{t("API Oficial (Meta)")}</TabsTrigger>
         <TabsTrigger value="instagram">{t("Instagram Direct")}</TabsTrigger>
+        <TabsTrigger value="logs">{t("Logs & Diagnóstico")}</TabsTrigger>
         {/* "Provedor parceiro" e não a marca: o rótulo da marca vem do servidor
             (`lib/channels/connect`), porque a tela não pode nomear provider — e
             porque no dia em que houver um segundo parceiro esta aba não muda.
@@ -94,6 +98,10 @@ export function ConexoesShell({
 
       <TabsContent value="instagram" className="mt-0">
         <CanalInstagramClient />
+      </TabsContent>
+
+      <TabsContent value="logs" className="mt-0">
+        <LogsDiagnosticoClient />
       </TabsContent>
 
       <TabsContent value="numeros" className="mt-0">

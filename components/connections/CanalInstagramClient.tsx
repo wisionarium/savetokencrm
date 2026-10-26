@@ -92,7 +92,13 @@ export function CanalInstagramClient() {
             </div>
           </div>
 
-          <div className="flex shrink-0 items-center gap-3">
+          <div className="flex shrink-0 items-center gap-2">
+            <Link href="/app/connections?aba=logs">
+              <Button type="button" variant="outline" size="lg" className="gap-2">
+                <ArrowsClockwise size={18} />
+                {t("Logs & Diagnóstico")}
+              </Button>
+            </Link>
             <Button
               type="button"
               size="lg"

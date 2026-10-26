@@ -8,6 +8,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { logger } from "@/lib/logger";
 import { replyToInstagramComment } from "@/lib/channels/instagram/comment-reply";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { appendInstagramLog } from "@/lib/channels/instagram/logs";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -32,6 +33,12 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
   if (mode === "subscribe" && token === INSTAGRAM_VERIFY_TOKEN && challenge) {
     logger.info("instagram_webhook_verified_successfully");
+    await appendInstagramLog(null, {
+      level: "success",
+      category: "webhook",
+      title: "Handshake do Webhook validado pela Meta com sucesso (200 OK)",
+      details: "Recebido hub.mode=subscribe e hub.verify_token correto. A Meta conectou com o endpoint.",
+    });
     // A Meta exige retorno do challenge cru em texto puro com HTTP 200
     return new NextResponse(challenge, {
       status: 200,
@@ -42,6 +49,13 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   logger.warn("instagram_webhook_verification_failed", {
     expectedToken: INSTAGRAM_VERIFY_TOKEN,
     receivedToken: token,
+  });
+
+  await appendInstagramLog(null, {
+    level: "error",
+    category: "webhook",
+    title: "Tentativa de validação do Webhook falhou",
+    details: `Token recebido ('${token || "vazio"}') diferente do esperado ('${INSTAGRAM_VERIFY_TOKEN}').`,
   });
 
   return new NextResponse("Forbidden", { status: 403 });
@@ -78,6 +92,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
               from: username,
             });
 
+            await appendInstagramLog(null, {
+              level: "info",
+              category: "webhook",
+              title: `Comentário recebido de @${username || "usuário"}`,
+              details: `Texto: "${commentText}". Media ID: ${mediaId || "N/A"}.`,
+              metadata: { commentId, mediaId, username, text: commentText },
+            });
+
             const { data: orgs } = await supabase
               .from("organizations")
               .select("id, settings");
@@ -87,6 +109,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
               const insta = settings.instagram_connection as Record<string, string> | undefined;
               const automations = (settings.instagram_automations as Array<{
                 id: string;
+                name?: string;
                 is_active: boolean;
                 target_type: "all_posts" | "specific_post";
                 post_id?: string | null;
@@ -119,12 +142,20 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
                     username || "amigo",
                   );
 
-                  await replyToInstagramComment({
+                  const replyRes = await replyToInstagramComment({
                     commentId,
                     publicReplyText: publicText,
                     dmText,
                     pageId: insta.page_id,
                     pageAccessToken: insta.page_access_token,
+                  });
+
+                  await appendInstagramLog(org.id, {
+                    level: replyRes.dmOk || replyRes.publicOk ? "success" : "error",
+                    category: "automation",
+                    title: `Automação "${auto.name || "Regra"}" disparada para @${username}`,
+                    details: `Resposta pública: ${replyRes.publicOk ? "Enviada ✅" : "Falhou ❌"} | DM Privada: ${replyRes.dmOk ? "Enviada ✅" : "Falhou ❌"}.`,
+                    metadata: { commentId, username, replyRes },
                   });
                   break;
                 }

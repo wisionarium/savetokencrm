@@ -861,6 +861,11 @@ const HOSTS_DECLARADOS: Record<string, EntradaDeHost> = {
     motivo:
       "tela de consentimento do OAuth do Facebook/Meta: para onde o operador da conta é redirecionado para autorizar o app a gerenciar DMs e comentários do Instagram.",
   },
+  "developers.facebook.com": {
+    categoria: "FORNECEDOR",
+    motivo:
+      "portal de desenvolvedores da Meta onde o usuário gerencia o aplicativo, credenciais e permissões da Graph API.",
+  },
   // ── painel do fornecedor: texto de tela apontando para o endereço DELE ────
   "platform.openai.com": {
     categoria: "CONSOLE",

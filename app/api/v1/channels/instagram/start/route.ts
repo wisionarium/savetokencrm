@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 const META_APP_ID = process.env.META_APP_ID || "1454524740075812";
 
 const SCOPES = [
-  "instagram_basic",
+  "instagram_business_basic",
   "instagram_manage_messages",
   "instagram_manage_comments",
   "pages_show_list",

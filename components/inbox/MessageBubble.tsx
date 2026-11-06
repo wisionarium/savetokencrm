@@ -55,6 +55,32 @@ function AckIndicator({ status, t }: { status: string; t: (texto: string) => str
   return null;
 }
 
+function friendlyErrorMessage(
+  errorMessage: string | null,
+  errorCode: string | null,
+  t: (s: string) => string,
+): string {
+  if (!errorMessage) return errorCode ?? t("Erro desconhecido");
+  if (
+    errorMessage.includes("131058") ||
+    (errorMessage.includes("Hello World") && errorMessage.includes("Public Test Numbers"))
+  ) {
+    return t(
+      "A Meta recusou o envio: o modelo 'hello_world' só é permitido pela Meta em números de teste de desenvolvedor. Em números reais, utilize um modelo próprio aprovado na Meta.",
+    );
+  }
+  if (
+    errorMessage.includes("131047") ||
+    errorMessage.toLowerCase().includes("24 hour") ||
+    errorMessage.toLowerCase().includes("24-hour")
+  ) {
+    return t(
+      "A janela de 24 horas está fechada. A Meta só aceita envio de modelos de mensagens aprovados.",
+    );
+  }
+  return t(errorMessage);
+}
+
 export const MessageBubble = memo(function MessageBubble({
   message,
   debugCitations,
@@ -283,8 +309,8 @@ export const MessageBubble = memo(function MessageBubble({
                     <WarningOctagon size={10} weight="fill" aria-hidden /> {t("Falhou")}
                   </span>
                 </TooltipTrigger>
-                <TooltipContent>
-                  {message.error_message ? t(message.error_message) : (message.error_code ?? t("Erro desconhecido"))}
+                <TooltipContent className="max-w-xs text-xs">
+                  {friendlyErrorMessage(message.error_message, message.error_code, t)}
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>

@@ -30,6 +30,7 @@ export interface TemplateView {
   /** DERIVADOS do template pela API — nunca digitados, nunca contados à mão. */
   slots: TemplateSlotView[];
   previews: TemplatePreview[];
+  components?: unknown[];
 }
 
 export interface TemplatesPayload {
@@ -60,6 +61,7 @@ export function useSyncTemplates() {
     onError: showApiError,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["channel-templates"] });
+      qc.invalidateQueries({ queryKey: ["templates-da-conversa"] });
     },
   });
 }

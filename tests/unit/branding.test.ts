@@ -890,6 +890,11 @@ const HOSTS_DECLARADOS: Record<string, EntradaDeHost> = {
     motivo:
       "portal de parceiros da Nuvemshop, onde o operador registra o aplicativo e pega client id e secret. Endereço da plataforma, não nosso.",
   },
+  "business.facebook.com": {
+    categoria: "FORNECEDOR",
+    motivo:
+      "painel do Gerenciador da Meta onde o operador gerencia a WABA e cria ou edita templates de mensagens do WhatsApp Business.",
+  },
   // ── amostra de formato: mostra o que digitar, não é destino ──────────────
   "wa.me": {
     categoria: "AMOSTRA",

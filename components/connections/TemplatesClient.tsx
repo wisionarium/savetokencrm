@@ -9,6 +9,7 @@ import {
   useTemplates,
   type TemplatePreview,
 } from "@/hooks/channels/useTemplates";
+import { lerConteudo } from "@/lib/channels/template-conteudo";
 import { useT } from "@/hooks/i18n/useT";
 
 /** Só APPROVED pode ser disparado — o resto é informação, não opção. */
@@ -92,14 +93,27 @@ export function TemplatesClient() {
 
   return (
     <div className="flex flex-col gap-4" data-testid="templates-root">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <p className="text-sm text-muted-foreground">
           {t("Espelho da conta")} <span className="font-mono text-xs">{waba}</span> ·{" "}
           {templates.length} {t("template(s)")}
         </p>
-        <Button onClick={sincronizar} disabled={sync.isPending} data-testid="btn-sync">
-          {sync.isPending ? t("Sincronizando…") : t("Sincronizar com a Meta")}
-        </Button>
+        <div className="flex items-center gap-2">
+          {waba && (
+            <Button variant="outline" size="sm" asChild className="text-xs">
+              <a
+                href={`https://business.facebook.com/wa/manage/message-templates/?waba_id=${waba}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {t("Gerenciador Meta ↗")}
+              </a>
+            </Button>
+          )}
+          <Button onClick={sincronizar} disabled={sync.isPending} data-testid="btn-sync">
+            {sync.isPending ? t("Sincronizando…") : t("Sincronizar com a Meta")}
+          </Button>
+        </div>
       </div>
 
       {templates.length === 0 ? (
@@ -113,55 +127,115 @@ export function TemplatesClient() {
         </Card>
       ) : (
         <div className="flex flex-col gap-3">
-          {templates.map((tpl) => (
-            <Card key={`${tpl.name}:${tpl.language}`} className="p-4" data-testid="template-card">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="font-medium">{tpl.name}</span>
-                <Badge variant="outline" className="font-mono text-xs">
-                  {tpl.language}
-                </Badge>
-                <Badge variant={statusTone(tpl.status)}>{tpl.status}</Badge>
-                {tpl.category ? (
-                  <Badge variant="outline" className="text-xs">
-                    {tpl.category}
+          {templates.map((tpl) => {
+            const conteudo = lerConteudo(tpl.components ?? []);
+            const isHelloWorld = tpl.name === "hello_world";
+            const isPending = tpl.status === "PENDING";
+
+            return (
+              <Card key={`${tpl.name}:${tpl.language}`} className="p-4" data-testid="template-card">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-medium">{tpl.name}</span>
+                  <Badge variant="outline" className="font-mono text-xs">
+                    {tpl.language}
                   </Badge>
-                ) : null}
-                <span className="ml-auto text-xs text-muted-foreground">
-                  {tpl.slots.length === 0
-                    ? t("sem parâmetros")
-                    : `${tpl.slots.length} ${t("parâmetro(s)")}`}
-                </span>
-              </div>
-
-              {tpl.rejectedReason ? (
-                <p className="mt-2 text-sm text-destructive">
-                  {t("Recusado:")} {tpl.rejectedReason}
-                </p>
-              ) : null}
-
-              {tpl.previews.length > 0 || tpl.slots.length > 0 ? (
-                <div className="mt-3 flex flex-col gap-3 border-l-2 border-muted pl-3">
-                  {tpl.previews.map((p, i) => (
-                    <Preview key={`${p.onde}:${i}`} preview={p} />
-                  ))}
-                  {/* Slots SEM texto ao redor: header de mídia. É justamente o
-                      parâmetro que contar `{{n}}` não enxerga. */}
-                  {tpl.slots
-                    .filter((s) => s.expects !== "text")
-                    .map((s, i) => (
-                      <div key={`m:${s.onde}:${i}`} className="flex flex-col gap-0.5">
-                        <span className="text-xs uppercase tracking-wide text-muted-foreground">
-                          {t(s.onde)} · {s.expects}
-                        </span>
-                        <span className="text-sm text-muted-foreground">
-                          {t("arquivo de")} {s.expects} {t("enviado no disparo")}
-                        </span>
-                      </div>
-                    ))}
+                  <Badge variant={statusTone(tpl.status)}>
+                    {tpl.status === "APPROVED"
+                      ? t("Aprovado")
+                      : tpl.status === "PENDING"
+                        ? `⏳ ${t("Em análise")}`
+                        : tpl.status}
+                  </Badge>
+                  {tpl.category ? (
+                    <Badge variant="outline" className="text-xs">
+                      {tpl.category}
+                    </Badge>
+                  ) : null}
+                  <span className="ml-auto text-xs text-muted-foreground">
+                    {tpl.slots.length === 0
+                      ? t("sem parâmetros")
+                      : `${tpl.slots.length} ${t("parâmetro(s)")}`}
+                  </span>
                 </div>
-              ) : null}
-            </Card>
-          ))}
+
+                {isHelloWorld && (
+                  <div className="mt-2.5 rounded-md border border-amber-500/30 bg-amber-500/10 p-2.5 text-xs text-amber-800 dark:text-amber-200">
+                    <p className="font-semibold">{t("Modelo de Teste da Meta (Public Test Numbers):")}</p>
+                    <p className="mt-0.5">
+                      {t(
+                        "A Meta só autoriza o envio do modelo 'hello_world' a partir de números de teste de desenvolvedor. Em números reais comerciais, a Meta rejeita o envio com erro #131058.",
+                      )}
+                    </p>
+                  </div>
+                )}
+
+                {isPending && (
+                  <div className="mt-2.5 rounded-md border border-blue-500/30 bg-blue-500/10 p-2.5 text-xs text-blue-800 dark:text-blue-200">
+                    <p className="font-semibold">{t("Em análise pela Meta:")}</p>
+                    <p className="mt-0.5">
+                      {t(
+                        "Este modelo foi enviado para análise na Meta (costuma levar de poucos minutos até 24h). Assim que a Meta aprovar, clique em 'Sincronizar com a Meta' para liberar o envio.",
+                      )}
+                    </p>
+                  </div>
+                )}
+
+                {tpl.rejectedReason ? (
+                  <p className="mt-2 text-sm text-destructive">
+                    {t("Recusado:")} {tpl.rejectedReason}
+                  </p>
+                ) : null}
+
+                {tpl.previews.length > 0 || tpl.slots.length > 0 ? (
+                  <div className="mt-3 flex flex-col gap-3 border-l-2 border-muted pl-3">
+                    {tpl.previews.map((p, i) => (
+                      <Preview key={`${p.onde}:${i}`} preview={p} />
+                    ))}
+                    {tpl.slots
+                      .filter((s) => s.expects !== "text")
+                      .map((s, i) => (
+                        <div key={`m:${s.onde}:${i}`} className="flex flex-col gap-0.5">
+                          <span className="text-xs uppercase tracking-wide text-muted-foreground">
+                            {t(s.onde)} · {s.expects}
+                          </span>
+                          <span className="text-sm text-muted-foreground">
+                            {t("arquivo de")} {s.expects} {t("enviado no disparo")}
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+                ) : conteudo.body || conteudo.header || conteudo.footer || conteudo.botoes.length > 0 ? (
+                  <div className="mt-3 max-w-md rounded-lg border border-border/60 bg-muted/30 p-3">
+                    {conteudo.header?.texto && (
+                      <p className="mb-1 text-xs font-semibold text-foreground">
+                        {conteudo.header.texto}
+                      </p>
+                    )}
+                    {conteudo.body && (
+                      <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+                        {conteudo.body}
+                      </p>
+                    )}
+                    {conteudo.footer && (
+                      <p className="mt-1 text-[11px] text-muted-foreground">{conteudo.footer}</p>
+                    )}
+                    {conteudo.botoes.length > 0 && (
+                      <div className="mt-2 flex flex-col gap-1 border-t border-border/50 pt-2">
+                        {conteudo.botoes.map((b, i) => (
+                          <div
+                            key={i}
+                            className="rounded border border-primary/20 bg-background/80 py-1 text-center text-xs font-medium text-primary"
+                          >
+                            {b.texto}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : null}
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>

@@ -12,20 +12,19 @@ import { useSendMessage } from "@/hooks/inbox/useSendMessage";
 import { useSyncTemplates } from "@/hooks/channels/useTemplates";
 import { fonteDeTemplates, rotaDeTemplates } from "@/lib/channels/templates-fonte";
 import { lerConteudo } from "@/lib/channels/template-conteudo";
-import { ArrowsClockwise, Warning } from "@/lib/ui/icons";
+import { ArrowBendUpLeft, ArrowsClockwise, PaperPlaneTilt, Warning, X } from "@/lib/ui/icons";
 import { cn } from "@/lib/utils";
 
 /**
  * A janela fechou — e aqui está o caminho de volta.
  *
- * ─── Visibilidade Completa dos Modelos ──────────────────────────────────────
+ * ─── Visibilidade e Controle do Operador ────────────────────────────────────
  *
- * O operador precisa saber o que existe na conta:
- * 1. Modelos aprovados (prontos para envio).
- * 2. Modelos em análise na Meta (para saber que foram criados e aguardam aprovação).
- * 3. Modelos de teste como `hello_world` (que a Meta proíbe disparar em números reais).
- *
- * Sincronizar com a Meta pode ser feito direto daqui, sem tirar o operador da conversa.
+ * O operador precisa:
+ * 1. Ver os modelos existentes (inclusive os em análise na Meta).
+ * 2. Poder VOLTAR AO CHAT NORMAL a qualquer momento sem ficar preso.
+ * 3. Poder MINIMIZAR esta barra para ela não ocupar metade da tela.
+ * 4. Sincronizar com a Meta direto daqui.
  */
 interface Modelo {
   name: string;
@@ -43,16 +42,35 @@ export function JanelaFechadaAviso({
   conversationId,
   provider,
   motivo,
+  recolhido = false,
+  onAlternarRecolhido,
+  onVoltarChatNormal,
 }: {
   conversationId: string;
   /** Decide de ONDE vêm as definições. A tela não interpreta este valor. */
   provider: string | null;
   motivo: string;
+  recolhido?: boolean;
+  onAlternarRecolhido?: (recolhido: boolean) => void;
+  onVoltarChatNormal?: () => void;
 }) {
   const t = useT();
   const send = useSendMessage();
   const sync = useSyncTemplates();
   const [escolhido, setEscolhido] = useState("");
+  const [localRecolhido, setLocalRecolhido] = useState(false);
+
+  const isRecolhido = recolhido || localRecolhido;
+
+  function alternarRecolhido(novo: boolean) {
+    setLocalRecolhido(novo);
+    onAlternarRecolhido?.(novo);
+  }
+
+  function handleVoltarChat() {
+    alternarRecolhido(true);
+    onVoltarChatNormal?.();
+  }
 
   const fonte = fonteDeTemplates(provider);
   const { data, isFetching } = useQuery({
@@ -150,25 +168,92 @@ export function JanelaFechadaAviso({
     );
   }
 
+  if (isRecolhido) {
+    return (
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-warning/40 bg-warning-bg/90 px-4 py-2 text-xs text-warning-fg transition-all">
+        <div className="flex min-w-0 items-center gap-1.5">
+          <Warning size={14} className="shrink-0 text-amber-600 dark:text-amber-400" />
+          <span className="truncate font-medium">{motivo}</span>
+          <span className="hidden sm:inline opacity-80">
+            — {t("só modelos aprovados garantem entrega fora de 24h")}
+          </span>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => alternarRecolhido(false)}
+            className="h-7 gap-1.5 border-warning/60 bg-background/90 px-2.5 text-xs text-foreground hover:bg-background"
+          >
+            <PaperPlaneTilt size={12} />
+            {t("Abrir modelos")}
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={handleSync}
+            disabled={sync.isPending || isFetching}
+            className="h-7 w-7 p-0 text-warning-fg hover:bg-warning/20"
+            title={t("Sincronizar modelos com a Meta")}
+          >
+            <ArrowsClockwise
+              size={12}
+              className={sync.isPending || isFetching ? "animate-spin" : ""}
+            />
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="border-t border-warning/40 bg-warning-bg px-4 py-3 text-warning-fg">
-      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-        <p className="text-xs">{motivo}</p>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={handleSync}
-          disabled={sync.isPending || isFetching}
-          className="h-6 gap-1 px-2 text-[11px] text-warning-fg hover:bg-warning/20"
-          title={t("Checar se a Meta já aprovou seus modelos pendentes")}
-        >
-          <ArrowsClockwise
-            size={12}
-            className={sync.isPending || isFetching ? "animate-spin" : ""}
-          />
-          {sync.isPending || isFetching ? t("Sincronizando…") : t("Sincronizar com a Meta")}
-        </Button>
+    <div className="border-t border-warning/40 bg-warning-bg px-4 py-3 text-warning-fg transition-all">
+      <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <Warning size={14} className="shrink-0 text-amber-600 dark:text-amber-400" />
+          <p className="text-xs font-semibold">{motivo}</p>
+        </div>
+        <div className="flex items-center gap-1.5 shrink-0">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleVoltarChat}
+            className="h-7 gap-1.5 border-warning/60 bg-background/90 px-2.5 text-xs font-medium text-foreground hover:bg-background shadow-xs"
+            title={t("Voltar para o campo de digitação do chat normal")}
+          >
+            <ArrowBendUpLeft size={13} />
+            {t("Voltar ao chat normal")}
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={handleSync}
+            disabled={sync.isPending || isFetching}
+            className="h-7 gap-1 px-2 text-xs text-warning-fg hover:bg-warning/20"
+            title={t("Checar se a Meta já aprovou seus modelos pendentes")}
+          >
+            <ArrowsClockwise
+              size={12}
+              className={sync.isPending || isFetching ? "animate-spin" : ""}
+            />
+            {sync.isPending || isFetching ? t("Sincronizando…") : t("Sincronizar")}
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => alternarRecolhido(true)}
+            className="h-7 w-7 p-0 text-warning-fg hover:bg-warning/20"
+            title={t("Minimizar aviso (Esc)")}
+            aria-label={t("Minimizar aviso")}
+          >
+            <X size={14} />
+          </Button>
+        </div>
       </div>
 
       {aprovados.length === 0 ? (
@@ -178,7 +263,7 @@ export function JanelaFechadaAviso({
               ⏳ {t("Você tem modelo(s) em análise na Meta:")}{" "}
               <strong>{pendentes.map((p) => `${p.name} (${p.language})`).join(", ")}</strong>.{" "}
               {t(
-                "Aguarde a aprovação da Meta (costuma levar alguns minutos a 24h) e clique em 'Sincronizar com a Meta' acima para liberar o envio.",
+                "Aguarde a aprovação da Meta (costuma levar alguns minutos a 24h) e clique em 'Sincronizar' para liberar o envio.",
               )}
             </p>
           ) : (
@@ -278,7 +363,7 @@ export function JanelaFechadaAviso({
             <p className="text-[11px] opacity-80">
               💡 {t("Você tem")} <strong>{pendentes.map((p) => p.name).join(", ")}</strong>{" "}
               {t(
-                "em análise pela Meta. Quando a Meta aprovar, clique no botão 'Sincronizar com a Meta' acima para habilitar o envio aqui.",
+                "em análise pela Meta. Quando a Meta aprovar, clique no botão 'Sincronizar' acima para habilitar o envio aqui.",
               )}
             </p>
           )}

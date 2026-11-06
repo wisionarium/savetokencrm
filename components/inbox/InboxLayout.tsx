@@ -336,6 +336,10 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
     return () => clearInterval(t);
   }, []);
 
+  // Permite ao operador recolher o aviso de modelos e voltar a digitar no chat normal
+  const [liberouChatJanela, setLiberouChatJanela] = useState<Record<string, boolean>>({});
+  const [recolheuJanela, setRecolheuJanela] = useState<Record<string, boolean>>({});
+
   // A janela de 24h fecha o composer, e o motivo DIZ há quanto tempo fechou.
   //
   // Antes disto o texto livre saía, o CRM marcava `failed` e o operador via um
@@ -362,6 +366,30 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
     : selectedConversation?.contacts?.is_anonymized
       ? t("Contato anonimizado — não é possível enviar mensagens.")
       : null;
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        if (selectedId && motivoDaJanela && !recolheuJanela[selectedId]) {
+          setRecolheuJanela((prev) => ({ ...prev, [selectedId]: true }));
+          setLiberouChatJanela((prev) => ({ ...prev, [selectedId]: true }));
+          composerRef.current?.focus();
+          return;
+        }
+
+        const activeTag = document.activeElement?.tagName?.toLowerCase();
+        const isInputFocused =
+          activeTag === "input" || activeTag === "textarea" || activeTag === "select";
+        if (isInputFocused) return;
+
+        if (selectedId) {
+          handleSelect(null);
+        }
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [selectedId, motivoDaJanela, recolheuJanela, handleSelect]);
 
   // Altura da grade: no CELULAR ela ocupa a tela inteira. Não há mais TopBar
   // abaixo de `md` (ela saiu do desenho), então o único desconto é a área
@@ -543,6 +571,7 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
             <ConversationHeader
               conversation={selectedConversation}
               onAbrirPerfil={abrirPerfilDoContato}
+              onFecharConversa={() => handleSelect(null)}
             />
             <div className="relative min-h-0 flex-1 overflow-hidden">
               {/*
@@ -580,13 +609,22 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
                 conversationId={selectedConversation.id}
                 provider={selectedConversation.channel_sessions?.provider ?? null}
                 motivo={motivoDaJanela}
+                recolhido={recolheuJanela[selectedConversation.id] ?? false}
+                onAlternarRecolhido={(r) =>
+                  setRecolheuJanela((prev) => ({ ...prev, [selectedConversation.id]: r }))
+                }
+                onVoltarChatNormal={() => {
+                  setLiberouChatJanela((prev) => ({ ...prev, [selectedConversation.id]: true }));
+                  setRecolheuJanela((prev) => ({ ...prev, [selectedConversation.id]: true }));
+                  composerRef.current?.focus();
+                }}
               />
             )}
             <Composer
               ref={composerRef}
               conversationId={selectedConversation.id}
               blockedReason={supportReadonly ? "Acompanhamento somente leitura" : blockedReason}
-              janelaFechada={motivoDaJanela}
+              janelaFechada={liberouChatJanela[selectedConversation.id] ? null : motivoDaJanela}
               disabled={selectedConversation.status === "closed"}
               contactName={selectedConversation.contacts?.name ?? null}
               contact={selectedConversation.contacts ?? null}

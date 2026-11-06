@@ -23,6 +23,7 @@ import {
   ArrowRight,
   ArrowsClockwise,
   CaretDown,
+  CaretLeft,
   Clock,
   DotsThreeVertical,
   IdentificationCard,
@@ -58,6 +59,8 @@ interface Props {
    * e painel direito no desktop — o mesmo gesto, dois recipientes.
    */
   onAbrirPerfil?: () => void;
+  /** Desmarca a conversa ativa (volta para a lista no desktop). */
+  onFecharConversa?: () => void;
 }
 
 /**
@@ -99,7 +102,7 @@ function lembreteEstaAtivo(snoozeUntil: string | null): boolean {
   return snoozeUntil != null && new Date(snoozeUntil).getTime() > Date.now();
 }
 
-export function ConversationHeader({ conversation, onAbrirPerfil }: Props) {
+export function ConversationHeader({ conversation, onAbrirPerfil, onFecharConversa }: Props) {
   const t = useT();
   const { user } = useAuth();
   const claim = useClaimConversation();
@@ -235,6 +238,19 @@ export function ConversationHeader({ conversation, onAbrirPerfil }: Props) {
     <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-background px-3 py-2 md:px-4 md:py-3">
       <div className="min-w-0">
         <div className="flex min-w-0 items-center gap-2">
+          {onFecharConversa && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={onFecharConversa}
+              className="hidden h-7 w-7 p-0 text-muted-foreground hover:bg-surface-elevated hover:text-foreground md:inline-flex"
+              title={t("Fechar conversa / Voltar para lista (Esc)")}
+              aria-label={t("Voltar")}
+            >
+              <CaretLeft size={16} />
+            </Button>
+          )}
           {/*
             ESTRELA (placeholder, novo visual): o mock fixa conversa favorita, e
             HOJE não há campo para isso (persistir exige migration — avisado ao

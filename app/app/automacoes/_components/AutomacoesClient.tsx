@@ -99,6 +99,7 @@ interface AutomacaoTemplate {
   badge: string;
   icon: typeof ChatCircle;
   defaultName: string;
+  triggerConfig?: Record<string, unknown>;
   draftGraph: Record<string, unknown>;
 }
 
@@ -110,6 +111,7 @@ const TEMPLATES_AUTOMACAO: AutomacaoTemplate[] = [
     badge: "Mais Usado",
     icon: ChatCircle,
     defaultName: "Boas-vindas - Primeira Mensagem",
+    triggerConfig: { kind: "first_message" },
     draftGraph: {
       nodes: [
         { id: "node_trigger", type: "trigger", label: "Início do Fluxo", position: { x: 100, y: 150 }, config: {} },
@@ -493,6 +495,7 @@ export function AutomacoesClient({ initialData, canWrite }: Props) {
     try {
       const res = await apiClient.post<{ data: FollowupFlowPointerRow }>("/api/v1/ai/followup-flows", {
         name: flowName.trim(),
+        trigger_config: selectedTemplate.triggerConfig ?? { kind: "manual" },
         draft_graph: selectedTemplate.draftGraph,
       });
 

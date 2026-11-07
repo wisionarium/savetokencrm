@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { useT } from "@/hooks/i18n/useT";
+import { useAssignableMembers } from "@/hooks/inbox/useAssignableMembers";
 import {
   agrupaPorPrazo,
   estaAtrasada,
@@ -13,7 +14,7 @@ import {
   type PrioridadeDaTarefa,
   type Tarefa,
 } from "@/lib/tarefas/tipos";
-import { Check, PencilSimple, Trash } from "@/lib/ui/icons";
+import { Check, PencilSimple, Trash, User } from "@/lib/ui/icons";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -35,12 +36,14 @@ const COR_DA_PRIORIDADE: Record<PrioridadeDaTarefa, string> = {
 function Linha({
   tarefa,
   podeEditar,
+  membrosMap,
   aoAlternarConcluida,
   aoEditar,
   aoApagar,
 }: {
   tarefa: Tarefa;
   podeEditar: boolean;
+  membrosMap: Map<string, string>;
   aoAlternarConcluida: (t: Tarefa) => Promise<unknown>;
   aoEditar: (t: Tarefa) => void;
   aoApagar: (t: Tarefa) => Promise<unknown>;
@@ -125,6 +128,12 @@ function Linha({
                 })
               : t("Sem prazo")}
           </span>
+          {tarefa.assigned_to && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-muted/80 px-2 py-0.5 text-muted-foreground font-medium">
+              <User size={11} aria-hidden />
+              <span>{membrosMap.get(tarefa.assigned_to) ?? t("Atribuído")}</span>
+            </span>
+          )}
         </div>
       </div>
 
@@ -181,6 +190,11 @@ export function ListaDeTarefas({
   aoApagar,
 }: Props) {
   const t = useT();
+  const { data: membros = [] } = useAssignableMembers(true);
+  const membrosMap = useMemo(
+    () => new Map(membros.map((m) => [m.user_id, m.full_name || m.user_id])),
+    [membros],
+  );
   const grupos = agrupaPorPrazo(tarefas);
 
   const rotuloDaFaixa: Record<FaixaDePrazo, string> = {
@@ -221,6 +235,7 @@ export function ListaDeTarefas({
                 key={tarefa.id}
                 tarefa={tarefa}
                 podeEditar={podeEditar}
+                membrosMap={membrosMap}
                 aoAlternarConcluida={aoAlternarConcluida}
                 aoEditar={aoEditar}
                 aoApagar={aoApagar}

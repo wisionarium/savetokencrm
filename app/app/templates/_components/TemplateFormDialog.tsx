@@ -128,7 +128,13 @@ export function TemplateFormDialog({ open, onOpenChange, canShare, template }: P
     let newBody = body;
     let nextPos = 0;
 
-    if (mentionMatch) {
+    const isValidMatch =
+      mentionMatch &&
+      mentionMatch.start >= 0 &&
+      mentionMatch.end <= body.length &&
+      body[mentionMatch.start] === "@";
+
+    if (isValidMatch && mentionOpen) {
       newBody = body.slice(0, mentionMatch.start) + tag + body.slice(mentionMatch.end);
       nextPos = mentionMatch.start + tag.length;
     } else if (ta) {
@@ -193,7 +199,7 @@ export function TemplateFormDialog({ open, onOpenChange, canShare, template }: P
         setMentionIndex((prev) => (prev - 1 + filteredVars.length) % filteredVars.length);
         return;
       }
-      if (e.key === "Enter" || e.key === "Tab") {
+      if ((e.key === "Enter" && !e.shiftKey) || e.key === "Tab") {
         e.preventDefault();
         const selected = filteredVars[mentionIndex];
         if (selected) {
@@ -204,6 +210,7 @@ export function TemplateFormDialog({ open, onOpenChange, canShare, template }: P
       if (e.key === "Escape") {
         e.preventDefault();
         setMentionOpen(false);
+        setMentionMatch(null);
         return;
       }
     }
@@ -290,10 +297,23 @@ export function TemplateFormDialog({ open, onOpenChange, canShare, template }: P
 
               {/* Popover / Menu de sugestão do @ */}
               {mentionOpen && (
-                <div
-                  ref={mentionMenuRef}
-                  className="absolute left-0 right-0 top-full z-50 mt-1 max-h-56 overflow-y-auto rounded-lg border bg-popover p-1.5 text-popover-foreground shadow-xl animate-in fade-in-50 zoom-in-95"
-                >
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    aria-hidden
+                    onPointerDown={() => {
+                      setMentionOpen(false);
+                      setMentionMatch(null);
+                    }}
+                    onClick={() => {
+                      setMentionOpen(false);
+                      setMentionMatch(null);
+                    }}
+                  />
+                  <div
+                    ref={mentionMenuRef}
+                    className="absolute left-0 right-0 top-full z-50 mt-1 max-h-56 overflow-y-auto rounded-lg border bg-popover p-1.5 text-popover-foreground shadow-xl animate-in fade-in-50 zoom-in-95"
+                  >
                   <div className="flex items-center justify-between px-2 py-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground border-b mb-1">
                     <span>{t("Informações da pessoa que chama")}</span>
                     <span className="text-[10px] font-normal normal-case">Enter ou clique para escolher</span>
@@ -359,7 +379,8 @@ export function TemplateFormDialog({ open, onOpenChange, canShare, template }: P
                     </ul>
                   )}
                 </div>
-              )}
+              </>
+            )}
             </div>
 
             {/* Chips de atalhos rápidos com 1 clique */}

@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useT } from "@/hooks/i18n/useT";
+import { useAssignableMembers } from "@/hooks/inbox/useAssignableMembers";
 import type {
   NovaTarefa,
   PrioridadeDaTarefa,
@@ -76,12 +77,14 @@ export function FormularioDeTarefa({
   // inicializador roda de novo. Efeito para sincronizar props com estado é
   // render em cascata e uma janela em que a tela mostra a tarefa anterior.
   const prazo = separaPrazo(tarefa?.due_date);
+  const { data: membros = [] } = useAssignableMembers(aberto);
   const [titulo, setTitulo] = useState(tarefa?.title ?? "");
   const [descricao, setDescricao] = useState(tarefa?.description ?? "");
   const [dia, setDia] = useState(tarefa?.due_date ? prazo.dia : (prazoSugerido ?? ""));
   const [hora, setHora] = useState(tarefa?.due_date ? prazo.hora : "09:00");
   const [prioridade, setPrioridade] = useState<PrioridadeDaTarefa>(tarefa?.priority ?? "medium");
   const [situacao, setSituacao] = useState<SituacaoDaTarefa>(tarefa?.status ?? "pending");
+  const [assignedTo, setAssignedTo] = useState<string | null>(tarefa?.assigned_to ?? null);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -105,6 +108,7 @@ export function FormularioDeTarefa({
         due_date: prazo,
         priority: prioridade,
         status: situacao,
+        assigned_to: assignedTo,
         lead_id: tarefa?.lead_id ?? leadId ?? null,
         contact_id: tarefa?.contact_id ?? contactId ?? null,
       });
@@ -203,6 +207,26 @@ export function FormularioDeTarefa({
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="tarefa-responsavel">{t("Responsável")}</Label>
+            <Select
+              value={assignedTo ?? "unassigned"}
+              onValueChange={(val) => setAssignedTo(val === "unassigned" ? null : val)}
+            >
+              <SelectTrigger id="tarefa-responsavel">
+                <SelectValue placeholder={t("Atribuir a uma pessoa...")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="unassigned">{t("Ninguém atribuído")}</SelectItem>
+                {membros.map((m) => (
+                  <SelectItem key={m.user_id} value={m.user_id}>
+                    {m.full_name || m.user_id} ({m.role})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {erro ? (

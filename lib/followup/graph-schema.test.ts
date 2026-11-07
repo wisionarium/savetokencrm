@@ -62,12 +62,20 @@ describe('graph-schema', () => {
         expect(result.success).toBe(true);
       });
 
-      it('rejects duration below 5 min', () => {
+      it('rejects duration below 1 second', () => {
         const result = waitConfigSchema.safeParse({
           mode: 'fixed',
-          duration_ms: 299_999,
+          duration_ms: 999,
         });
         expect(result.success).toBe(false);
+      });
+
+      it('accepts duration in seconds or minutes', () => {
+        const result = waitConfigSchema.safeParse({
+          mode: 'fixed',
+          duration_ms: 5_000,
+        });
+        expect(result.success).toBe(true);
       });
 
       it('rejects duration above 90 days', () => {
@@ -125,10 +133,10 @@ describe('graph-schema', () => {
         expect(result.success).toBe(false);
       });
 
-      it('rejects when min below 5 min', () => {
+      it('rejects when min below 1 second', () => {
         const result = waitConfigSchema.safeParse({
           mode: 'smart',
-          min_ms: 299_999,
+          min_ms: 999,
           max_ms: 7_776_000_000,
         });
         expect(result.success).toBe(false);

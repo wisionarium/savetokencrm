@@ -3,6 +3,7 @@ import { NavHub } from "@/components/shell/NavHub";
 import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
 import { traduzir } from "@/lib/i18n/dicionario";
 import { SupportBotButton } from "@/components/support/SupportBotWidget";
+import { LimiteContatosCard } from "@/components/settings/LimiteContatosCard";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Configurações" };
@@ -32,8 +33,9 @@ export default async function SettingsHubPage() {
         subtitle={traduzir("Sua conta, os dados da empresa e quem tem acesso ao quê.", idioma)}
         locale={idioma}
       />
-      <div className="px-6 pb-8">
-        <div className="max-w-md rounded-xl border border-border bg-card p-4 space-y-2">
+      <div className="px-6 pb-8 space-y-6 max-w-xl">
+        <LimiteContatosCard />
+        <div className="rounded-xl border border-border bg-card p-4 space-y-2">
           <h3 className="text-sm font-semibold">{traduzir("Suporte e Atendimento", idioma)}</h3>
           <p className="text-xs text-muted-foreground">
             {traduzir("Abra chamados ou tire dúvidas com o assistente inteligente.", idioma)}

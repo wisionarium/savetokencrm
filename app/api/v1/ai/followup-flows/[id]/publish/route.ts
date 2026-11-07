@@ -66,12 +66,24 @@ export async function POST(_req: NextRequest, ctx: RouteCtx): Promise<Response> 
   //
   // Kind entra neste conjunto só DEPOIS de ter motor de enrollment vivo:
   // `manual`/`webhook` (POST enroll + ação de regra), `silence` (silence-sweep),
-  // `stage_change` (gatilho-etapa), `case_opened` (gatilho-caso) e
-  // `appointment_no_show` (followup-gatilho-presenca.v1, confirmação humana).
-  const KINDS_COM_MOTOR = new Set(["manual", "webhook", "silence", "stage_change", "case_opened", "appointment_no_show"]);
+  // `stage_change` (gatilho-etapa), `case_opened` (gatilho-caso),
+  // `appointment_no_show` (followup-gatilho-presenca.v1, confirmação humana),
+  // `first_message` (boas-vindas/novo contato), `keyword` (palavra-chave no chat)
+  // e `tag_added` (etiqueta adicionada).
+  const KINDS_COM_MOTOR = new Set([
+    "manual",
+    "webhook",
+    "silence",
+    "stage_change",
+    "case_opened",
+    "appointment_no_show",
+    "first_message",
+    "keyword",
+    "tag_added",
+  ]);
   const trigger = (pointer.trigger_config ?? { kind: "manual" }) as {
     kind?: string;
-    params?: { stage_id?: string };
+    params?: { stage_id?: string; keywords?: string[]; tag?: string };
   };
   const triggerKind = trigger.kind ?? "manual";
   if (!KINDS_COM_MOTOR.has(triggerKind)) {
@@ -81,6 +93,30 @@ export async function POST(_req: NextRequest, ctx: RouteCtx): Promise<Response> 
       422,
       { requestId },
     );
+  }
+
+  if (triggerKind === "keyword") {
+    const kws = trigger.params?.keywords;
+    if (!Array.isArray(kws) || kws.length === 0 || !kws[0]?.trim()) {
+      return fail(
+        "trigger_keyword_missing",
+        t("Informe ao menos uma palavra-chave que dispara este fluxo antes de publicar."),
+        422,
+        { requestId },
+      );
+    }
+  }
+
+  if (triggerKind === "tag_added") {
+    const tag = trigger.params?.tag;
+    if (!tag || !tag.trim()) {
+      return fail(
+        "trigger_tag_missing",
+        t("Informe a tag que dispara este fluxo antes de publicar."),
+        422,
+        { requestId },
+      );
+    }
   }
 
   // ⚠️ ETAPA QUE NÃO EXISTE MAIS É FLUXO MORTO COM CARA DE VIVO. O gatilho casa

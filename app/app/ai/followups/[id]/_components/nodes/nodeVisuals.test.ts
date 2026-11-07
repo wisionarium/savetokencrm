@@ -94,6 +94,9 @@ describe("nenhum card fala a língua do banco", () => {
       describeNodeConfig("ai_classify", { classes: ["a"], grace_timeout_ms: 900_000, target: "last_reply" }, pt),
     ).toBe("1 classe · espera 15 min");
     expect(describeNodeConfig("wait", { mode: "fixed", duration_ms: 600_000 }, pt)).toBe("10 min");
+    expect(describeNodeConfig("wait", { mode: "fixed", duration_ms: 5_000 }, pt)).toBe("5s");
+    expect(describeNodeConfig("wait", { mode: "fixed", duration_ms: 7_200_000 }, pt)).toBe("2 h");
+    expect(describeNodeConfig("wait", { mode: "fixed", duration_ms: 86_400_000 }, pt)).toBe("1 dia");
   });
 
   it("em espanhol o card de repetição e o de casar resposta também traduzem", () => {

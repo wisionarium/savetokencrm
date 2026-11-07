@@ -5,6 +5,7 @@ import { ROLE_RANK } from "@/lib/auth/types";
 import { emailDeSuporte } from "@/lib/branding/saida";
 import { Card } from "@/components/ui/card";
 import { traduzir } from "@/lib/i18n/dicionario";
+import { LimiteContatosCard } from "@/components/settings/LimiteContatosCard";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +32,7 @@ export default async function BillingPage() {
           {traduzir("Planos, faturas e cobrança.", idioma)}
         </p>
       </header>
+      <LimiteContatosCard className="max-w-xl" />
       <Card className="max-w-xl p-6">
         <h2 className="text-sm font-semibold">{traduzir("Em breve — Fase 2", idioma)}</h2>
         <p className="mt-2 text-sm text-muted-foreground">

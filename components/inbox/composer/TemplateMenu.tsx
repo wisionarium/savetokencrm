@@ -5,10 +5,12 @@ import { X, Zap } from "lucide-react";
 
 /** Estado do slash-menu a partir do texto do composer. Puro (testável). */
 export function resolveSlash(text: string): { open: boolean; query: string } {
-  if (!text.startsWith("/")) return { open: false, query: "" };
-  const rest = text.slice(1);
-  if (/\s/.test(rest)) return { open: false, query: "" };
-  return { open: true, query: rest };
+  if (text.startsWith("/") || text.startsWith("@")) {
+    const rest = text.slice(1);
+    if (/\s/.test(rest)) return { open: false, query: "" };
+    return { open: true, query: rest };
+  }
+  return { open: false, query: "" };
 }
 
 interface Props {

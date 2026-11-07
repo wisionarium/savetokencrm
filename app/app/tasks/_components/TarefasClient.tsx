@@ -14,6 +14,7 @@ import { useT } from "@/hooks/i18n/useT";
 import { ArrowsClockwise, CalendarBlank, ListChecks, Plus } from "@/lib/ui/icons";
 import { cn } from "@/lib/utils";
 import { useTasks } from "@/hooks/tasks/useTasks";
+import { useAssignableMembers } from "@/hooks/inbox/useAssignableMembers";
 import type { NovaTarefa, SituacaoDaTarefa, Tarefa } from "@/lib/tarefas/tipos";
 
 import { AbasDeTarefas } from "./AbasDeTarefas";
@@ -28,6 +29,8 @@ export function TarefasClient({ podeEditar }: { podeEditar: boolean }) {
   const t = useT();
   const [modo, setModo] = useState<"lista" | "calendario">("lista");
   const [situacao, setSituacao] = useState<FiltroDeSituacao>("aberto");
+  const [filtroResponsavel, setFiltroResponsavel] = useState<string>("todos");
+  const { data: membros = [] } = useAssignableMembers(true);
   const [emEdicao, setEmEdicao] = useState<Tarefa | null>(null);
   const [formAberto, setFormAberto] = useState(false);
   const [prazoSugerido, setPrazoSugerido] = useState<string | undefined>();
@@ -46,9 +49,10 @@ export function TarefasClient({ podeEditar }: { podeEditar: boolean }) {
     editarTarefa,
     apagarTarefa,
     alternarConcluida,
-  } = useTasks(
-    situacao === "aberto" ? { aberto: true } : { status: situacao },
-  );
+  } = useTasks({
+    ...(situacao === "aberto" ? { aberto: true } : { status: situacao }),
+    ...(filtroResponsavel !== "todos" ? { assigned_to: filtroResponsavel } : {}),
+  });
 
   function abrirNova(dia?: string) {
     setEmEdicao(null);
@@ -89,7 +93,7 @@ export function TarefasClient({ podeEditar }: { podeEditar: boolean }) {
             value={situacao}
             onValueChange={(v) => setSituacao(v as FiltroDeSituacao)}
           >
-            <SelectTrigger className="h-9 w-[168px] text-xs">
+            <SelectTrigger className="h-9 w-[150px] text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -100,6 +104,25 @@ export function TarefasClient({ podeEditar }: { podeEditar: boolean }) {
               <SelectItem value="cancelled">{t("Cancelada")}</SelectItem>
             </SelectContent>
           </Select>
+
+          {membros.length > 0 && (
+            <Select
+              value={filtroResponsavel}
+              onValueChange={setFiltroResponsavel}
+            >
+              <SelectTrigger className="h-9 w-[160px] text-xs">
+                <SelectValue placeholder={t("Responsável")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">{t("Todos os responsáveis")}</SelectItem>
+                {membros.map((m) => (
+                  <SelectItem key={m.user_id} value={m.user_id}>
+                    {m.full_name || m.user_id}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
 
           <div className="flex items-center gap-0.5 rounded-md border bg-muted p-0.5">
             <button

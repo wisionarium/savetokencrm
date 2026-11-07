@@ -87,7 +87,7 @@ export const waitConfigSchema = z
   .discriminatedUnion('mode', [
     z.strictObject({
       mode: z.literal('fixed'),
-      duration_ms: z.number().int().min(300_000).max(7_776_000_000),
+      duration_ms: z.number().int().min(1_000).max(7_776_000_000),
       /**
        * A espera NÃO é encurtada nem cancelada quando o contato manda mensagem.
        *
@@ -110,7 +110,7 @@ export const waitConfigSchema = z
     }),
     z.strictObject({
       mode: z.literal('smart'),
-      min_ms: z.number().int().min(300_000),
+      min_ms: z.number().int().min(1_000),
       max_ms: z.number().int().max(7_776_000_000),
       guidance: z.string().max(500).optional(),
     }),
@@ -222,6 +222,15 @@ export const aiClassifyConfigSchema = z
     }
   );
 
+export const actionButtonSchema = z.strictObject({
+  id: z.string().min(1).max(64),
+  text: z.string().min(1).max(80),
+  type: z.enum(['flow', 'url', 'phone']).default('flow'),
+  url: z.string().max(1000).optional(),
+  phone: z.string().max(40).optional(),
+});
+export type ActionButton = z.infer<typeof actionButtonSchema>;
+
 /**
  * Action node configuration schema.
  * - text: send this body as-is (no model)
@@ -233,15 +242,18 @@ export const actionConfigSchema = z.discriminatedUnion('mode', [
     mode: z.literal('text'),
     body: z.string().min(1).max(4000),
     media_url: z.string().max(1000).optional(),
+    buttons: z.array(actionButtonSchema).max(10).optional(),
   }),
   z.strictObject({
     mode: z.literal('ai_message'),
     prompt_hint: z.string().min(1).max(1000),
     fallback_template_id: z.string().uuid().optional(),
+    buttons: z.array(actionButtonSchema).max(10).optional(),
   }),
   z.strictObject({
     mode: z.literal('template'),
     template_id: z.string().uuid(),
+    buttons: z.array(actionButtonSchema).max(10).optional(),
   }),
 ]);
 
@@ -697,6 +709,24 @@ export function nodeBranches(node: BranchableNode): FlowBranch[] {
         },
         fallbackBranch(FALLBACK_OTHERS_LABEL),
       ];
+
+    case 'action': {
+      const btns = (node.config as { buttons?: ActionButton[] }).buttons;
+      if (Array.isArray(btns) && btns.length > 0) {
+        const flowButtons = btns.filter((b) => b.type === 'flow' || !b.type);
+        if (flowButtons.length > 0) {
+          const btnBranches: FlowBranch[] = flowButtons.map((b) => ({
+            id: b.id,
+            label: b.text,
+            check: null,
+            kind: 'match' as const,
+            condition: { type: 'branch' as const, branch_id: b.id },
+          }));
+          return [...btnBranches, fallbackBranch(FALLBACK_ALWAYS_LABEL)];
+        }
+      }
+      return [fallbackBranch(FALLBACK_ALWAYS_LABEL)];
+    }
 
     default:
       return [fallbackBranch(FALLBACK_ALWAYS_LABEL)];

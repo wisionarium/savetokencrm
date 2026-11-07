@@ -2,11 +2,7 @@
 
 import { useState } from "react";
 import {
-  ChatCircle,
   ImageSquare,
-  VideoCamera,
-  FileText,
-  Clock,
   Plus,
   Trash,
   UploadSimple,
@@ -27,10 +23,11 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { actionConfigSchema } from "@/lib/followup/graph-schema";
+import { actionConfigSchema, type ActionButton } from "@/lib/followup/graph-schema";
 import { MODOS_DA_ACAO, opcoes, type ModoDaAcao } from "@/lib/followup/vocabulario";
 import { useMessageTemplates } from "@/hooks/inbox/useMessageTemplates";
 import { useT } from "@/hooks/i18n/useT";
+import { cn } from "@/lib/utils";
 
 import type { ConfigOf } from "./shared";
 
@@ -85,6 +82,10 @@ function SeletorDeModelo({
   );
 }
 
+function gerarButtonId(): string {
+  return `btn_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
+}
+
 export function ActionForm({
   config,
   onChange,
@@ -97,6 +98,11 @@ export function ActionForm({
   const [body, setBody] = useState(config.mode === "text" ? config.body : "");
   const [mediaUrl, setMediaUrl] = useState(
     config.mode === "text" ? (config as { media_url?: string }).media_url ?? "" : "",
+  );
+  const [buttons, setButtons] = useState<ActionButton[]>(
+    Array.isArray((config as { buttons?: ActionButton[] }).buttons)
+      ? (config as { buttons?: ActionButton[] }).buttons!
+      : [],
   );
   const [isUploading, setIsUploading] = useState(false);
   const [promptHint, setPromptHint] = useState(config.mode === "ai_message" ? config.prompt_hint : "");
@@ -113,6 +119,7 @@ export function ActionForm({
     promptHint: string;
     fallbackTemplateId: string;
     templateId: string;
+    buttons?: ActionButton[];
   }) => {
     const candidate =
       next.mode === "text"
@@ -120,14 +127,20 @@ export function ActionForm({
             mode: "text" as const,
             body: next.body,
             ...(next.mediaUrl.trim() ? { media_url: next.mediaUrl.trim() } : {}),
+            ...(next.buttons && next.buttons.length > 0 ? { buttons: next.buttons } : {}),
           }
         : next.mode === "ai_message"
           ? {
               mode: "ai_message" as const,
               prompt_hint: next.promptHint,
               ...(next.fallbackTemplateId.trim() ? { fallback_template_id: next.fallbackTemplateId } : {}),
+              ...(next.buttons && next.buttons.length > 0 ? { buttons: next.buttons } : {}),
             }
-          : { mode: "template" as const, template_id: next.templateId };
+          : {
+              mode: "template" as const,
+              template_id: next.templateId,
+              ...(next.buttons && next.buttons.length > 0 ? { buttons: next.buttons } : {}),
+            };
 
     const parsed = actionConfigSchema.safeParse(candidate);
     if (!parsed.success) {
@@ -138,7 +151,36 @@ export function ActionForm({
     onChange(parsed.data);
   };
 
-  const fields = { body, mediaUrl, promptHint, fallbackTemplateId, templateId };
+  const fields = { body, mediaUrl, promptHint, fallbackTemplateId, templateId, buttons };
+
+  const addButton = (type: "flow" | "url" | "phone" = "flow") => {
+    const newBtn: ActionButton = {
+      id: gerarButtonId(),
+      text: type === "flow" ? t("Falar com Atendente") : type === "url" ? t("Acessar Link") : t("Ligue Agora"),
+      type,
+    };
+    const nextButtons = [...buttons, newBtn];
+    setButtons(nextButtons);
+    commit({ mode, ...fields, buttons: nextButtons });
+  };
+
+  const updateButton = (id: string, patch: Partial<ActionButton>) => {
+    const nextButtons = buttons.map((b) => (b.id === id ? { ...b, ...patch } : b));
+    setButtons(nextButtons);
+    commit({ mode, ...fields, buttons: nextButtons });
+  };
+
+  const removeButton = (id: string) => {
+    const nextButtons = buttons.filter((b) => b.id !== id);
+    setButtons(nextButtons);
+    commit({ mode, ...fields, buttons: nextButtons });
+  };
+
+  const cleanLegacyButtonText = () => {
+    const cleaned = body.replace(/\n\s*\[(?:[0-9]+|Opção\s+[0-9]+|[a-zA-Z0-9_\s]+)\].*$/gim, "").trim();
+    setBody(cleaned);
+    commit({ mode, ...fields, body: cleaned });
+  };
 
   const insertVariable = (variable: string) => {
     const updated = body ? `${body} ${variable}` : variable;
@@ -299,27 +341,134 @@ export function ActionForm({
               ))}
             </div>
 
-            {/* Botões Rápidos de Ação (Image 4) */}
-            <div className="space-y-1.5 pt-1">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="w-full justify-center text-xs h-8 rounded-xl font-medium"
-                onClick={() => insertVariable("\n[1] Falar com Atendente")}
-              >
-                <Plus size={13} className="mr-1" />
-                {t("Adicionar Botão")}
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="w-full justify-center text-xs h-8 rounded-xl font-normal text-text-muted hover:text-text"
-                onClick={() => insertVariable("\n[Opção 1] Sim | [Opção 2] Não")}
-              >
-                + {t("Resposta Rápida")}
-              </Button>
+            {/* Seção de Botões Reais Estilo ManyChat / Nextags */}
+            <div className="space-y-2 pt-2 border-t border-border/40">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-semibold text-foreground">
+                  {t("Botões da Mensagem")}
+                </Label>
+                <span className="text-[10px] text-muted-foreground">
+                  {buttons.length}/3 {t("botões")}
+                </span>
+              </div>
+
+              {body.match(/\[(?:[0-9]+|Opção\s+[0-9]+)\].*$/im) && (
+                <div className="flex items-center justify-between rounded-lg bg-amber-500/10 p-2 text-xs text-amber-700 dark:text-amber-300 border border-amber-500/20">
+                  <span className="text-[11px]">{t("Texto de botão legado detectado na mensagem.")}</span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-2 text-[10px] font-semibold text-amber-800 dark:text-amber-200 hover:bg-amber-500/20"
+                    onClick={cleanLegacyButtonText}
+                  >
+                    {t("Limpar do texto")}
+                  </Button>
+                </div>
+              )}
+
+              {buttons.map((btn, index) => (
+                <div
+                  key={btn.id}
+                  className="rounded-xl border border-border/80 bg-muted/20 p-2.5 space-y-2 shadow-2xs"
+                >
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="text-[11px] font-semibold text-foreground">
+                      {t("Botão")} {index + 1}
+                    </span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                      onClick={() => removeButton(btn.id)}
+                      title={t("Remover botão")}
+                    >
+                      <Trash size={12} />
+                    </Button>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Input
+                      value={btn.text}
+                      placeholder={t("Texto do botão (ex: Falar com Atendente)")}
+                      maxLength={80}
+                      className="h-7 text-xs bg-background"
+                      onChange={(e) => updateButton(btn.id, { text: e.target.value })}
+                    />
+
+                    <div className="grid grid-cols-3 gap-1">
+                      <button
+                        type="button"
+                        onClick={() => updateButton(btn.id, { type: "flow" })}
+                        className={cn(
+                          "rounded-md px-1.5 py-1 text-[10px] font-medium border text-center transition-colors",
+                          btn.type === "flow" || !btn.type
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-background text-muted-foreground border-border hover:bg-muted",
+                        )}
+                      >
+                        🔀 {t("Próximo Nó")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => updateButton(btn.id, { type: "url" })}
+                        className={cn(
+                          "rounded-md px-1.5 py-1 text-[10px] font-medium border text-center transition-colors",
+                          btn.type === "url"
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-background text-muted-foreground border-border hover:bg-muted",
+                        )}
+                      >
+                        🔗 {t("Abrir Link")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => updateButton(btn.id, { type: "phone" })}
+                        className={cn(
+                          "rounded-md px-1.5 py-1 text-[10px] font-medium border text-center transition-colors",
+                          btn.type === "phone"
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-background text-muted-foreground border-border hover:bg-muted",
+                        )}
+                      >
+                        📞 {t("Ligar")}
+                      </button>
+                    </div>
+
+                    {btn.type === "url" && (
+                      <Input
+                        value={btn.url ?? ""}
+                        placeholder="https://exemplo.com/pagina"
+                        className="h-7 text-xs bg-background"
+                        onChange={(e) => updateButton(btn.id, { url: e.target.value })}
+                      />
+                    )}
+
+                    {btn.type === "phone" && (
+                      <Input
+                        value={btn.phone ?? ""}
+                        placeholder="+55 11 99999-9999"
+                        className="h-7 text-xs bg-background"
+                        onChange={(e) => updateButton(btn.id, { phone: e.target.value })}
+                      />
+                    )}
+                  </div>
+                </div>
+              ))}
+
+              {buttons.length < 3 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-center text-xs h-8 rounded-xl font-medium border-dashed border-primary/50 text-primary hover:bg-primary/5"
+                  onClick={() => addButton("flow")}
+                >
+                  <Plus size={13} className="mr-1" />
+                  {t("+ Adicionar Botão")}
+                </Button>
+              )}
             </div>
           </div>
 

@@ -145,9 +145,23 @@ export const NODE_VISUAL_LIST = Object.values(NODE_VISUALS);
 
 type ConfigOf<T extends NodeType> = Extract<FlowNode, { type: T }>["config"];
 
-/** "15 min", com espaço — o mesmo formato do card de espera, que dizia "5 min" enquanto este dizia "15min". */
+/** Formata duração legível: segundos (5s), minutos (15 min), horas (2 h) ou dias (3 dias). */
+function formatarTempo(ms: number, t?: (texto: string) => string): string {
+  if (ms < 60_000) {
+    const s = Math.max(1, Math.round(ms / 1_000));
+    return `${s}s`;
+  }
+  const m = Math.round(ms / 60_000);
+  if (m < 60) return `${m} min`;
+  const h = Math.round(m / 60);
+  if (h < 24) return `${h} h`;
+  const d = Math.round(h / 24);
+  const rotuloDia = t ? (d === 1 ? t("dia") : t("dias")) : (d === 1 ? "dia" : "dias");
+  return `${d} ${rotuloDia}`;
+}
+
 function minutos(ms: number): string {
-  return `${Math.round(ms / 60_000)} min`;
+  return formatarTempo(ms);
 }
 
 /**
@@ -170,8 +184,8 @@ export function describeNodeConfig(
     case "wait": {
       const c = config as ConfigOf<"wait">;
       return c.mode === "fixed"
-        ? minutos(c.duration_ms)
-        : `${Math.round(c.min_ms / 60_000)}–${minutos(c.max_ms)} ${t("(adaptativo)")}`;
+        ? formatarTempo(c.duration_ms, t)
+        : `${formatarTempo(c.min_ms, t)}–${formatarTempo(c.max_ms, t)} ${t("(adaptativo)")}`;
     }
     case "condition": {
       const c = config as ConfigOf<"condition">;

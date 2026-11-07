@@ -511,6 +511,14 @@ export const MODOS_DA_ACAO: Record<ModoDaAcao, string> = {
   template: "Modelo de mensagem pronto",
 };
 
+export type TipoDeBotaoDeAcao = "flow" | "url" | "phone";
+
+export const TIPOS_DE_BOTAO_DE_ACAO: Record<TipoDeBotaoDeAcao, string> = {
+  flow: "Abrir próximo nó do fluxo",
+  url: "Abrir link ou site externo",
+  phone: "Ligar para telefone",
+};
+
 // ─── nó final ────────────────────────────────────────────────────────────
 
 /**
@@ -560,9 +568,12 @@ export const DESFECHOS: Record<EnrollmentOutcome, string> = {
  * que `followup-builder.spec.ts` seleciona pelo nome — mantidos ao pé da letra.
  */
 export const GATILHOS: Record<TipoDeGatilho, string> = {
-  appointment_no_show:"Falta confirmada pela equipe",
+  appointment_no_show: "Falta confirmada pela equipe",
   manual: "Manual",
   webhook: "Disparado por uma automação em Webhooks",
+  first_message: "Primeira mensagem recebida (Boas-vindas)",
+  keyword: "Palavra-chave na mensagem",
+  tag_added: "Etiqueta / Tag adicionada",
   silence: "Silêncio",
   stage_change: "Mudança de etapa no funil",
   // "Caso" é a palavra que a tela de escalação já usa. O rótulo diz o FATO que

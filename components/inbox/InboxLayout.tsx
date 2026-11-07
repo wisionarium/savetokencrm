@@ -585,6 +585,12 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
                 className="h-full"
                 data-zoom-do-fio
                 style={{ "--zoom-fio": zoomDoFio / 100 } as CSSProperties}
+                onClick={() => {
+                  if (motivoDaJanela && !recolheuJanela[selectedConversation.id]) {
+                    setRecolheuJanela((prev) => ({ ...prev, [selectedConversation.id]: true }));
+                    setLiberouChatJanela((prev) => ({ ...prev, [selectedConversation.id]: true }));
+                  }
+                }}
               >
                 <ChatThread
                   conversationId={selectedConversation.id}

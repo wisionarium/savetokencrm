@@ -627,17 +627,17 @@
    (h-7/h-8/h-9 dos botões e selects continuam cabendo com folga maior:
    17px em 32px, 15px em 28px — os line-heights não mudaram). */
 @theme {
-  --text-xs: 15px;
+  --text-xs: 14px;
   --text-xs--line-height: 1.5rem;
-  --text-sm: 17px;
+  --text-sm: 16px;
   --text-sm--line-height: 1.75rem;
-  --text-base: 19px;
+  --text-base: 18px;
   --text-base--line-height: 2rem;
-  --text-lg: 21px;
+  --text-lg: 20px;
   --text-lg--line-height: 2rem;
-  --text-xl: 23px;
+  --text-xl: 22px;
   --text-xl--line-height: 2.25rem;
-  --text-2xl: 27px;
+  --text-2xl: 26px;
   --text-2xl--line-height: 2.5rem;
 }
 
@@ -650,13 +650,13 @@
    Sem layer de propósito: sem layer vence qualquer utilitário em `@layer
    utilities`, independente da ordem no arquivo. */
 .text-\[10px\] {
-  font-size: 13px;
+  font-size: 12px;
 }
 .text-\[11px\] {
-  font-size: 14px;
+  font-size: 13px;
 }
 .text-\[13px\] {
-  font-size: 16px;
+  font-size: 15px;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -681,27 +681,27 @@
    `text-[10px]` (0,2,0) vence a regra global homônima (0,1,0) por
    especificidade, não por ordem. */
 [data-zoom-do-fio] {
-  --text-xs: calc(15px * var(--zoom-fio, 0.9));
+  --text-xs: calc(14px * var(--zoom-fio, 0.9));
   --text-xs--line-height: calc(1.5rem * var(--zoom-fio, 0.9));
-  --text-sm: calc(17px * var(--zoom-fio, 0.9));
+  --text-sm: calc(16px * var(--zoom-fio, 0.9));
   --text-sm--line-height: calc(1.75rem * var(--zoom-fio, 0.9));
-  --text-base: calc(19px * var(--zoom-fio, 0.9));
+  --text-base: calc(18px * var(--zoom-fio, 0.9));
   --text-base--line-height: calc(2rem * var(--zoom-fio, 0.9));
-  --text-lg: calc(21px * var(--zoom-fio, 0.9));
+  --text-lg: calc(20px * var(--zoom-fio, 0.9));
   --text-lg--line-height: calc(2rem * var(--zoom-fio, 0.9));
-  --text-xl: calc(23px * var(--zoom-fio, 0.9));
+  --text-xl: calc(22px * var(--zoom-fio, 0.9));
   --text-xl--line-height: calc(2.25rem * var(--zoom-fio, 0.9));
-  --text-2xl: calc(27px * var(--zoom-fio, 0.9));
+  --text-2xl: calc(26px * var(--zoom-fio, 0.9));
   --text-2xl--line-height: calc(2.5rem * var(--zoom-fio, 0.9));
 }
 [data-zoom-do-fio] .text-\[10px\] {
-  font-size: calc(13px * var(--zoom-fio, 0.9));
+  font-size: calc(12px * var(--zoom-fio, 0.9));
 }
 [data-zoom-do-fio] .text-\[11px\] {
-  font-size: calc(14px * var(--zoom-fio, 0.9));
+  font-size: calc(13px * var(--zoom-fio, 0.9));
 }
 [data-zoom-do-fio] .text-\[13px\] {
-  font-size: calc(16px * var(--zoom-fio, 0.9));
+  font-size: calc(15px * var(--zoom-fio, 0.9));
 }
 
 

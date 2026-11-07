@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { useT } from "@/hooks/i18n/useT";
@@ -59,18 +59,46 @@ export function JanelaFechadaAviso({
   const sync = useSyncTemplates();
   const [escolhido, setEscolhido] = useState("");
   const [localRecolhido, setLocalRecolhido] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const isRecolhido = recolhido || localRecolhido;
 
-  function alternarRecolhido(novo: boolean) {
-    setLocalRecolhido(novo);
-    onAlternarRecolhido?.(novo);
-  }
+  const alternarRecolhido = useCallback(
+    (novo: boolean) => {
+      setLocalRecolhido(novo);
+      onAlternarRecolhido?.(novo);
+    },
+    [onAlternarRecolhido],
+  );
 
-  function handleVoltarChat() {
+  const handleVoltarChat = useCallback(() => {
     alternarRecolhido(true);
     onVoltarChatNormal?.();
-  }
+  }, [alternarRecolhido, onVoltarChatNormal]);
+
+  // Clique fora ou tecla Esc recolhe o painel de modelos e devolve o controle ao chat normal
+  useEffect(() => {
+    if (isRecolhido) return;
+
+    function handleClickOutside(event: MouseEvent | TouchEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        handleVoltarChat();
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        handleVoltarChat();
+      }
+    }
+
+    document.addEventListener("pointerdown", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isRecolhido, handleVoltarChat]);
 
   const fonte = fonteDeTemplates(provider);
   const { data, isFetching } = useQuery({
@@ -209,11 +237,17 @@ export function JanelaFechadaAviso({
   }
 
   return (
-    <div className="border-t border-warning/40 bg-warning-bg px-4 py-3 text-warning-fg transition-all">
+    <div
+      ref={containerRef}
+      className="border-t border-warning/40 bg-warning-bg px-4 py-3 text-warning-fg transition-all max-h-[260px] overflow-y-auto shadow-md"
+    >
       <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-1.5 min-w-0">
           <Warning size={14} className="shrink-0 text-amber-600 dark:text-amber-400" />
           <p className="text-xs font-semibold">{motivo}</p>
+          <span className="hidden lg:inline text-[10px] text-muted-foreground opacity-80">
+            ({t("clique fora ou Esc para fechar")})
+          </span>
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
           <Button

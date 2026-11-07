@@ -135,6 +135,7 @@ export {
   Funnel,
   BookOpen,
   Key,
+  User,
   UserCircle,
   ClockCounterClockwise,
   // inbox no celular: voltar para a lista e abrir a ficha do contato

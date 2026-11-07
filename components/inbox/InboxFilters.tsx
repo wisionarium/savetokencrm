@@ -1,7 +1,7 @@
 "use client";
 import { useT } from "@/hooks/i18n/useT";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Funnel, MagnifyingGlass } from "@/lib/ui/icons";
+import { EnvelopeSimple, Funnel, InstagramLogo, MagnifyingGlass, Phone, X } from "@/lib/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
@@ -299,7 +299,7 @@ export function InboxFilters({ value, onChange }: Props) {
    */
   function renderRefinamentos() {
     return (
-      <>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
         {/* Leitura (lidas/não lidas) — um refinamento como os outros, não uma
             segunda fileira de abas: o bloco segmentado de 3 botões repetia os
             nomes das abas ("Todas", "Minhas") e brigava com elas pelo mesmo
@@ -311,8 +311,8 @@ export function InboxFilters({ value, onChange }: Props) {
         >
           <SelectTrigger
             className={cn(
-              "h-8 w-full rounded-full border-transparent bg-surface-elevated px-3 text-xs shadow-none",
-              value.leitura !== "todas" && "border-accent bg-accent-soft text-accent",
+              "h-7.5 w-full rounded-full border-border/60 bg-surface-elevated px-2.5 text-xs shadow-none hover:bg-surface-elevated/80",
+              value.leitura !== "todas" && "border-accent bg-accent-soft text-accent font-medium",
             )}
             aria-label={t("Filtrar por leitura")}
           >
@@ -336,8 +336,8 @@ export function InboxFilters({ value, onChange }: Props) {
           >
             <SelectTrigger
               className={cn(
-                "h-8 w-full rounded-full border-transparent bg-surface-elevated px-3 text-xs shadow-none",
-                value.assigned_to != null && "border-accent bg-accent-soft text-accent",
+                "h-7.5 w-full rounded-full border-border/60 bg-surface-elevated px-2.5 text-xs shadow-none hover:bg-surface-elevated/80",
+                value.assigned_to != null && "border-accent bg-accent-soft text-accent font-medium",
               )}
               aria-label={t("Filtrar por atendente")}
             >
@@ -358,89 +358,85 @@ export function InboxFilters({ value, onChange }: Props) {
           </Select>
         )}
 
-        {(showChannelSwitch || mostrarSeletorDeTag) && (
-          <div className="flex gap-2">
-            {showChannelSwitch && (
-              <Select
-                value={value.channel_session_id ?? "all"}
-                onValueChange={(v) =>
-                  onChange({ ...value, channel_session_id: v === "all" ? undefined : v })
-                }
-              >
-                <SelectTrigger
-                  className={cn(
-                    "h-8 min-w-0 flex-1 rounded-full border-transparent bg-surface-elevated px-3 text-xs shadow-none",
-                    value.channel_session_id != null && "border-accent bg-accent-soft text-accent",
-                  )}
-                  aria-label={t("Filtrar por número de WhatsApp")}
-                >
-                  <SelectValue placeholder={t("Todos os números")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t("Todos os números")}</SelectItem>
-                  {filtroForaDaLista && value.channel_session_id != null && (
-                    <SelectItem value={value.channel_session_id}>{t("Número removido")}</SelectItem>
-                  )}
-                  {channels?.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {channelLabel(c)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-
-            {mostrarSeletorDeTag && (
-              <Select
-                value={value.tag ?? "all"}
-                onValueChange={(v) => onChange({ ...value, tag: v === "all" ? undefined : v })}
-              >
-                <SelectTrigger
-                  className={cn(
-                    "h-8 min-w-0 flex-1 rounded-full border-transparent bg-surface-elevated px-3 text-xs shadow-none",
-                    value.tag != null && "border-accent bg-accent-soft text-accent",
-                  )}
-                  aria-label={t("Filtrar por tag")}
-                >
-                  {/* O gatilho mostra o CHIP da etiqueta filtrada, e não o texto
-                      cru: é a mesma cor que a lista mostra ao lado, e é o que
-                      faz o filtro ativo se reconhecer de relance — mesma razão
-                      do `border-accent` acima. Sem filtro, o texto continua
-                      sendo o de sempre (`Todas as tags`). */}
-                  <SelectValue placeholder={t("Todas as tags")}>
-                    {value.tag ? (
-                      <ChipDeEtiqueta tag={value.tag} className="h-5 px-1.5 text-[11px]" />
-                    ) : (
-                      t("Todas as tags")
-                    )}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t("Todas as tags")}</SelectItem>
-                  {/* A órfã entra na lista: sem ela o Select mostraria o
-                      placeholder no lugar do valor JÁ selecionado, e o operador
-                      veria "Todas as tags" com um filtro ativo. */}
-                  {[
-                    ...(tagVocabulary ?? []),
-                    ...(tagForaDoVocabulario && value.tag ? [value.tag] : []),
-                  ].map((tag) => (
-                    <SelectItem key={tag} value={tag}>
-                      {/* Ponto, não chip: a opção é uma linha de 280 px que já
-                          divide espaço com o filtro de número. O nome continua
-                          sendo o que se lê; a cor só acelera o reconhecimento
-                          de quem já conhece o vocabulário da operação. */}
-                      <span className="inline-flex items-center gap-2">
-                        <PontoDaEtiqueta tag={tag} />
-                        {tag}
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          </div>
+        {showChannelSwitch && (
+          <Select
+            value={value.channel_session_id ?? "all"}
+            onValueChange={(v) =>
+              onChange({ ...value, channel_session_id: v === "all" ? undefined : v })
+            }
+          >
+            <SelectTrigger
+              className={cn(
+                "h-7.5 w-full rounded-full border-border/60 bg-surface-elevated px-2.5 text-xs shadow-none hover:bg-surface-elevated/80",
+                value.channel_session_id != null && "border-accent bg-accent-soft text-accent font-medium",
+              )}
+              aria-label={t("Filtrar por número de WhatsApp")}
+            >
+              <SelectValue placeholder={t("Todos os números")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("Todos os números")}</SelectItem>
+              {filtroForaDaLista && value.channel_session_id != null && (
+                <SelectItem value={value.channel_session_id}>{t("Número removido")}</SelectItem>
+              )}
+              {channels?.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {channelLabel(c)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         )}
-      </>
+
+        {mostrarSeletorDeTag && (
+          <Select
+            value={value.tag ?? "all"}
+            onValueChange={(v) => onChange({ ...value, tag: v === "all" ? undefined : v })}
+          >
+            <SelectTrigger
+              className={cn(
+                "h-7.5 w-full rounded-full border-border/60 bg-surface-elevated px-2.5 text-xs shadow-none hover:bg-surface-elevated/80",
+                value.tag != null && "border-accent bg-accent-soft text-accent font-medium",
+              )}
+              aria-label={t("Filtrar por tag")}
+            >
+              {/* O gatilho mostra o CHIP da etiqueta filtrada, e não o texto
+                  cru: é a mesma cor que a lista mostra ao lado, e é o que
+                  faz o filtro ativo se reconhecer de relance — mesma razão
+                  do `border-accent` acima. Sem filtro, o texto continua
+                  sendo o de sempre (`Todas as tags`). */}
+              <SelectValue placeholder={t("Todas as tags")}>
+                {value.tag ? (
+                  <ChipDeEtiqueta tag={value.tag} className="h-4.5 px-1.5 text-[10px]" />
+                ) : (
+                  t("Todas as tags")
+                )}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("Todas as tags")}</SelectItem>
+              {/* A órfã entra na lista: sem ela o Select mostraria o
+                  placeholder no lugar do valor JÁ selecionado, e o operador
+                  veria "Todas as tags" com um filtro ativo. */}
+              {[
+                ...(tagVocabulary ?? []),
+                ...(tagForaDoVocabulario && value.tag ? [value.tag] : []),
+              ].map((tag) => (
+                <SelectItem key={tag} value={tag}>
+                  {/* Ponto, não chip: a opção é uma linha de 280 px que já
+                      divide espaço com o filtro de número. O nome continua
+                      sendo o que se lê; a cor só acelera o reconhecimento
+                      de quem já conhece o vocabulário da operação. */}
+                  <span className="inline-flex items-center gap-2">
+                    <PontoDaEtiqueta tag={tag} />
+                    {tag}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+      </div>
     );
   }
 
@@ -499,7 +495,7 @@ export function InboxFilters({ value, onChange }: Props) {
         </Button>
       </div>
 
-      <div className="space-y-2 px-3 pt-2 pb-2 md:pt-3">
+      <div className="space-y-1.5 px-3 pt-2 pb-1.5 md:pt-2.5">
         <div className="flex items-center gap-2">
           <div className="relative min-w-0 flex-1">
             <MagnifyingGlass
@@ -518,15 +514,110 @@ export function InboxFilters({ value, onChange }: Props) {
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder={t("Buscar por nome, telefone ou última mensagem…")}
-              className="h-9 rounded-full border-transparent bg-surface-elevated pl-9 text-sm shadow-none focus-visible:border-border focus-visible:bg-background"
+              className="h-8.5 rounded-full border-transparent bg-surface-elevated pl-9 pr-8 text-xs shadow-none focus-visible:border-border focus-visible:bg-background"
               aria-label={t("Buscar conversas")}
             />
+            {searchInput && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchInput("");
+                  onChange({ ...value, search: "" });
+                }}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                aria-label={t("Limpar busca")}
+              >
+                <X size={13} />
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Desktop: os refinamentos inline, como sempre. No celular eles vivem
-            na gaveta do funil — a mesma função, para não haver duas listas. */}
-        <div className="hidden space-y-2 md:block">{renderRefinamentos()}</div>
+        {/* Pílulas rápidas de canais e status (estilo Nextags) */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none]">
+          <button
+            type="button"
+            onClick={limparRefinamentos}
+            className={cn(
+              "shrink-0 inline-flex items-center gap-1 h-6 px-2.5 rounded-full text-xs font-medium transition-colors border",
+              !value.channel_session_id && value.leitura === "todas" && !value.tag && !value.assigned_to
+                ? "border-accent bg-accent-soft text-accent"
+                : "border-border/60 bg-surface-elevated text-text-muted hover:text-text hover:bg-surface-elevated/80",
+            )}
+          >
+            {t("Todas")}
+          </button>
+
+          {/* Atalho rápido de canais */}
+          {channels?.map((c) => {
+            const isSelected = value.channel_session_id === c.id;
+            const isInstagram = c.display_name?.toLowerCase().includes("instagram") ?? false;
+            return (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() =>
+                  onChange({
+                    ...value,
+                    channel_session_id: isSelected ? undefined : c.id,
+                  })
+                }
+                title={channelLabel(c)}
+                className={cn(
+                  "shrink-0 inline-flex items-center gap-1 h-6 px-2 rounded-full text-xs transition-colors border",
+                  isSelected
+                    ? "border-accent bg-accent-soft text-accent font-medium shadow-2xs"
+                    : "border-border/60 bg-surface-elevated text-text-muted hover:text-text hover:bg-surface-elevated/80",
+                )}
+              >
+                {isInstagram ? (
+                  <InstagramLogo size={12} weight="bold" className="text-[#E1306C] shrink-0" />
+                ) : (
+                  <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#25d366] text-white shrink-0">
+                    <Phone size={8} weight="fill" />
+                  </span>
+                )}
+                <span className="max-w-[85px] truncate">{c.display_name || c.phone_number || channelLabel(c)}</span>
+              </button>
+            );
+          })}
+
+          {/* Atalho rápido de Não Lidas */}
+          <button
+            type="button"
+            onClick={() =>
+              onChange({
+                ...value,
+                leitura: value.leitura === "nao_lidas" ? "todas" : "nao_lidas",
+              })
+            }
+            className={cn(
+              "shrink-0 inline-flex items-center gap-1 h-6 px-2.5 rounded-full text-xs transition-colors border",
+              value.leitura === "nao_lidas"
+                ? "border-accent bg-accent-soft text-accent font-medium shadow-2xs"
+                : "border-border/60 bg-surface-elevated text-text-muted hover:text-text hover:bg-surface-elevated/80",
+            )}
+          >
+            <EnvelopeSimple size={12} />
+            <span>{t("Não lidas")}</span>
+          </button>
+
+          {/* Botão limpar quando houver filtros ativos */}
+          {refinamentosAtivos > 0 && (
+            <button
+              type="button"
+              onClick={limparRefinamentos}
+              className="shrink-0 inline-flex items-center gap-1 h-6 px-2 rounded-full text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              title={t("Limpar filtros")}
+            >
+              <X size={11} />
+              <span>{t("Limpar")}</span>
+            </button>
+          )}
+        </div>
+
+        {/* Desktop: os refinamentos compactos em grid */}
+        <div className="hidden md:block">{renderRefinamentos()}</div>
       </div>
 
       {/* CHIPS no celular; faixa sublinhada no desktop. A faixa antiga quebrava

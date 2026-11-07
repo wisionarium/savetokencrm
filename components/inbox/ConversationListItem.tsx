@@ -6,7 +6,7 @@ import { useLocaleDeData } from "@/hooks/i18n/useLocaleDeData";
 import type { Locale } from "date-fns";
 import { format, formatDistanceToNowStrict } from "date-fns";
 import { useT } from "@/hooks/i18n/useT";
-import { Checks, Phone, Robot } from "@/lib/ui/icons";
+import { Checks, Phone, Robot, User } from "@/lib/ui/icons";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ChipDeEtiqueta } from "@/components/tags/ChipDeEtiqueta";
@@ -320,6 +320,23 @@ export const ConversationListItem = memo(function ConversationListItem({
             <span className="inline-flex min-h-[18px] min-w-[18px] shrink-0 items-center justify-center rounded-full bg-emerald-500 px-1.5 text-[10px] font-bold tabular-nums text-white shadow-xs">
               {unread}
             </span>
+          )}
+        </div>
+
+        {/* Linha 3: Atendente / Responsável da conversa ("Com [Nome]") */}
+        <div className="mt-0.5 flex items-center gap-1 text-[11px] text-text-muted">
+          {isAi ? (
+            <>
+              <Robot size={11} weight="duotone" className="shrink-0 text-accent inline" aria-hidden />
+              <span className="truncate">{t("Com")} {t("Automático")}</span>
+            </>
+          ) : comando.quem === "humano" && (comando.nome || conversation.assigned_to_user_name) ? (
+            <>
+              <User size={11} weight="regular" className="shrink-0 text-text-muted inline" aria-hidden />
+              <span className="truncate">{t("Com")} {comando.nome || conversation.assigned_to_user_name}</span>
+            </>
+          ) : (
+            <span className="truncate opacity-75">{t("Sem atendente")}</span>
           )}
         </div>
 

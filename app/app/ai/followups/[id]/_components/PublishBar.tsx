@@ -166,15 +166,15 @@ export function PublishBar({
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-surface px-4 py-3">
       <div className="flex items-center gap-2">
-          <Link
-            href="/app/ai/followups"
-            className="inline-flex h-6 w-6 items-center justify-center rounded-sm text-text-muted hover:bg-muted hover:text-text"
-          title={t("Voltar para Fluxos")}
-          aria-label={t("Voltar para Fluxos")}
+        <Link
+          href="/app/automacoes?tab=nodes"
+          className="inline-flex h-6 w-6 items-center justify-center rounded-sm text-text-muted hover:bg-muted hover:text-text"
+          title={t("Voltar para Automações")}
+          aria-label={t("Voltar para Automações")}
         >
           <CaretLeft size={14} />
         </Link>
-        <span className="text-xs text-text-muted">{t("Fluxos")}</span>
+        <span className="text-xs text-text-muted">{t("Automações")}</span>
         <span className="text-xs text-text-muted">/</span>
         <h1 className="text-sm font-semibold text-text">{flow.name}</h1>
         <Button

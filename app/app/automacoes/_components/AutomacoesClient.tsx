@@ -4,7 +4,7 @@ import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { useT } from "@/hooks/i18n/useT";
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -36,15 +36,12 @@ import { Label } from "@/components/ui/label";
 import {
   TreeStructure,
   Plus,
-  Sparkle,
   Clock,
   ChatCircle,
   Users,
-  Copy,
   Trash,
   PencilSimple,
   MagnifyingGlass,
-  FlowArrow,
   Check,
   CheckCircle,
   CircleNotch,
@@ -109,112 +106,133 @@ const TEMPLATES_AUTOMACAO: AutomacaoTemplate[] = [
   {
     id: "boas-vindas",
     title: "Boas-vindas (1ª Mensagem)",
-    description: "Mensagem imediata ao receber a 1ª mensagem do contato no WhatsApp, com delay humanizado e menu de opções.",
+    description: "Mensagem imediata ao receber contato, com opções de atendimento e encaminhamento.",
     badge: "Mais Usado",
     icon: ChatCircle,
     defaultName: "Boas-vindas - Primeira Mensagem",
     draftGraph: {
-      version: 2,
       nodes: [
-        {
-          id: "node_trigger",
-          type: "trigger",
-          position: { x: 100, y: 120 },
-          data: {
-            title: "Gatilho: Primeira Mensagem",
-            description: "Dispara quando um contato novo envia a primeira mensagem",
-            trigger_type: "first_message",
-          },
-        },
-        {
-          id: "node_delay",
-          type: "wait",
-          position: { x: 100, y: 260 },
-          data: {
-            title: "Delay de Digitação",
-            description: "Aguardar 3 segundos para parecer digitação humana",
-            wait_seconds: 3,
-          },
-        },
+        { id: "node_trigger", type: "trigger", label: "Início do Fluxo", position: { x: 100, y: 150 }, config: {} },
         {
           id: "node_msg",
           type: "action",
-          position: { x: 100, y: 400 },
-          data: {
-            title: "Mensagem de Saudação",
-            description: "Saudação com nome do contato e apresentação",
-            action_type: "send_message",
-            message_text: "Olá @primeiro_nome! Seja muito bem-vindo(a). 👋\n\nComo posso ajudar você hoje?",
+          label: "Mensagem de Boas-vindas",
+          position: { x: 380, y: 150 },
+          config: { mode: "text", body: "Olá! Seja muito bem-vindo(a). 👋 Como posso ajudar você hoje?" },
+        },
+        {
+          id: "node_opcoes",
+          type: "match_reply",
+          label: "Menu de Opções",
+          position: { x: 680, y: 150 },
+          config: {
+            branches: [
+              { id: "br_atendente", label: "Falar com Atendente", op: "contains", pattern: "atendente" },
+            ],
+            grace_timeout_ms: 900_000,
           },
+        },
+        {
+          id: "node_fim",
+          type: "end",
+          label: "Fim do Fluxo",
+          position: { x: 980, y: 150 },
+          config: { outcome: "converted", note: "Atendimento iniciado" },
         },
       ],
       edges: [
-        { id: "e1", source: "node_trigger", target: "node_delay" },
-        { id: "e2", source: "node_delay", target: "node_msg" },
+        { id: "e1", source: "node_trigger", target: "node_msg", priority: 0, condition: { type: "always" } },
+        { id: "e2", source: "node_msg", target: "node_opcoes", priority: 0, condition: { type: "always" } },
+        { id: "e3", source: "node_opcoes", target: "node_fim", priority: 0, condition: { type: "branch", branch_id: "br_atendente" } },
+        { id: "e4", source: "node_opcoes", target: "node_fim", priority: 0, condition: { type: "branch", branch_id: "no_reply" } },
+        { id: "e5", source: "node_opcoes", target: "node_fim", priority: 0, condition: { type: "always" } },
       ],
     },
   },
   {
     id: "sequencia-delays",
     title: "Sequência com Timers & Delays",
-    description: "Etapas encadeadas com pausas inteligentes (ex: 5 min, 1 hora, 1 dia) para nutrir e manter o lead engajado.",
+    description: "Etapas encadeadas com pausas inteligentes (delays e timers) para nutrir e engajar o lead.",
     badge: "Nutrição",
     icon: Clock,
     defaultName: "Sequência com Delays e Timers",
     draftGraph: {
-      version: 2,
       nodes: [
-        {
-          id: "node_trigger",
-          type: "trigger",
-          position: { x: 100, y: 120 },
-          data: {
-            title: "Gatilho Inicial",
-            trigger_type: "lead_status_changed",
-          },
-        },
+        { id: "node_trigger", type: "trigger", label: "Início do Fluxo", position: { x: 100, y: 150 }, config: {} },
         {
           id: "node_msg_1",
           type: "action",
-          position: { x: 100, y: 260 },
-          data: {
-            title: "1ª Etapa: Mensagem Inicial",
-            action_type: "send_message",
-            message_text: "Olá @primeiro_nome! Tudo bem por aí?",
-          },
+          label: "1ª Mensagem",
+          position: { x: 380, y: 150 },
+          config: { mode: "text", body: "Olá! Tudo bem? Passando para te dar as boas-vindas." },
+        },
+        {
+          id: "node_wait",
+          type: "wait",
+          label: "Aguardar 1 dia",
+          position: { x: 680, y: 150 },
+          config: { mode: "fixed", duration_ms: 86_400_000, immune_to_reply: false },
+        },
+        {
+          id: "node_msg_2",
+          type: "action",
+          label: "2ª Mensagem (Follow-up)",
+          position: { x: 980, y: 150 },
+          config: { mode: "text", body: "Passando para saber se ficou com alguma dúvida sobre o que conversamos!" },
+        },
+        {
+          id: "node_fim",
+          type: "end",
+          label: "Fim da Sequência",
+          position: { x: 1280, y: 150 },
+          config: { outcome: "exhausted" },
         },
       ],
-      edges: [{ id: "e1", source: "node_trigger", target: "node_msg_1" }],
+      edges: [
+        { id: "e1", source: "node_trigger", target: "node_msg_1", priority: 0, condition: { type: "always" } },
+        { id: "e2", source: "node_msg_1", target: "node_wait", priority: 0, condition: { type: "always" } },
+        { id: "e3", source: "node_wait", target: "node_msg_2", priority: 0, condition: { type: "always" } },
+        { id: "e4", source: "node_msg_2", target: "node_fim", priority: 0, condition: { type: "always" } },
+      ],
     },
   },
   {
     id: "triagem-humana",
     title: "Triagem & Transbordo Humano",
-    description: "Qualifica o lead com perguntas e direciona automaticamente para atendente humano ou fila do time.",
+    description: "Qualifica o lead com perguntas e direciona automaticamente para atendente humano ou fila.",
     badge: "Atendimento",
     icon: Users,
     defaultName: "Triagem e Atribuição para Atendente",
     draftGraph: {
-      version: 2,
       nodes: [
+        { id: "node_trigger", type: "trigger", label: "Início do Fluxo", position: { x: 100, y: 150 }, config: {} },
         {
-          id: "node_trigger",
-          type: "trigger",
-          position: { x: 100, y: 120 },
-          data: { title: "Gatilho: Solicitação de Atendimento", trigger_type: "manual" },
+          id: "node_msg",
+          type: "action",
+          label: "Pergunta de Triagem",
+          position: { x: 380, y: 150 },
+          config: { mode: "text", body: "Olá! Você gostaria de falar sobre vendas ou suporte?" },
         },
         {
-          id: "node_handoff",
-          type: "action",
-          position: { x: 100, y: 260 },
-          data: {
-            title: "Transbordo para Atendente Humano",
-            action_type: "transfer_human",
-            message_text: "Transferindo seu atendimento para a nossa equipe agora mesmo! 👨‍💼",
-          },
+          id: "node_cond",
+          type: "condition",
+          label: "Verificar Condição",
+          position: { x: 680, y: 150 },
+          config: { combinator: "and", checks: [{ field: "lead_stage", op: "eq", value: "" }] },
+        },
+        {
+          id: "node_fim",
+          type: "end",
+          label: "Fim da Triagem",
+          position: { x: 980, y: 150 },
+          config: { outcome: "converted", note: "Encaminhado para atendimento" },
         },
       ],
-      edges: [{ id: "e1", source: "node_trigger", target: "node_handoff" }],
+      edges: [
+        { id: "e1", source: "node_trigger", target: "node_msg", priority: 0, condition: { type: "always" } },
+        { id: "e2", source: "node_msg", target: "node_cond", priority: 0, condition: { type: "always" } },
+        { id: "e3", source: "node_cond", target: "node_fim", priority: 0, condition: { type: "always" } },
+      ],
     },
   },
   {
@@ -225,16 +243,19 @@ const TEMPLATES_AUTOMACAO: AutomacaoTemplate[] = [
     icon: TreeStructure,
     defaultName: "Nova Automação em Nodes",
     draftGraph: {
-      version: 2,
       nodes: [
+        { id: "node_trigger", type: "trigger", label: "Início do Fluxo", position: { x: 100, y: 150 }, config: {} },
         {
-          id: "node_start",
-          type: "trigger",
-          position: { x: 100, y: 120 },
-          data: { title: "Início do Fluxo", description: "Ponto de entrada da automação", trigger_type: "manual" },
+          id: "node_action",
+          type: "action",
+          label: "Enviar mensagem",
+          position: { x: 380, y: 150 },
+          config: { mode: "text", body: "Olá! Digite sua mensagem aqui..." },
         },
       ],
-      edges: [],
+      edges: [
+        { id: "e1", source: "node_trigger", target: "node_action", priority: 0, condition: { type: "always" } },
+      ],
     },
   },
 ];
@@ -245,8 +266,9 @@ export function AutomacoesClient({ initialData, canWrite }: Props) {
   const qc = useQueryClient();
   const router = useRouter();
 
-  // ─── ABA ATIVA (Instagram vs Fluxos de Nós) ──────────────────────────────
-  const [activeTab, setActiveTab] = useState<"instagram" | "nodes">("instagram");
+  const searchParams = useSearchParams();
+  const initialTab = searchParams.get("tab") === "nodes" ? "nodes" : "instagram";
+  const [activeTab, setActiveTab] = useState<"instagram" | "nodes">(initialTab);
 
   // ─── DADOS DO INSTAGRAM ──────────────────────────────────────────────────
   const [instaAutomations, setInstaAutomations] = useState<InstagramAutomationRule[]>([]);
@@ -335,7 +357,7 @@ export function AutomacoesClient({ initialData, canWrite }: Props) {
     setSelectedPost(null);
     setKeywordsText("QUERO, LINK, PRECO, EU QUERO");
     setReplyCommentText("Te enviei os detalhes no seu Direct! Dá uma olhada lá 🚀");
-    setDmMessageText("Olá @primeiro_nome! Aqui está o link que você pediu: https://example.com/oferta Aproveite!");
+    setDmMessageText("Olá @primeiro_nome! Te enviei as informações no seu Direct. Como posso te ajudar?");
     setModalInstaOpen(true);
     // Se ainda não puxou as mídias, puxa automaticamente
     if (instaMedia.length === 0) {
@@ -1060,7 +1082,7 @@ export function AutomacoesClient({ initialData, canWrite }: Props) {
                   rows={3}
                   value={dmMessageText}
                   onChange={(e) => setDmMessageText(e.target.value)}
-                  placeholder={t("Ex: Olá @primeiro_nome! Aqui está o link que você pediu: https://example.com/oferta")}
+                  placeholder={t("Ex: Olá @primeiro_nome! Te enviei as informações no seu Direct. Como posso te ajudar?")}
                   className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
                   required
                 />

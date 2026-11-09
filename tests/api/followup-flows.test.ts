@@ -339,7 +339,7 @@ describe("POST /api/v1/ai/followup-flows — create draft", () => {
     expect(body.data.name).toBe("Fyron F1");
   });
 
-  it("wait de 2.6s (formato antigo do dialog) → 422: piso de 5 min", async () => {
+  it("wait < piso de 1s → 422: piso mínimo", async () => {
     const { buildDispatchGraph } = await import("@/lib/followup/dispatch-graph");
     const base = buildDispatchGraph({ specifications: "x" });
     const graph = {
@@ -349,9 +349,9 @@ describe("POST /api/v1/ai/followup-flows — create draft", () => {
         {
           id: "node_wait",
           type: "wait",
-          label: "Aguardar 2.6s",
+          label: "Aguardar 500ms",
           position: { x: 100, y: 400 },
-          config: { mode: "fixed", duration_ms: 2600 },
+          config: { mode: "fixed", duration_ms: 500 },
         },
       ],
     };

@@ -160,7 +160,7 @@ export function NodeCard({
                 data-regra-sem-etapa={semEtapa || undefined}
                 title={
                   semEtapa
-                    ? `${rotulo} — ${t("Esta regra não aponta para uma etapa ativa do funil.")}`
+                    ? `${rotulo} — ${t("Esta regra não aponta para uma etapa ativa do funil. Abra o nó e escolha a etapa na lista.")}`
                     : rotulo
                 }
               >
@@ -176,7 +176,7 @@ export function NodeCard({
                       )}
                     />
                   )}
-                  <span className="truncate text-xs leading-tight">{rotulo}</span>
+                  <span className="line-clamp-3 break-words text-xs leading-tight">{rotulo}</span>
                 </div>
                 <Handle
                   type="source"

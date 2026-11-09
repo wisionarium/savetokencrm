@@ -8,6 +8,7 @@ import { type NextRequest } from "next/server";
 import { ok, fail } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -63,8 +64,8 @@ export async function POST(req: NextRequest): Promise<Response> {
     });
   }
 
-  const supabase = await createClient();
-  const { data: orgData, error: fetchErr } = await supabase
+  const admin = createAdminClient();
+  const { data: orgData, error: fetchErr } = await admin
     .from("organizations")
     .select("settings")
     .eq("id", activeOrg.orgId)
@@ -118,7 +119,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     updatedList = [newRule, ...currentList];
   }
 
-  const { error: saveErr } = await supabase
+  const { error: saveErr } = await admin
     .from("organizations")
     .update({
       settings: {
@@ -148,8 +149,8 @@ export async function PATCH(req: NextRequest): Promise<Response> {
     return fail("validation_failed", "ID e is_active são obrigatórios.", 422, { requestId });
   }
 
-  const supabase = await createClient();
-  const { data: orgData, error: fetchErr } = await supabase
+  const admin = createAdminClient();
+  const { data: orgData, error: fetchErr } = await admin
     .from("organizations")
     .select("settings")
     .eq("id", activeOrg.orgId)
@@ -164,7 +165,7 @@ export async function PATCH(req: NextRequest): Promise<Response> {
     item.id === id ? { ...item, is_active, updated_at: new Date().toISOString() } : item,
   );
 
-  await supabase
+  const { error: saveErr } = await admin
     .from("organizations")
     .update({
       settings: {
@@ -173,6 +174,8 @@ export async function PATCH(req: NextRequest): Promise<Response> {
       },
     })
     .eq("id", activeOrg.orgId);
+
+  if (saveErr) return fail("database_error", saveErr.message, 500, { requestId });
 
   return ok({ automations: updatedList }, { requestId });
 }
@@ -190,8 +193,8 @@ export async function DELETE(req: NextRequest): Promise<Response> {
     return fail("validation_failed", "ID é obrigatório na query string.", 422, { requestId });
   }
 
-  const supabase = await createClient();
-  const { data: orgData, error: fetchErr } = await supabase
+  const admin = createAdminClient();
+  const { data: orgData, error: fetchErr } = await admin
     .from("organizations")
     .select("settings")
     .eq("id", activeOrg.orgId)
@@ -204,7 +207,7 @@ export async function DELETE(req: NextRequest): Promise<Response> {
 
   const updatedList = currentList.filter((item) => item.id !== id);
 
-  await supabase
+  const { error: saveErr } = await admin
     .from("organizations")
     .update({
       settings: {
@@ -213,6 +216,8 @@ export async function DELETE(req: NextRequest): Promise<Response> {
       },
     })
     .eq("id", activeOrg.orgId);
+
+  if (saveErr) return fail("database_error", saveErr.message, 500, { requestId });
 
   return ok({ automations: updatedList }, { requestId });
 }

@@ -8,6 +8,7 @@ import { type NextRequest } from "next/server";
 import { ok, fail } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { appendInstagramLog, type InstagramLogEntry } from "@/lib/channels/instagram/logs";
 
 export const dynamic = "force-dynamic";
@@ -94,15 +95,15 @@ export async function DELETE(req: NextRequest): Promise<Response> {
   if (!authz.ok) return authz.response;
   const { org: activeOrg } = authz;
 
-  const supabase = await createClient();
-  const { data: orgData } = await supabase
+  const admin = createAdminClient();
+  const { data: orgData } = await admin
     .from("organizations")
     .select("settings")
     .eq("id", activeOrg.orgId)
     .single();
 
   const settings = (orgData?.settings as Record<string, unknown>) || {};
-  await supabase
+  await admin
     .from("organizations")
     .update({
       settings: {

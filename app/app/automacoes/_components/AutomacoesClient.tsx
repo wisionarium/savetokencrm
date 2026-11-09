@@ -220,7 +220,7 @@ const TEMPLATES_AUTOMACAO: AutomacaoTemplate[] = [
           type: "condition",
           label: "Verificar Condição",
           position: { x: 680, y: 150 },
-          config: { combinator: "and", checks: [{ field: "lead_stage", op: "eq", value: "" }] },
+          config: { combinator: "and", checks: [{ field: "steps_taken", op: "gte", value: 1 }] },
         },
         {
           id: "node_fim",
@@ -233,7 +233,8 @@ const TEMPLATES_AUTOMACAO: AutomacaoTemplate[] = [
       edges: [
         { id: "e1", source: "node_trigger", target: "node_msg", priority: 0, condition: { type: "always" } },
         { id: "e2", source: "node_msg", target: "node_cond", priority: 0, condition: { type: "always" } },
-        { id: "e3", source: "node_cond", target: "node_fim", priority: 0, condition: { type: "always" } },
+        { id: "e3", source: "node_cond", target: "node_fim", priority: 0, condition: { type: "cond_result", value: true } },
+        { id: "e4", source: "node_cond", target: "node_fim", priority: 0, condition: { type: "cond_result", value: false } },
       ],
     },
   },
@@ -254,9 +255,17 @@ const TEMPLATES_AUTOMACAO: AutomacaoTemplate[] = [
           position: { x: 380, y: 150 },
           config: { mode: "text", body: "Olá! Digite sua mensagem aqui..." },
         },
+        {
+          id: "node_fim",
+          type: "end",
+          label: "Fim do Fluxo",
+          position: { x: 680, y: 150 },
+          config: { outcome: "converted" },
+        },
       ],
       edges: [
         { id: "e1", source: "node_trigger", target: "node_action", priority: 0, condition: { type: "always" } },
+        { id: "e2", source: "node_action", target: "node_fim", priority: 0, condition: { type: "always" } },
       ],
     },
   },
@@ -269,8 +278,23 @@ export function AutomacoesClient({ initialData, canWrite }: Props) {
   const router = useRouter();
 
   const searchParams = useSearchParams();
-  const initialTab = searchParams.get("tab") === "nodes" ? "nodes" : "instagram";
+  const initialTab = searchParams.get("tab") === "instagram" ? "instagram" : "nodes";
   const [activeTab, setActiveTab] = useState<"instagram" | "nodes">(initialTab);
+
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab === "nodes" || tab === "instagram") {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (val: string) => {
+    const nextTab = val as "instagram" | "nodes";
+    setActiveTab(nextTab);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", nextTab);
+    router.replace(`/app/automacoes?${params.toString()}`);
+  };
 
   // ─── DADOS DO INSTAGRAM ──────────────────────────────────────────────────
   const [instaAutomations, setInstaAutomations] = useState<InstagramAutomationRule[]>([]);
@@ -534,24 +558,24 @@ export function AutomacoesClient({ initialData, canWrite }: Props) {
   return (
     <div className="space-y-6">
       {/* Seletor Superior de Modo */}
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "instagram" | "nodes")} className="w-full">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b pb-4">
           <TabsList className="bg-muted/60 p-1">
-            <TabsTrigger value="instagram" className="gap-2 font-medium">
-              <InstagramLogo size={18} weight="bold" className="text-rose-500" />
-              {t("Instagram: Comentários & DMs")}
-              {instaAutomations.length > 0 && (
-                <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs font-semibold">
-                  {instaAutomations.length}
-                </Badge>
-              )}
-            </TabsTrigger>
             <TabsTrigger value="nodes" className="gap-2 font-medium">
               <TreeStructure size={18} weight="bold" className="text-primary" />
               {t("Fluxos em Nós (Delays & Timers)")}
               {flows.length > 0 && (
                 <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs font-semibold">
                   {flows.length}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="instagram" className="gap-2 font-medium">
+              <InstagramLogo size={18} weight="bold" className="text-rose-500" />
+              {t("Instagram: Comentários & DMs")}
+              {instaAutomations.length > 0 && (
+                <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs font-semibold">
+                  {instaAutomations.length}
                 </Badge>
               )}
             </TabsTrigger>

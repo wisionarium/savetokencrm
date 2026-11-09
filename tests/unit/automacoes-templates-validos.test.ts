@@ -97,7 +97,7 @@ export const TEMPLATES_GRAFOS_TESTE = {
         type: "condition" as const,
         label: "Verificar Condição",
         position: { x: 680, y: 150 },
-        config: { combinator: "and" as const, checks: [{ field: "lead_stage" as const, op: "eq" as const, value: "" }] },
+        config: { combinator: "and" as const, checks: [{ field: "steps_taken" as const, op: "gte" as const, value: 1 }] },
       },
       {
         id: "node_fim",
@@ -110,7 +110,8 @@ export const TEMPLATES_GRAFOS_TESTE = {
     edges: [
       { id: "e1", source: "node_trigger", target: "node_msg", priority: 0, condition: { type: "always" as const } },
       { id: "e2", source: "node_msg", target: "node_cond", priority: 0, condition: { type: "always" as const } },
-      { id: "e3", source: "node_cond", target: "node_fim", priority: 0, condition: { type: "always" as const } },
+      { id: "e3", source: "node_cond", target: "node_fim", priority: 0, condition: { type: "cond_result" as const, value: true } },
+      { id: "e4", source: "node_cond", target: "node_fim", priority: 0, condition: { type: "cond_result" as const, value: false } },
     ],
   },
 
@@ -124,9 +125,17 @@ export const TEMPLATES_GRAFOS_TESTE = {
         position: { x: 380, y: 150 },
         config: { mode: "text" as const, body: "Olá! Digite sua mensagem aqui..." },
       },
+      {
+        id: "node_fim",
+        type: "end" as const,
+        label: "Fim do Fluxo",
+        position: { x: 680, y: 150 },
+        config: { outcome: "converted" as const },
+      },
     ],
     edges: [
       { id: "e1", source: "node_trigger", target: "node_action", priority: 0, condition: { type: "always" as const } },
+      { id: "e2", source: "node_action", target: "node_fim", priority: 0, condition: { type: "always" as const } },
     ],
   },
 };
@@ -156,13 +165,27 @@ describe("Validação dos Grafos dos Templates de Automação", () => {
     }
   });
 
-  it("o template de triagem humana passa pelo schema", () => {
+  it("o template de triagem humana passa pelo schema e publica", () => {
     const res = flowGraphSchema.safeParse(TEMPLATES_GRAFOS_TESTE.triagemHumana);
     expect(res.success, res.error?.message).toBe(true);
+    if (res.success) {
+      const pub = validateFlowForPublish(res.data);
+      if (!pub.ok) {
+        expect.fail(JSON.stringify(pub.errors));
+      }
+      expect(pub.ok).toBe(true);
+    }
   });
 
-  it("o template em branco passa pelo schema", () => {
+  it("o template em branco passa pelo schema e publica", () => {
     const res = flowGraphSchema.safeParse(TEMPLATES_GRAFOS_TESTE.emBranco);
     expect(res.success, res.error?.message).toBe(true);
+    if (res.success) {
+      const pub = validateFlowForPublish(res.data);
+      if (!pub.ok) {
+        expect.fail(JSON.stringify(pub.errors));
+      }
+      expect(pub.ok).toBe(true);
+    }
   });
 });

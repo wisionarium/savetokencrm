@@ -18,6 +18,7 @@ import {
   Play,
 } from "@/lib/ui/icons";
 import { useT } from "@/hooks/i18n/useT";
+import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 
 interface LogEntry {
   id: string;
@@ -46,6 +47,7 @@ interface DiagnosticsData {
 
 export function LogsDiagnosticoClient() {
   const t = useT();
+  const tagDoIdioma = useTagDeIdioma();
 
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [diagnostics, setDiagnostics] = useState<DiagnosticsData | null>(null);
@@ -424,12 +426,12 @@ export function LogsDiagnosticoClient() {
             {filteredLogs.map((log) => {
               const isExpanded = expandedLogId === log.id;
               const date = new Date(log.timestamp);
-              const formattedTime = date.toLocaleTimeString("pt-BR", {
+              const formattedTime = date.toLocaleTimeString(tagDoIdioma, {
                 hour: "2-digit",
                 minute: "2-digit",
                 second: "2-digit",
               });
-              const formattedDate = date.toLocaleDateString("pt-BR", {
+              const formattedDate = date.toLocaleDateString(tagDoIdioma, {
                 day: "2-digit",
                 month: "2-digit",
               });

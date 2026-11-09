@@ -14,6 +14,7 @@ import {
   type ConversationWithContact,
 } from "@/hooks/inbox/useConversationsRealtime";
 import { useConversation, isNotFound } from "@/hooks/inbox/useConversation";
+import { useAssignableMembers } from "@/hooks/inbox/useAssignableMembers";
 import { ConversationList } from "./ConversationList";
 import { InboxFilters, type InboxFiltersValue, type InboxTab } from "./InboxFilters";
 import { ChatThread } from "./ChatThread";
@@ -216,7 +217,21 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
    * discorda do filtro, porque os dois usam a mesma convenção.
    */
   const { data: automaticoDaOrg } = useAutomaticoAtivo();
+  const { data: atendentes } = useAssignableMembers(true);
   const composerRef = useRef<ComposerHandle | null>(null);
+
+  const membrosMap = useMemo(() => {
+    const map = new Map<string, string>();
+    if (user?.id) {
+      map.set(user.id, user.full_name || t("Você"));
+    }
+    for (const m of atendentes ?? []) {
+      if (m.user_id && m.full_name) {
+        map.set(m.user_id, m.full_name);
+      }
+    }
+    return map;
+  }, [atendentes, user, t]);
 
   // Aba + auxiliares num filtro só — a montagem mora em
   // `lib/inbox/montar-filtros.ts` (testada pela matriz de congruência), não
@@ -229,6 +244,9 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
         channel_session_id: filterValue.channel_session_id,
         tag: filterValue.tag,
         assigned_to: filterValue.assigned_to,
+        sem_resposta: filterValue.sem_resposta,
+        janela_aberta: filterValue.janela_aberta,
+        seguindo: filterValue.seguindo,
       }),
     [
       filterValue.tab,
@@ -238,6 +256,9 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
       filterValue.tag,
       filterValue.leitura,
       filterValue.assigned_to,
+      filterValue.sem_resposta,
+      filterValue.janela_aberta,
+      filterValue.seguindo,
     ],
   );
 
@@ -500,6 +521,7 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
             onSelect={handleSelect}
             onVisibleChange={handleVisibleChange}
             onLimparFiltros={limparFiltrosAuxiliares}
+            membrosMap={membrosMap}
           />
         </div>
       </div>

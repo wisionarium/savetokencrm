@@ -18,6 +18,8 @@ import type {
   ConversationWithContact,
 } from "@/hooks/inbox/useConversationsRealtime";
 
+import { engajamentoDaConversa } from "@/lib/inbox/engajamento";
+
 interface ListResponse {
   data: ConversationWithContact[];
   meta?: { cursor?: string | null; has_more?: boolean };
@@ -33,6 +35,7 @@ interface Props {
   onLimparFiltros?: () => void;
   /** Notifies parent when the visible list changes (used by keyboard nav). */
   onVisibleChange?: (ids: string[]) => void;
+  membrosMap?: Map<string, string>;
 }
 
 export function ConversationList({
@@ -42,6 +45,7 @@ export function ConversationList({
   onSelect,
   onVisibleChange,
   onLimparFiltros,
+  membrosMap,
 }: Props) {
   const t = useT();
   // Só mostra POR ONDE a conversa entrou quando há mais de um número. Com um
@@ -67,7 +71,39 @@ export function ConversationList({
   // `clientFilter` era o mecanismo que permitia um filtro existir fora do contrato
   // — e foi por ele que "Não lidos" virou ilha, fora da cerca que vigia os demais.
   const items = useMemo(() => {
-    const raw = (q.data?.pages.flatMap((p) => p.data) ?? []) as ConversationWithContact[];
+    let raw = (q.data?.pages.flatMap((p) => p.data) ?? []) as ConversationWithContact[];
+
+    if (filters.sem_resposta) {
+      raw = raw.filter((c) => {
+        if (c.awaiting_since) return true;
+        if (!c.last_inbound_at) return false;
+        if (!c.last_outbound_at) return true;
+        return new Date(c.last_inbound_at) > new Date(c.last_outbound_at);
+      });
+    }
+
+    if (filters.janela_aberta) {
+      const limite24h = Date.now() - 24 * 60 * 60 * 1000;
+      raw = raw.filter((c) => {
+        if (!c.last_inbound_at) return false;
+        return new Date(c.last_inbound_at).getTime() >= limite24h;
+      });
+    }
+
+    if (filters.seguindo) {
+      raw = raw.filter((c) => {
+        const engajamento = engajamentoDaConversa({
+          last_inbound_at: c.last_inbound_at,
+          inbound_total: c.inbound_total ?? null,
+        });
+        if (engajamento.nivel === "quente") return true;
+        const tags = c.contacts?.tags ?? [];
+        return tags.some((tagItem) =>
+          ["quente", "favorito", "urgente", "seguindo", "vip"].includes(tagItem.toLowerCase()),
+        );
+      });
+    }
+
     return [...raw].sort((a, b) => {
       const timeA = a.last_message_at
         ? new Date(a.last_message_at).getTime()
@@ -82,7 +118,7 @@ export function ConversationList({
       if (timeA !== timeB) return timeB - timeA;
       return b.id.localeCompare(a.id);
     });
-  }, [q.data]);
+  }, [q.data, filters.sem_resposta, filters.janela_aberta, filters.seguindo]);
 
   // Notify parent of currently-visible IDs (for j/k nav). Must use effect
   // (not render-time call) — invoking onVisibleChange during render triggers
@@ -187,6 +223,11 @@ export function ConversationList({
             mostrarAtendente={mostrarAtendente}
             mostrarAutomatico={mostrarAutomatico}
             automaticoDaOrg={automaticoDaOrg.data}
+            atendenteNome={
+              c.assigned_to_user_id
+                ? c.assigned_to_user_name || membrosMap?.get(c.assigned_to_user_id) || null
+                : null
+            }
           />
         ))}
         {q.hasNextPage && (

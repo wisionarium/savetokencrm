@@ -59,6 +59,7 @@ interface Props {
    * afirme nada".
    */
   automaticoDaOrg?: boolean;
+  atendenteNome?: string | null;
 }
 
 /**
@@ -132,6 +133,7 @@ export const ConversationListItem = memo(function ConversationListItem({
   mostrarAtendente,
   mostrarAutomatico = true,
   automaticoDaOrg,
+  atendenteNome,
 }: Props) {
   const localeDaData = useLocaleDeData();
   const t = useT();
@@ -186,6 +188,7 @@ export const ConversationListItem = memo(function ConversationListItem({
     automaticoDaOrg,
   });
   const isAi = comando.quem === "automatico";
+  const comandoNome = comando.quem === "humano" ? comando.nome : null;
   const dot = COR_DO_COMANDO[comando.quem] ?? COR_DO_COMANDO.ninguem;
 
   // O número DA EMPRESA por onde esta conversa chegou — não o do cliente. Com
@@ -323,20 +326,25 @@ export const ConversationListItem = memo(function ConversationListItem({
           )}
         </div>
 
-        {/* Linha 3: Atendente / Responsável da conversa ("Com [Nome]") */}
+        {/* Linha 3: Atendente / Responsável da conversa ("Com [Nome]" ou "Não atribuído") */}
         <div className="mt-0.5 flex items-center gap-1 text-[11px] text-text-muted">
           {isAi ? (
             <>
               <Robot size={11} weight="duotone" className="shrink-0 text-accent inline" aria-hidden />
               <span className="truncate">{t("Com")} {t("Automático")}</span>
             </>
-          ) : comando.quem === "humano" && (comando.nome || conversation.assigned_to_user_name) ? (
+          ) : conversation.assigned_to_user_id || comando.quem === "humano" ? (
             <>
               <User size={11} weight="regular" className="shrink-0 text-text-muted inline" aria-hidden />
-              <span className="truncate">{t("Com")} {comando.nome || conversation.assigned_to_user_name}</span>
+              <span className="truncate">
+                {t("Com")} {atendenteNome || comandoNome || conversation.assigned_to_user_name || t("Atendente")}
+              </span>
             </>
           ) : (
-            <span className="truncate opacity-75">{t("Sem atendente")}</span>
+            <>
+              <User size={11} weight="regular" className="shrink-0 text-text-muted/60 inline" aria-hidden />
+              <span className="truncate text-text-muted/75">{t("Não atribuído")}</span>
+            </>
           )}
         </div>
 

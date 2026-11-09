@@ -1,7 +1,20 @@
 "use client";
 import { useT } from "@/hooks/i18n/useT";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { EnvelopeSimple, Funnel, InstagramLogo, MagnifyingGlass, Phone, X } from "@/lib/ui/icons";
+import {
+  ArrowBendUpLeft,
+  Clock,
+  EnvelopeSimple,
+  Funnel,
+  InstagramLogo,
+  MagnifyingGlass,
+  Phone,
+  Robot,
+  Star,
+  User,
+  X,
+} from "@/lib/ui/icons";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
@@ -102,6 +115,9 @@ export interface InboxFiltersValue {
    * `abaAceitaAtribuido`; ao sair delas, `aoTrocarDeAba` larga o valor.
    */
   assigned_to?: string;
+  sem_resposta?: boolean;
+  janela_aberta?: boolean;
+  seguindo?: boolean;
 }
 
 interface Props {
@@ -164,6 +180,9 @@ export function InboxFilters({ value, onChange }: Props) {
     value.channel_session_id != null,
     value.tag != null,
     value.assigned_to != null,
+    Boolean(value.sem_resposta),
+    Boolean(value.janela_aberta),
+    Boolean(value.seguindo),
   ].filter(Boolean).length;
   /**
    * As opções são a UNIÃO das duas caixas — as mesmas que o filtro consulta
@@ -447,6 +466,9 @@ export function InboxFilters({ value, onChange }: Props) {
       channel_session_id: undefined,
       tag: undefined,
       assigned_to: undefined,
+      sem_resposta: undefined,
+      janela_aberta: undefined,
+      seguindo: undefined,
     });
   }
 
@@ -496,7 +518,40 @@ export function InboxFilters({ value, onChange }: Props) {
       </div>
 
       <div className="space-y-1.5 px-3 pt-2 pb-1.5 md:pt-2.5">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
+          {/* Atalho rápido Automático */}
+          <button
+            type="button"
+            onClick={() => onChange(aoTrocarDeAba(value, value.tab === "ai" ? "all" : "ai"))}
+            className={cn(
+              "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition-colors",
+              value.tab === "ai"
+                ? "border-accent bg-accent-soft text-accent"
+                : "border-border/60 bg-surface-elevated text-text-muted hover:text-text hover:bg-surface-elevated/80",
+            )}
+            title={t("Conversas com Automático")}
+            aria-label={t("Automático")}
+          >
+            <Robot size={15} weight="duotone" />
+          </button>
+
+          {/* Atalho rápido Minhas */}
+          <button
+            type="button"
+            onClick={() => onChange(aoTrocarDeAba(value, value.tab === "mine" ? "all" : "mine"))}
+            className={cn(
+              "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition-colors",
+              value.tab === "mine"
+                ? "border-accent bg-accent-soft text-accent"
+                : "border-border/60 bg-surface-elevated text-text-muted hover:text-text hover:bg-surface-elevated/80",
+            )}
+            title={t("Minhas conversas")}
+            aria-label={t("Minhas")}
+          >
+            <User size={15} />
+          </button>
+
+          {/* Campo de Busca */}
           <div className="relative min-w-0 flex-1">
             <MagnifyingGlass
               size={15}
@@ -504,12 +559,6 @@ export function InboxFilters({ value, onChange }: Props) {
               className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-subtle"
               aria-hidden
             />
-            {/* "última mensagem", e não "mensagem": a busca alcança apenas
-                `conversations.last_message_preview` — a ÚLTIMA mensagem, truncada em 200
-                caracteres já na ingestão (`grep -rn 'slice(0, 200)' lib/channels/` mostra onde).
-                Medido numa conversa real de 32 mensagens: buscar o que o cliente pediu na
-                3ª devolve ZERO. Alcançar o histórico é projeto próprio (índice trigram +
-                retenção + LGPD); até lá, a tela não promete o que o backend não faz. */}
             <Input
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
@@ -531,6 +580,216 @@ export function InboxFilters({ value, onChange }: Props) {
               </button>
             )}
           </div>
+
+          {/* Botão de Filtros Nextags com Badge */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                className={cn(
+                  "relative flex h-8.5 w-8.5 shrink-0 items-center justify-center rounded-full border transition-colors",
+                  refinamentosAtivos > 0
+                    ? "border-accent bg-accent-soft text-accent"
+                    : "border-border/60 bg-surface-elevated text-text-muted hover:text-text hover:bg-surface-elevated/80",
+                )}
+                title={t("Filtros avançados")}
+                aria-label={t("Filtros avançados")}
+              >
+                <Funnel size={15} weight="regular" aria-hidden />
+                {refinamentosAtivos > 0 && (
+                  <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] font-bold text-white shadow-xs">
+                    {refinamentosAtivos}
+                  </span>
+                )}
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-80 p-3.5 space-y-3 bg-surface-elevated border-border shadow-2xl rounded-xl z-50">
+              <div className="flex items-center justify-between pb-1.5 border-b border-border/70">
+                <span className="text-xs font-semibold text-text">{t("Filtros")}</span>
+                {refinamentosAtivos > 0 && (
+                  <button
+                    type="button"
+                    onClick={limparRefinamentos}
+                    className="text-[11px] text-text-muted hover:text-accent transition-colors"
+                  >
+                    {t("Limpar filtros")}
+                  </button>
+                )}
+              </div>
+
+              {/* 1. Canal */}
+              <div className="space-y-1">
+                <label className="text-[11px] font-medium text-text-muted">{t("Canal")}</label>
+                <Select
+                  value={value.channel_session_id ?? "all"}
+                  onValueChange={(v) =>
+                    onChange({ ...value, channel_session_id: v === "all" ? undefined : v })
+                  }
+                >
+                  <SelectTrigger className="h-8 w-full rounded-lg text-xs bg-background border-border/70">
+                    <SelectValue placeholder={t("Todos os canais")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t("Todos os canais")}</SelectItem>
+                    {channels?.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {channelLabel(c)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* 2. Atribuição */}
+              <div className="space-y-1">
+                <label className="text-[11px] font-medium text-text-muted">{t("Atribuição")}</label>
+                <Select
+                  value={value.assigned_to ?? (value.tab === "mine" ? "me" : value.tab === "unassigned" ? "unassigned" : "all")}
+                  onValueChange={(v) => {
+                    if (v === "all") {
+                      onChange({ ...value, assigned_to: undefined });
+                    } else if (v === "me") {
+                      onChange(aoTrocarDeAba({ ...value, assigned_to: undefined }, "mine"));
+                    } else if (v === "unassigned") {
+                      onChange(aoTrocarDeAba({ ...value, assigned_to: "unassigned" }, "all"));
+                    } else {
+                      onChange(aoTrocarDeAba({ ...value, assigned_to: v }, "all"));
+                    }
+                  }}
+                >
+                  <SelectTrigger className="h-8 w-full rounded-lg text-xs bg-background border-border/70">
+                    <SelectValue placeholder={t("Atribuído e não atribuído")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t("Atribuído e não atribuído")}</SelectItem>
+                    <SelectItem value="me">{t("Minhas conversas")}</SelectItem>
+                    <SelectItem value="unassigned">{t("Não atribuído")}</SelectItem>
+                    {atendentes?.map((m) => (
+                      <SelectItem key={m.user_id} value={m.user_id}>
+                        {t("Com")} {m.full_name ?? t("Atendente")}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* 3. Status da conversa (Estilo Nextags) */}
+              <div className="space-y-1">
+                <label className="text-[11px] font-medium text-text-muted">{t("Status da conversa")}</label>
+                <Select
+                  value={
+                    value.sem_resposta
+                      ? "sem_resposta"
+                      : value.leitura === "nao_lidas"
+                        ? "nao_lidas"
+                        : value.leitura === "lidas"
+                          ? "lidas"
+                          : value.seguindo
+                            ? "seguindo"
+                            : value.janela_aberta
+                              ? "janela_aberta"
+                              : value.tab === "archived"
+                                ? "archived"
+                                : value.tab === "closed"
+                                  ? "closed"
+                                  : "todos"
+                  }
+                  onValueChange={(v) => {
+                    if (v === "todos") {
+                      onChange({
+                        ...value,
+                        leitura: "todas",
+                        sem_resposta: undefined,
+                        janela_aberta: undefined,
+                        seguindo: undefined,
+                      });
+                    } else if (v === "sem_resposta") {
+                      onChange({
+                        ...value,
+                        sem_resposta: true,
+                        janela_aberta: undefined,
+                        seguindo: undefined,
+                      });
+                    } else if (v === "nao_lidas") {
+                      onChange({
+                        ...value,
+                        leitura: "nao_lidas",
+                        sem_resposta: undefined,
+                        janela_aberta: undefined,
+                        seguindo: undefined,
+                      });
+                    } else if (v === "lidas") {
+                      onChange({
+                        ...value,
+                        leitura: "lidas",
+                        sem_resposta: undefined,
+                        janela_aberta: undefined,
+                        seguindo: undefined,
+                      });
+                    } else if (v === "seguindo") {
+                      onChange({
+                        ...value,
+                        seguindo: true,
+                        sem_resposta: undefined,
+                        janela_aberta: undefined,
+                      });
+                    } else if (v === "janela_aberta") {
+                      onChange({
+                        ...value,
+                        janela_aberta: true,
+                        sem_resposta: undefined,
+                        seguindo: undefined,
+                      });
+                    } else if (v === "archived") {
+                      onChange(aoTrocarDeAba(value, "archived"));
+                    } else if (v === "closed") {
+                      onChange(aoTrocarDeAba(value, "closed"));
+                    }
+                  }}
+                >
+                  <SelectTrigger className="h-8 w-full rounded-lg text-xs bg-background border-border/70">
+                    <SelectValue placeholder={t("Todos os status")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">{t("Todos os status")}</SelectItem>
+                    <SelectItem value="sem_resposta">{t("Sem resposta do atendente")}</SelectItem>
+                    <SelectItem value="nao_lidas">{t("Não lido")}</SelectItem>
+                    <SelectItem value="lidas">{t("Lidas")}</SelectItem>
+                    <SelectItem value="seguindo">{t("Seguindo (Marcadas / Quentes)")}</SelectItem>
+                    <SelectItem value="janela_aberta">{t("Janela aberta (24h)")}</SelectItem>
+                    <SelectItem value="archived">{t("Arquivado")}</SelectItem>
+                    <SelectItem value="closed">{t("Fechadas / Bloqueadas")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* 4. Etiquetas */}
+              {mostrarSeletorDeTag && (
+                <div className="space-y-1">
+                  <label className="text-[11px] font-medium text-text-muted">{t("Etiquetas")}</label>
+                  <Select
+                    value={value.tag ?? "all"}
+                    onValueChange={(v) => onChange({ ...value, tag: v === "all" ? undefined : v })}
+                  >
+                    <SelectTrigger className="h-8 w-full rounded-lg text-xs bg-background border-border/70">
+                      <SelectValue placeholder={t("Todas as tags")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">{t("Todas as tags")}</SelectItem>
+                      {tagVocabulary?.map((tag) => (
+                        <SelectItem key={tag} value={tag}>
+                          <span className="inline-flex items-center gap-2">
+                            <PontoDaEtiqueta tag={tag} />
+                            {tag}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </PopoverContent>
+          </Popover>
         </div>
 
         {/* Pílulas rápidas de canais e status (estilo Nextags) */}
@@ -540,7 +799,13 @@ export function InboxFilters({ value, onChange }: Props) {
             onClick={limparRefinamentos}
             className={cn(
               "shrink-0 inline-flex items-center gap-1 h-6 px-2.5 rounded-full text-xs font-medium transition-colors border",
-              !value.channel_session_id && value.leitura === "todas" && !value.tag && !value.assigned_to
+              !value.channel_session_id &&
+                value.leitura === "todas" &&
+                !value.tag &&
+                !value.assigned_to &&
+                !value.sem_resposta &&
+                !value.janela_aberta &&
+                !value.seguindo
                 ? "border-accent bg-accent-soft text-accent"
                 : "border-border/60 bg-surface-elevated text-text-muted hover:text-text hover:bg-surface-elevated/80",
             )}
@@ -600,6 +865,86 @@ export function InboxFilters({ value, onChange }: Props) {
           >
             <EnvelopeSimple size={12} />
             <span>{t("Não lidas")}</span>
+          </button>
+
+          {/* Atalho rápido de Sem Resposta */}
+          <button
+            type="button"
+            onClick={() =>
+              onChange({
+                ...value,
+                sem_resposta: !value.sem_resposta,
+              })
+            }
+            className={cn(
+              "shrink-0 inline-flex items-center gap-1 h-6 px-2.5 rounded-full text-xs transition-colors border",
+              value.sem_resposta
+                ? "border-accent bg-accent-soft text-accent font-medium shadow-2xs"
+                : "border-border/60 bg-surface-elevated text-text-muted hover:text-text hover:bg-surface-elevated/80",
+            )}
+          >
+            <ArrowBendUpLeft size={12} />
+            <span>{t("Sem resposta")}</span>
+          </button>
+
+          {/* Atalho rápido de Janela Aberta */}
+          <button
+            type="button"
+            onClick={() =>
+              onChange({
+                ...value,
+                janela_aberta: !value.janela_aberta,
+              })
+            }
+            className={cn(
+              "shrink-0 inline-flex items-center gap-1 h-6 px-2.5 rounded-full text-xs transition-colors border",
+              value.janela_aberta
+                ? "border-accent bg-accent-soft text-accent font-medium shadow-2xs"
+                : "border-border/60 bg-surface-elevated text-text-muted hover:text-text hover:bg-surface-elevated/80",
+            )}
+          >
+            <Clock size={12} />
+            <span>{t("Janela aberta")}</span>
+          </button>
+
+          {/* Atalho rápido de Não Atribuído */}
+          <button
+            type="button"
+            onClick={() =>
+              onChange({
+                ...value,
+                assigned_to: value.assigned_to === "unassigned" ? undefined : "unassigned",
+              })
+            }
+            className={cn(
+              "shrink-0 inline-flex items-center gap-1 h-6 px-2.5 rounded-full text-xs transition-colors border",
+              value.assigned_to === "unassigned"
+                ? "border-accent bg-accent-soft text-accent font-medium shadow-2xs"
+                : "border-border/60 bg-surface-elevated text-text-muted hover:text-text hover:bg-surface-elevated/80",
+            )}
+          >
+            <User size={12} />
+            <span>{t("Não atribuído")}</span>
+          </button>
+
+          {/* Atalho rápido de Seguindo */}
+          <button
+            type="button"
+            onClick={() =>
+              onChange({
+                ...value,
+                seguindo: !value.seguindo,
+              })
+            }
+            className={cn(
+              "shrink-0 inline-flex items-center gap-1 h-6 px-2.5 rounded-full text-xs transition-colors border",
+              value.seguindo
+                ? "border-accent bg-accent-soft text-accent font-medium shadow-2xs"
+                : "border-border/60 bg-surface-elevated text-text-muted hover:text-text hover:bg-surface-elevated/80",
+            )}
+          >
+            <Star size={12} />
+            <span>{t("Seguindo")}</span>
           </button>
 
           {/* Botão limpar quando houver filtros ativos */}

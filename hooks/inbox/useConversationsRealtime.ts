@@ -99,6 +99,9 @@ export interface ConversationsFilters {
   read?: boolean;
   channel_session_id?: string;
   tag?: string;
+  sem_resposta?: boolean;
+  janela_aberta?: boolean;
+  seguindo?: boolean;
 }
 
 interface ListResponse {

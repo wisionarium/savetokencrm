@@ -14,6 +14,9 @@ export interface FiltrosAuxiliaresDaTela {
   channel_session_id?: string;
   tag?: string;
   assigned_to?: string;
+  sem_resposta?: boolean;
+  janela_aberta?: boolean;
+  seguindo?: boolean;
 }
 
 /**
@@ -43,5 +46,8 @@ export function montarFiltrosDaLista(
     tag: aux.tag,
     unread: aux.leitura === "nao_lidas" || undefined,
     read: aux.leitura === "lidas" || undefined,
+    sem_resposta: aux.sem_resposta || undefined,
+    janela_aberta: aux.janela_aberta || undefined,
+    seguindo: aux.seguindo || undefined,
   };
 }

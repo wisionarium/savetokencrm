@@ -26,5 +26,8 @@ export function filtrosAuxiliaresAtivos(filters: ConversationsFilters): string[]
   if (filters.tag) ativos.push("Etiqueta");
   if (filters.channel_session_id) ativos.push("Canal");
   if (filters.assigned_to) ativos.push("Atribuído");
+  if (filters.sem_resposta) ativos.push("Sem resposta");
+  if (filters.janela_aberta) ativos.push("Janela aberta");
+  if (filters.seguindo) ativos.push("Seguindo");
   return ativos;
 }

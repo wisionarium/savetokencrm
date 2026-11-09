@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
-import { Tag, Receipt, Users, ArrowRight, Flame, Phone } from "@/lib/ui/icons";
+import { Tag, Receipt, Users, ArrowRight, Flame, Phone, X, IdentificationCard } from "@/lib/ui/icons";
 import { apiClient } from "@/lib/api/client";
 import { toast } from "sonner";
 import type { ConversationWithContact } from "@/hooks/inbox/useConversationsRealtime";
@@ -25,6 +25,7 @@ import { useDefaultPipeline } from "@/hooks/pipelines/useDefaultPipeline";
 import { NewLeadDialog } from "@/components/kanban/NewLeadDialog";
 import { CustomFieldsEditor, type CustomFieldDef } from "@/components/contacts/CustomFieldsEditor";
 import { useEditLead } from "@/hooks/kanban/useUpdateLead";
+import { useUpdateContact } from "@/hooks/contacts/useUpdateContact";
 import { cn } from "@/lib/utils";
 import { rotuloDoContato } from "@/lib/contacts/rotulo-do-contato";
 import { phoneForDisplay } from "@/lib/channels/phone-variants";
@@ -39,6 +40,8 @@ interface Props {
    * — aqui é só o AVISO, nunca a porta de envio de modelo.
    */
   janelaFechada?: string | null;
+  /** Callback para fechar / recolher o painel */
+  onFechar?: () => void;
 }
 
 interface LeadRow {
@@ -461,13 +464,14 @@ function CamposDoFunil({
   );
 }
 
-export function CRMSidePanel({ conversation, janelaFechada }: Props) {
+export function CRMSidePanel({ conversation, janelaFechada, onFechar }: Props) {
   const { user } = useAuth();
   const readonly = user.support?.access_mode === "support_readonly";
   const localeDaData = useLocaleDeData();
   const t = useT();
   const contact = conversation?.contacts ?? null;
   const contactId = contact?.id ?? null;
+  const updateContact = useUpdateContact(contactId ?? "");
   const [desfechoDraft, setDesfechoDraft] = useState<DesfechoDraft | null>(null);
   // A saída do filtro produz null enquanto o detalhe carrega. O rascunho não
   // some nessa lacuna; outra conversa/contato real o descarta, sem expô-lo.
@@ -585,6 +589,18 @@ export function CRMSidePanel({ conversation, janelaFechada }: Props) {
   const tags = contact?.tags ?? [];
   const displayName = rotuloDoContato(contact, t);
 
+  const handleRemoveTag = async (tagToRemove: string) => {
+    if (!contactId || readonly) return;
+    const nextTags = tags.filter((t) => t.toLowerCase() !== tagToRemove.toLowerCase());
+    try {
+      await updateContact.mutateAsync({ tags: nextTags });
+      toast.success(t("Etiqueta removida"));
+      recarregar();
+    } catch {
+      toast.error(t("Erro ao remover etiqueta"));
+    }
+  };
+
   // `erro` PRIMEIRO, e não é detalhe: as três listas voltam a `null` quando a
   // leitura falha, e este derivado lê `null` como "ainda não chegou". Sem esta
   // guarda o painel mostraria esqueleto para sempre e o estado de falha nunca
@@ -607,18 +623,26 @@ export function CRMSidePanel({ conversation, janelaFechada }: Props) {
 
   return (
     <aside className="flex h-full flex-col gap-4 overflow-y-auto border-l border-border bg-background p-4">
-      {/*
-        FICHA DO MOCK (novo visual): cartão do contato no topo — ID curto,
-        avatar, canal, TEMPERATURA, telefone/local/desde-quando e etiquetas.
-        Regras de honestidade:
-        -temperatura deriva de `engajamentoDaConversa` (quente = barra cheia);
-          sem streak, a barra marca o volume (1-2 segmentos) e o tooltip diz
-          que a escala fina ainda não existe — é placeholder de produto, não
-          medida nova;
-        - `Local` não existe no contato: "—" com tooltip, até a fonte existir;
-        - etiquetas reaproveitam os chips + o MESMO `ContactTagsEditor` da
-          seção Contato (um editor, duas portas — o botão só abre o estado).
-      */}
+      {/* Top Header com título e botão Fechar */}
+      <div className="flex items-center justify-between pb-2 border-b border-border/70">
+        <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <IdentificationCard size={15} weight="duotone" className="text-accent" />
+          <span>{t("Ficha do Contato")}</span>
+        </div>
+        {onFechar && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground rounded-full"
+            onClick={onFechar}
+            aria-label={t("Recolher painel")}
+            title={t("Recolher painel")}
+          >
+            <X size={14} weight="bold" />
+          </Button>
+        )}
+      </div>
+
       {(() => {
         const eng = engajamentoDaConversa({
           last_inbound_at: conversation.last_inbound_at ?? null,
@@ -636,33 +660,71 @@ export function CRMSidePanel({ conversation, janelaFechada }: Props) {
         const desdeQuando = conversation.created_at
           ? format(new Date(conversation.created_at), "dd/MM/yyyy HH:mm", { locale: localeDaData })
           : "—";
+
         return (
-          <section aria-label={t("Ficha do contato")}>
-            <div className="flex items-center justify-end text-[11px] tabular-nums text-muted-foreground">
-              ID: {contactId ? contactId.slice(0, 6).toUpperCase() : "—"}
+          <section aria-label={t("Ficha do contato")} className="space-y-3">
+            <div className="flex items-center justify-between text-[11px] tabular-nums text-muted-foreground">
+              <span>{conversation.channel_sessions?.display_name ?? "WhatsApp"}</span>
+              <span>ID: {contactId ? contactId.slice(0, 6).toUpperCase() : "—"}</span>
             </div>
-            <div className="mt-1 flex items-center gap-3">
+
+            <div className="flex items-center gap-3">
               <span
-                className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-surface-elevated text-lg font-semibold text-text-muted"
+                className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-surface-elevated text-base font-semibold text-text-muted ring-2 ring-emerald-500/30"
                 aria-hidden
               >
                 {iniciais || "??"}
               </span>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <div className="truncate text-sm font-semibold uppercase">{displayName}</div>
-                <div className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
-                  <Phone size={12} weight="fill" aria-hidden />
-                  {conversation.channel_sessions?.display_name ?? "WhatsApp"}
-                </div>
+                {contact?.phone_number && (
+                  <div className="text-xs text-muted-foreground mt-0.5">
+                    {phoneForDisplay(contact.phone_number)}
+                  </div>
+                )}
               </div>
             </div>
-            <div className="mt-3">
-              <div className="flex items-center justify-center gap-1.5 text-xs font-semibold uppercase tracking-wide">
-                <Flame size={14} weight="fill" className="text-orange-500" aria-hidden />
-                {t("Temperatura")}
+
+            {/* Ações rápidas do contato */}
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {contactId && conversation && (
+                <Button asChild size="sm" variant="outline" className="h-7 px-2 text-xs">
+                  <Link href={`/app/tasks/agenda?contato=${contactId}&conversa=${conversation.id}`}>
+                    {t("Marcar compromisso")}
+                  </Link>
+                </Button>
+              )}
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 px-2 text-xs"
+                disabled={readonly || !contactId || (leadDialogOpen && defaultPipeline.isLoading)}
+                onClick={() => setLeadDialogOpen(true)}
+              >
+                <Users size={12} className="mr-1" weight="regular" aria-hidden />
+                {leadDialogOpen && defaultPipeline.isLoading ? t("Carregando…") : t("Novo Lead")}
+              </Button>
+              {contactId && (
+                <Button asChild size="sm" variant="ghost" className="h-7 px-2 text-xs">
+                  <Link href={`/app/contacts/${contactId}`}>
+                    {t("Ver contato")}
+                    <ArrowRight size={12} className="ml-1" weight="regular" aria-hidden />
+                  </Link>
+                </Button>
+              )}
+            </div>
+
+            {/* Temperatura */}
+            <div className="rounded-lg border border-border/60 bg-surface-elevated/40 p-2.5">
+              <div className="flex items-center justify-between text-xs">
+                <span className="flex items-center gap-1.5 font-semibold uppercase tracking-wide">
+                  <Flame size={14} weight="fill" className="text-orange-500" aria-hidden />
+                  {t("Temperatura")}
+                </span>
+                <span className="text-[11px] text-muted-foreground">{eng.motivo ?? t("Sem engajamento recente")}</span>
               </div>
               <div
-                className="mt-1.5 flex justify-center gap-1"
+                className="mt-2 flex gap-1"
                 role="img"
                 aria-label={eng.motivo ?? t("Sem engajamento recente")}
                 title={eng.motivo ?? t("Sem engajamento recente")}
@@ -671,7 +733,7 @@ export function CRMSidePanel({ conversation, janelaFechada }: Props) {
                   <span
                     key={i}
                     className={cn(
-                      "h-2 w-8 rounded-full",
+                      "h-1.5 flex-1 rounded-full transition-colors",
                       i < segmentos ? "bg-orange-500" : "bg-muted",
                     )}
                     aria-hidden
@@ -679,55 +741,72 @@ export function CRMSidePanel({ conversation, janelaFechada }: Props) {
                 ))}
               </div>
             </div>
-            <dl className="mt-3 space-y-1 text-xs">
-              <div className="flex gap-2">
-                <dt className="w-16 shrink-0 text-muted-foreground">{t("Telefone")}:</dt>
-                <dd className="min-w-0 truncate tabular-nums">
+
+            {/* Dados do contato */}
+            <dl className="space-y-1.5 text-xs text-muted-foreground border-y border-border/60 py-2.5">
+              <div className="flex justify-between">
+                <dt>{t("Telefone")}:</dt>
+                <dd className="font-medium text-foreground tabular-nums">
                   {contact?.phone_number ? phoneForDisplay(contact.phone_number) : "—"}
                 </dd>
               </div>
-              <div className="flex gap-2">
-                <dt className="w-16 shrink-0 text-muted-foreground">{t("Local")}:</dt>
-                <dd className="text-muted-foreground" title={t("Cidade do contato (em breve)")}>
-                  —
-                </dd>
-              </div>
-              <div className="flex gap-2">
-                <dt className="w-16 shrink-0 text-muted-foreground">{t("Contato")}:</dt>
+              <div className="flex justify-between">
+                <dt>{t("Contato desde")}:</dt>
                 <dd className="tabular-nums">{desdeQuando}</dd>
               </div>
             </dl>
-            <div className="mt-3">
-              <div className="text-center text-xs font-semibold uppercase tracking-wide">
-                {t("Etiquetas")}
+
+            {/* Etiquetas com remoção e edição direta */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wide">
+                <span>{t("Etiquetas")}</span>
+                <span className="text-[11px] font-normal text-muted-foreground">{tags.length}</span>
               </div>
-              {tags.length > 0 && (
-                <div className="mt-1.5 flex flex-wrap justify-center gap-1">
+
+              {tags.length > 0 ? (
+                <div className="flex flex-wrap gap-1">
                   {tags.map((tag) => (
-                    <ChipDeEtiqueta key={tag} tag={tag} className="h-5 px-2 text-[11px]" />
+                    <ChipDeEtiqueta key={tag} tag={tag} className="h-6 gap-1 px-2 text-xs">
+                      <span>{tag}</span>
+                      <button
+                        type="button"
+                        onClick={() => void handleRemoveTag(tag)}
+                        disabled={readonly || updateContact.isPending}
+                        className="rounded-full p-0.5 text-muted-foreground hover:bg-black/10 hover:text-destructive dark:hover:bg-white/10 transition-colors"
+                        aria-label={`${t("Remover tag")} ${tag}`}
+                        title={`${t("Remover tag")} ${tag}`}
+                      >
+                        <X size={10} weight="bold" />
+                      </button>
+                    </ChipDeEtiqueta>
                   ))}
                 </div>
+              ) : (
+                <p className="text-xs text-muted-foreground">{t("Nenhuma etiqueta no contato.")}</p>
               )}
+
               <Button
                 size="sm"
                 variant="outline"
-                className="mt-2 h-7 w-full px-2 text-xs"
+                className="mt-1 h-7 w-full px-2 text-xs"
                 disabled={readonly || !contactId}
                 aria-pressed={tagEditorOpen}
                 onClick={() => setTagEditorOpen((v) => !v)}
               >
-                {t("Adicionar etiqueta")}
+                <Tag size={12} className="mr-1" weight="regular" aria-hidden />
+                {t("Tags do contato")}
               </Button>
-              {/*
-                CAIXA LARANJA DO MOCK: a janela de 24h explicada onde o olho do
-                dono espera. Só AVISO — quem envia modelo é o `JanelaFechadaAviso`
-                do centro; duplicar a porta aqui seria duas fontes para o mesmo
-                envio. Tokens de warning (claro/escuro), nunca cor fixa.
-              */}
+
+              {tagEditorOpen && contactId && (
+                <div className="mt-2">
+                  <ContactTagsEditor contactId={contactId} orgId={conversation.organization_id} tags={tags} />
+                </div>
+              )}
+
               {janelaFechada && (
                 <div
                   role="note"
-                  className="mt-3 rounded-md border border-warning-border bg-warning-bg/40 p-2 text-[11px] leading-snug"
+                  className="rounded-md border border-warning-border bg-warning-bg/40 p-2 text-[11px] leading-snug"
                 >
                   {janelaFechada}
                 </div>
@@ -737,56 +816,6 @@ export function CRMSidePanel({ conversation, janelaFechada }: Props) {
         );
       })()}
       <Separator />
-      <section>
-        <h3 className="text-xs font-semibold text-text">
-          {t("Contato")}
-        </h3>
-        <Card className="mt-2 space-y-2 p-3 text-sm">
-          <div className="font-medium">{displayName}</div>
-          {contact?.phone_number && (
-            <div className="text-xs text-muted-foreground">{phoneForDisplay(contact.phone_number)}</div>
-          )}
-          {tags.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {tags.map((t) => (
-                <ChipDeEtiqueta key={t} tag={t} className="h-4 px-1.5 text-[10px]" />
-              ))}
-            </div>
-          )}
-          <div className="flex flex-wrap gap-2 pt-1">
-            {contactId&&conversation?<Link className="underline" href={`/app/tasks/agenda?contato=${contactId}&conversa=${conversation.id}`}>{t("Marcar compromisso")}</Link>:null}
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-7 px-2 text-xs"
-              disabled={readonly || !contactId}
-              aria-pressed={tagEditorOpen}
-              onClick={() => setTagEditorOpen((v) => !v)}
-            >
-              <Tag size={12} className="mr-1" weight="regular" aria-hidden /> {t("Tags do contato")}
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-7 px-2 text-xs"
-              disabled={readonly || !contactId || (leadDialogOpen && defaultPipeline.isLoading)}
-              onClick={() => setLeadDialogOpen(true)}
-            >
-              <Users size={12} className="mr-1" weight="regular" aria-hidden />
-              {leadDialogOpen && defaultPipeline.isLoading ? t("Carregando…") : t("Novo Lead")}
-            </Button>
-            {contactId && (
-              <Button asChild size="sm" variant="ghost" className="h-7 px-2 text-xs">
-                <Link href={`/app/contacts/${contactId}`}>
-                  {t("Ver contato")}
-                  <ArrowRight size={12} className="ml-1" weight="regular" aria-hidden />
-                </Link>
-              </Button>
-            )}
-          </div>
-          {tagEditorOpen && contactId && <ContactTagsEditor contactId={contactId} orgId={conversation.organization_id} tags={tags} />}
-        </Card>
-      </section>
 
       {contactId && defaultPipeline.data && (
         <NewLeadDialog

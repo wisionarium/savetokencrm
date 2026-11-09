@@ -462,8 +462,8 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
         // TopBar e o `p-6`.
         "grid h-[100dvh] w-full grid-cols-1 pt-[env(safe-area-inset-top)] md:h-[calc(100dvh-3.5rem-2*var(--space-6))] md:pt-0",
         painelAberto
-          ? "md:grid-cols-[280px_minmax(0,1fr)_264px] xl:grid-cols-[320px_1fr_296px] 2xl:grid-cols-[360px_1fr_320px]"
-          : "md:grid-cols-[280px_minmax(0,1fr)_32px] xl:grid-cols-[320px_1fr_32px] 2xl:grid-cols-[360px_1fr_32px]",
+          ? "md:grid-cols-[280px_minmax(0,1fr)_320px] xl:grid-cols-[300px_1fr_340px] 2xl:grid-cols-[340px_1fr_360px]"
+          : "md:grid-cols-[280px_minmax(0,1fr)_32px] xl:grid-cols-[300px_1fr_32px] 2xl:grid-cols-[340px_1fr_32px]",
       )}
       // A CONVERSA ABERTA ESCONDE O RODAPÉ. O CSS lê daqui
       // (`app/globals.css`, `html:has([data-conversa-aberta])`): no fio, a
@@ -594,6 +594,8 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
               conversation={selectedConversation}
               onAbrirPerfil={abrirPerfilDoContato}
               onFecharConversa={() => handleSelect(null)}
+              painelAberto={painelAberto}
+              onAlternarPainel={() => setPainelAberto((v) => !v)}
             />
             <div className="relative min-h-0 flex-1 overflow-hidden">
               {/*
@@ -684,29 +686,23 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
       <div className="hidden h-full min-h-0 md:block">
         {painelAberto ? (
           <div className="relative h-full">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="absolute left-1 top-1 z-10 h-7 w-7 bg-background/80 p-0"
-              onClick={() => setPainelAberto(false)}
-              aria-label={t("Recolher painel")}
-              title={t("Recolher painel")}
-            >
-              <CaretRight size={14} weight="bold" aria-hidden />
-            </Button>
-            <CRMSidePanel conversation={selectedConversation} janelaFechada={motivoDaJanela} />
+            <CRMSidePanel
+              conversation={selectedConversation}
+              janelaFechada={motivoDaJanela}
+              onFechar={() => setPainelAberto(false)}
+            />
           </div>
         ) : (
-          <div className="flex h-full items-start justify-center border-l border-border pt-1">
+          <div className="flex h-full items-start justify-center border-l border-border pt-2">
             <Button
               variant="ghost"
               size="sm"
-              className="h-7 w-7 p-0"
+              className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
               onClick={() => setPainelAberto(true)}
               aria-label={t("Mostrar painel")}
               title={t("Mostrar painel do contato")}
             >
-              <CaretLeft size={14} weight="bold" aria-hidden />
+              <CaretLeft size={16} weight="bold" aria-hidden />
             </Button>
           </div>
         )}

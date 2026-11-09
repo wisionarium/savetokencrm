@@ -47,6 +47,9 @@ import { useAutomaticoAtivo } from "@/hooks/ai/useAutomaticoAtivo";
 import { comandoDaConversa, ROTULO_DO_MOTIVO } from "@/lib/inbox/comando-da-conversa";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ReassignDialog } from "@/components/inbox/ReassignDialog";
+import { useUpdateContact } from "@/hooks/contacts/useUpdateContact";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import type { ConversationWithContact } from "@/hooks/inbox/useConversationsRealtime";
 import { rotuloDoContato } from "@/lib/contacts/rotulo-do-contato";
 import { iniciaisDoContato } from "@/lib/contacts/iniciais-do-contato";
@@ -61,6 +64,10 @@ interface Props {
   onAbrirPerfil?: () => void;
   /** Desmarca a conversa ativa (volta para a lista no desktop). */
   onFecharConversa?: () => void;
+  /** Estado de visibilidade do painel CRM lateral direito */
+  painelAberto?: boolean;
+  /** Alterna visibilidade do painel CRM lateral direito */
+  onAlternarPainel?: () => void;
 }
 
 /**
@@ -102,7 +109,13 @@ function lembreteEstaAtivo(snoozeUntil: string | null): boolean {
   return snoozeUntil != null && new Date(snoozeUntil).getTime() > Date.now();
 }
 
-export function ConversationHeader({ conversation, onAbrirPerfil, onFecharConversa }: Props) {
+export function ConversationHeader({
+  conversation,
+  onAbrirPerfil,
+  onFecharConversa,
+  painelAberto,
+  onAlternarPainel,
+}: Props) {
   const t = useT();
   const { user } = useAuth();
   const claim = useClaimConversation();
@@ -126,6 +139,29 @@ export function ConversationHeader({ conversation, onAbrirPerfil, onFecharConver
   const lembreteOcupado = snooze.isPending || cancel.isPending;
 
   const c = conversation.contacts ?? null;
+  const contactTags = c?.tags ?? [];
+  const isFavorito = contactTags.some((tagItem) =>
+    ["favorito", "seguindo"].includes(tagItem.toLowerCase()),
+  );
+  const updateContact = useUpdateContact(c?.id ?? "");
+
+  const handleToggleFavorito = async () => {
+    if (!c?.id) return;
+    const nextTags = isFavorito
+      ? contactTags.filter((tagItem) => !["favorito", "seguindo"].includes(tagItem.toLowerCase()))
+      : [...contactTags, "favorito"];
+
+    try {
+      await updateContact.mutateAsync({ tags: nextTags });
+      toast.success(
+        isFavorito
+          ? t("Conversa removida dos favoritos")
+          : t("Conversa adicionada aos favoritos"),
+      );
+    } catch {
+      toast.error(t("Não foi possível atualizar favoritos"));
+    }
+  };
   const displayName = rotuloDoContato(c, t);
   const phone = c?.phone_number ? phoneForDisplay(c.phone_number) : null;
   /**
@@ -252,19 +288,30 @@ export function ConversationHeader({ conversation, onAbrirPerfil, onFecharConver
             </Button>
           )}
           {/*
-            ESTRELA (placeholder, novo visual): o mock fixa conversa favorita, e
-            HOJE não há campo para isso (persistir exige migration — avisado ao
-            dono). Desabilitada com o motivo no tooltip: estrela que finge
-            funcionar e esquece no F5 é pior que estrela assumidamente futura.
+            ESTRELA: favoritar / desfavoritar conversa (persiste nas tags do contato)
           */}
-          <span className="hidden md:inline" title={t("Favoritar conversa (em breve)")}>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={handleToggleFavorito}
+            disabled={!c?.id || updateContact.isPending}
+            className={cn(
+              "hidden md:inline-flex h-7 w-7 p-0 transition-colors",
+              isFavorito
+                ? "text-amber-500 hover:text-amber-600"
+                : "text-muted-foreground hover:text-amber-500",
+            )}
+            title={isFavorito ? t("Desfavoritar conversa") : t("Favoritar conversa")}
+            aria-label={isFavorito ? t("Desfavoritar conversa") : t("Favoritar conversa")}
+          >
             <Star
-              size={16}
-              weight="fill"
-              className="shrink-0 text-yellow-400"
+              size={17}
+              weight={isFavorito ? "fill" : "regular"}
+              className={isFavorito ? "fill-amber-400 text-amber-500" : ""}
               aria-hidden
             />
-          </span>
+          </Button>
           {/*
             FOTO + NOME SÃO UMA PORTA SÓ (decisão do dono): tocar em qualquer um
             dos dois abre o perfil — como no WhatsApp. No desktop o mesmo clique
@@ -448,6 +495,27 @@ export function ConversationHeader({ conversation, onAbrirPerfil, onFecharConver
             <ZoomDoFio userId={user.id ?? null} />
           </div>
         </div>
+
+        {/* Botão de alternar Painel CRM / Ficha do Contato */}
+        {onAlternarPainel && (
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            className={cn(
+              "hidden md:inline-flex h-8 w-8 p-0 transition-colors",
+              painelAberto
+                ? "bg-accent-soft text-accent hover:bg-accent-soft/80"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+            onClick={onAlternarPainel}
+            aria-label={painelAberto ? t("Ocultar painel do contato") : t("Ver painel do contato")}
+            title={painelAberto ? t("Ocultar painel do contato") : t("Ver painel do contato")}
+          >
+            <IdentificationCard size={17} weight={painelAberto ? "fill" : "regular"} aria-hidden />
+          </Button>
+        )}
+
         {/*
           OS 5 NO KEBAB (⋮) — decisão de produto (mock do dono, refinada pelo
           dono): `Assumir, Transferir, Lembrar, Fechar, Arquivar` vivem neste

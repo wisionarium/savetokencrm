@@ -792,174 +792,115 @@ export function InboxFilters({ value, onChange }: Props) {
           </Popover>
         </div>
 
-        {/* Pílulas rápidas de canais e status (estilo Nextags) */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none]">
-          <button
-            type="button"
-            onClick={limparRefinamentos}
-            className={cn(
-              "shrink-0 inline-flex items-center gap-1 h-6 px-2.5 rounded-full text-xs font-medium transition-colors border",
-              !value.channel_session_id &&
-                value.leitura === "todas" &&
-                !value.tag &&
-                !value.assigned_to &&
-                !value.sem_resposta &&
-                !value.janela_aberta &&
-                !value.seguindo
-                ? "border-accent bg-accent-soft text-accent"
-                : "border-border/60 bg-surface-elevated text-text-muted hover:text-text hover:bg-surface-elevated/80",
+        {/* Filtros ativos (chips removíveis sem rolagem horizontal) */}
+        {refinamentosAtivos > 0 && (
+          <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+            {value.channel_session_id && (
+              <span className="inline-flex items-center gap-1 h-5.5 px-2 rounded-full text-[11px] bg-accent-soft text-accent border border-accent">
+                <span className="max-w-[100px] truncate">
+                  {channels?.find((c) => c.id === value.channel_session_id)?.display_name ?? t("Canal")}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => onChange({ ...value, channel_session_id: undefined })}
+                  className="rounded-full p-0.5 hover:bg-black/10 dark:hover:bg-white/10"
+                  aria-label={t("Remover filtro de canal")}
+                >
+                  <X size={10} />
+                </button>
+              </span>
             )}
-          >
-            {t("Todas")}
-          </button>
-
-          {/* Atalho rápido de canais */}
-          {channels?.map((c) => {
-            const isSelected = value.channel_session_id === c.id;
-            const isInstagram = c.display_name?.toLowerCase().includes("instagram") ?? false;
-            return (
-              <button
-                key={c.id}
-                type="button"
-                onClick={() =>
-                  onChange({
-                    ...value,
-                    channel_session_id: isSelected ? undefined : c.id,
-                  })
-                }
-                title={channelLabel(c)}
-                className={cn(
-                  "shrink-0 inline-flex items-center gap-1 h-6 px-2 rounded-full text-xs transition-colors border",
-                  isSelected
-                    ? "border-accent bg-accent-soft text-accent font-medium shadow-2xs"
-                    : "border-border/60 bg-surface-elevated text-text-muted hover:text-text hover:bg-surface-elevated/80",
-                )}
-              >
-                {isInstagram ? (
-                  <InstagramLogo size={12} weight="bold" className="text-[#E1306C] shrink-0" />
-                ) : (
-                  <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#25d366] text-white shrink-0">
-                    <Phone size={8} weight="fill" />
-                  </span>
-                )}
-                <span className="max-w-[85px] truncate">{c.display_name || c.phone_number || channelLabel(c)}</span>
-              </button>
-            );
-          })}
-
-          {/* Atalho rápido de Não Lidas */}
-          <button
-            type="button"
-            onClick={() =>
-              onChange({
-                ...value,
-                leitura: value.leitura === "nao_lidas" ? "todas" : "nao_lidas",
-              })
-            }
-            className={cn(
-              "shrink-0 inline-flex items-center gap-1 h-6 px-2.5 rounded-full text-xs transition-colors border",
-              value.leitura === "nao_lidas"
-                ? "border-accent bg-accent-soft text-accent font-medium shadow-2xs"
-                : "border-border/60 bg-surface-elevated text-text-muted hover:text-text hover:bg-surface-elevated/80",
+            {value.assigned_to === "unassigned" && (
+              <span className="inline-flex items-center gap-1 h-5.5 px-2 rounded-full text-[11px] bg-accent-soft text-accent border border-accent">
+                <span>{t("Não atribuído")}</span>
+                <button
+                  type="button"
+                  onClick={() => onChange({ ...value, assigned_to: undefined })}
+                  className="rounded-full p-0.5 hover:bg-black/10 dark:hover:bg-white/10"
+                  aria-label={t("Remover filtro de atendente")}
+                >
+                  <X size={10} />
+                </button>
+              </span>
             )}
-          >
-            <EnvelopeSimple size={12} />
-            <span>{t("Não lidas")}</span>
-          </button>
-
-          {/* Atalho rápido de Sem Resposta */}
-          <button
-            type="button"
-            onClick={() =>
-              onChange({
-                ...value,
-                sem_resposta: !value.sem_resposta,
-              })
-            }
-            className={cn(
-              "shrink-0 inline-flex items-center gap-1 h-6 px-2.5 rounded-full text-xs transition-colors border",
-              value.sem_resposta
-                ? "border-accent bg-accent-soft text-accent font-medium shadow-2xs"
-                : "border-border/60 bg-surface-elevated text-text-muted hover:text-text hover:bg-surface-elevated/80",
+            {value.assigned_to && value.assigned_to !== "unassigned" && value.assigned_to !== "me" && (
+              <span className="inline-flex items-center gap-1 h-5.5 px-2 rounded-full text-[11px] bg-accent-soft text-accent border border-accent">
+                <span className="max-w-[100px] truncate">
+                  {atendentes?.find((m) => m.user_id === value.assigned_to)?.full_name ?? t("Atendente")}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => onChange({ ...value, assigned_to: undefined })}
+                  className="rounded-full p-0.5 hover:bg-black/10 dark:hover:bg-white/10"
+                  aria-label={t("Remover filtro de atendente")}
+                >
+                  <X size={10} />
+                </button>
+              </span>
             )}
-          >
-            <ArrowBendUpLeft size={12} />
-            <span>{t("Sem resposta")}</span>
-          </button>
-
-          {/* Atalho rápido de Janela Aberta */}
-          <button
-            type="button"
-            onClick={() =>
-              onChange({
-                ...value,
-                janela_aberta: !value.janela_aberta,
-              })
-            }
-            className={cn(
-              "shrink-0 inline-flex items-center gap-1 h-6 px-2.5 rounded-full text-xs transition-colors border",
-              value.janela_aberta
-                ? "border-accent bg-accent-soft text-accent font-medium shadow-2xs"
-                : "border-border/60 bg-surface-elevated text-text-muted hover:text-text hover:bg-surface-elevated/80",
+            {value.sem_resposta && (
+              <span className="inline-flex items-center gap-1 h-5.5 px-2 rounded-full text-[11px] bg-accent-soft text-accent border border-accent">
+                <span>{t("Sem resposta")}</span>
+                <button
+                  type="button"
+                  onClick={() => onChange({ ...value, sem_resposta: undefined })}
+                  className="rounded-full p-0.5 hover:bg-black/10 dark:hover:bg-white/10"
+                  aria-label={t("Remover filtro sem resposta")}
+                >
+                  <X size={10} />
+                </button>
+              </span>
             )}
-          >
-            <Clock size={12} />
-            <span>{t("Janela aberta")}</span>
-          </button>
-
-          {/* Atalho rápido de Não Atribuído */}
-          <button
-            type="button"
-            onClick={() =>
-              onChange({
-                ...value,
-                assigned_to: value.assigned_to === "unassigned" ? undefined : "unassigned",
-              })
-            }
-            className={cn(
-              "shrink-0 inline-flex items-center gap-1 h-6 px-2.5 rounded-full text-xs transition-colors border",
-              value.assigned_to === "unassigned"
-                ? "border-accent bg-accent-soft text-accent font-medium shadow-2xs"
-                : "border-border/60 bg-surface-elevated text-text-muted hover:text-text hover:bg-surface-elevated/80",
+            {value.seguindo && (
+              <span className="inline-flex items-center gap-1 h-5.5 px-2 rounded-full text-[11px] bg-accent-soft text-accent border border-accent">
+                <Star size={10} weight="fill" className="text-amber-500" />
+                <span>{t("Seguindo")}</span>
+                <button
+                  type="button"
+                  onClick={() => onChange({ ...value, seguindo: undefined })}
+                  className="rounded-full p-0.5 hover:bg-black/10 dark:hover:bg-white/10"
+                  aria-label={t("Remover filtro seguindo")}
+                >
+                  <X size={10} />
+                </button>
+              </span>
             )}
-          >
-            <User size={12} />
-            <span>{t("Não atribuído")}</span>
-          </button>
-
-          {/* Atalho rápido de Seguindo */}
-          <button
-            type="button"
-            onClick={() =>
-              onChange({
-                ...value,
-                seguindo: !value.seguindo,
-              })
-            }
-            className={cn(
-              "shrink-0 inline-flex items-center gap-1 h-6 px-2.5 rounded-full text-xs transition-colors border",
-              value.seguindo
-                ? "border-accent bg-accent-soft text-accent font-medium shadow-2xs"
-                : "border-border/60 bg-surface-elevated text-text-muted hover:text-text hover:bg-surface-elevated/80",
+            {value.janela_aberta && (
+              <span className="inline-flex items-center gap-1 h-5.5 px-2 rounded-full text-[11px] bg-accent-soft text-accent border border-accent">
+                <span>{t("Janela 24h")}</span>
+                <button
+                  type="button"
+                  onClick={() => onChange({ ...value, janela_aberta: undefined })}
+                  className="rounded-full p-0.5 hover:bg-black/10 dark:hover:bg-white/10"
+                  aria-label={t("Remover filtro janela aberta")}
+                >
+                  <X size={10} />
+                </button>
+              </span>
             )}
-          >
-            <Star size={12} />
-            <span>{t("Seguindo")}</span>
-          </button>
-
-          {/* Botão limpar quando houver filtros ativos */}
-          {refinamentosAtivos > 0 && (
+            {value.tag && (
+              <span className="inline-flex items-center gap-1 h-5.5 px-2 rounded-full text-[11px] bg-accent-soft text-accent border border-accent">
+                <PontoDaEtiqueta tag={value.tag} />
+                <span className="max-w-[80px] truncate">{value.tag}</span>
+                <button
+                  type="button"
+                  onClick={() => onChange({ ...value, tag: undefined })}
+                  className="rounded-full p-0.5 hover:bg-black/10 dark:hover:bg-white/10"
+                  aria-label={t("Remover filtro de tag")}
+                >
+                  <X size={10} />
+                </button>
+              </span>
+            )}
             <button
               type="button"
               onClick={limparRefinamentos}
-              className="shrink-0 inline-flex items-center gap-1 h-6 px-2 rounded-full text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-              title={t("Limpar filtros")}
+              className="text-[11px] text-muted-foreground hover:text-foreground transition-colors ml-1"
             >
-              <X size={11} />
-              <span>{t("Limpar")}</span>
+              {t("Limpar")}
             </button>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Desktop: os refinamentos compactos em grid */}
         <div className="hidden md:block">{renderRefinamentos()}</div>

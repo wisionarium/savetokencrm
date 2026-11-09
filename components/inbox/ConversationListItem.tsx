@@ -6,14 +6,10 @@ import { useLocaleDeData } from "@/hooks/i18n/useLocaleDeData";
 import type { Locale } from "date-fns";
 import { format, formatDistanceToNowStrict } from "date-fns";
 import { useT } from "@/hooks/i18n/useT";
-import { Checks, Phone, Robot, User } from "@/lib/ui/icons";
+import { Checks, Phone, Robot, Star, User } from "@/lib/ui/icons";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { ChipDeEtiqueta } from "@/components/tags/ChipDeEtiqueta";
-import { OwnerBadge } from "@/components/kanban/OwnerBadge";
 import { comandoDaConversa, esperaDaConversa } from "@/lib/inbox/comando-da-conversa";
-import { engajamentoDaConversa } from "@/lib/inbox/engajamento";
-import { ChamaDeEngajamento } from "./ChamaDeEngajamento";
 import { cn } from "@/lib/utils";
 import type { ConversationWithContact } from "@/hooks/inbox/useConversationsRealtime";
 import { rotuloDoContato } from "@/lib/contacts/rotulo-do-contato";
@@ -141,8 +137,6 @@ export const ConversationListItem = memo(function ConversationListItem({
   const displayName = rotuloDoContato(c, t);
   const phoneFallback = c?.phone_number ? phoneForDisplay(c.phone_number) : "??";
   const tags = c?.tags ?? [];
-  const visibleTags = tags.slice(0, 2);
-  const overflow = tags.length - visibleTags.length;
   const preview = conversation.last_message_preview?.trim() || t("Sem mensagens");
   const truncated = preview.length > 60 ? `${preview.slice(0, 60)}…` : preview;
   const naFila = queuePosition !== undefined;
@@ -197,26 +191,14 @@ export const ConversationListItem = memo(function ConversationListItem({
   const canal = conversation.channel_sessions ?? null;
   const rotuloCanal = canal?.phone_number ?? canal?.display_name ?? null;
 
-  const temSelos =
-    visibleTags.length > 0 ||
-    (mostrarAtendente && comando.quem === "humano") ||
-    (mostrarCanal && rotuloCanal != null) ||
-    Boolean(c?.is_blocked) ||
-    Boolean(c?.is_anonymized);
-
-  // O streak mora na linha: a régua v2 lê o total de inbound + a recência da
-  // última mensagem dele (`lib/inbox/engajamento.ts`). Sem chamada extra por
-  // linha — o total vem anexado pela lista (`inbound_total`).
-  const engajamento = engajamentoDaConversa({
-    last_inbound_at: conversation.last_inbound_at,
-    inbound_total: conversation.inbound_total ?? null,
-  });
-
   const isOutbound = Boolean(
     conversation.last_outbound_at &&
       (!conversation.last_inbound_at ||
         new Date(conversation.last_outbound_at) >= new Date(conversation.last_inbound_at)),
   );
+
+  const isFavorito =
+    c?.tags?.some((tagItem) => ["favorito", "seguindo"].includes(tagItem.toLowerCase())) ?? false;
 
   return (
     <button
@@ -262,9 +244,13 @@ export const ConversationListItem = memo(function ConversationListItem({
             <Phone size={9} weight="fill" aria-hidden />
           </span>
         )}
-        {engajamento.nivel === "quente" && engajamento.motivo && (
-          <span className="absolute -left-1 -top-1" title={engajamento.motivo}>
-            <ChamaDeEngajamento motivo={engajamento.motivo} />
+        {isFavorito && (
+          <span
+            className="absolute -top-1 -left-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-white shadow-xs"
+            title={t("Conversa favoritada")}
+            aria-hidden
+          >
+            <Star size={9} weight="fill" />
           </span>
         )}
       </div>
@@ -355,18 +341,9 @@ export const ConversationListItem = memo(function ConversationListItem({
           </div>
         )}
 
-        {/* Linha de Etiquetas/Selos (apenas se existirem) */}
-        {(temSelos || (engajamento.nivel === "quente" && engajamento.motivo)) && (
+        {/* Linha de Selos Críticos (apenas bloqueado/anonimizado/canal) */}
+        {Boolean((mostrarCanal && rotuloCanal) || c?.is_blocked || c?.is_anonymized) && (
           <div className="mt-1 flex flex-wrap items-center gap-1">
-            {visibleTags.map((t) => (
-              <ChipDeEtiqueta key={t} tag={t} className="min-h-4 px-1.5 text-[10px]" />
-            ))}
-            {overflow > 0 && (
-              <span className="text-[10px] text-text-muted">+{overflow}</span>
-            )}
-            {mostrarAtendente && comando.quem === "humano" && (
-              <OwnerBadge ownerKind="user" ownerName={comando.nome ?? t("Atendente")} compacto />
-            )}
             {mostrarCanal && rotuloCanal && (
               <Badge
                 variant="outline"
@@ -386,9 +363,6 @@ export const ConversationListItem = memo(function ConversationListItem({
               <Badge variant="outline" className="min-h-4 px-1.5 text-[10px]">
                 {t("Anonimizado")}
               </Badge>
-            )}
-            {engajamento.nivel === "quente" && engajamento.motivo && (
-              <ChamaDeEngajamento motivo={engajamento.motivo} />
             )}
           </div>
         )}

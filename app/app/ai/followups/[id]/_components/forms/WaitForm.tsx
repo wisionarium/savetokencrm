@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { waitConfigSchema } from "@/lib/followup/graph-schema";
 import { MODOS_DE_ESPERA, opcoes } from "@/lib/followup/vocabulario";
 import { useT } from "@/hooks/i18n/useT";
+import { cn } from "@/lib/utils";
 
 import type { ConfigOf } from "./shared";
 
@@ -195,6 +196,51 @@ export function WaitForm({
                   <SelectItem value="days">{t("Dias")}</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            {/* Atalhos Rápidos de Delay */}
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {[
+                { value: 3, unit: "seconds" as const, label: "3s" },
+                { value: 5, unit: "seconds" as const, label: "5s" },
+                { value: 10, unit: "seconds" as const, label: "10s" },
+                { value: 30, unit: "seconds" as const, label: "30s" },
+                { value: 1, unit: "minutes" as const, label: "1 min" },
+                { value: 5, unit: "minutes" as const, label: "5 min" },
+                { value: 15, unit: "minutes" as const, label: "15 min" },
+                { value: 1, unit: "hours" as const, label: "1 h" },
+                { value: 1, unit: "days" as const, label: "1 dia" },
+              ].map((p) => {
+                const active = durationValue === p.value && durationUnit === p.unit;
+                return (
+                  <button
+                    key={p.label}
+                    type="button"
+                    onClick={() => {
+                      setDurationValue(p.value);
+                      setDurationUnit(p.unit);
+                      commit({
+                        mode,
+                        durationValue: p.value,
+                        durationUnit: p.unit,
+                        immuneToReply,
+                        minValue,
+                        minUnit,
+                        maxValue,
+                        maxUnit,
+                        guidance,
+                      });
+                    }}
+                    className={cn(
+                      "rounded-md border px-2 py-0.5 text-[11px] font-medium transition-colors",
+                      active
+                        ? "border-primary bg-primary/10 text-primary font-semibold"
+                        : "border-border bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground",
+                    )}
+                  >
+                    {p.label}
+                  </button>
+                );
+              })}
             </div>
             <p className="text-xs text-muted-foreground">
               {t("Use segundos (ex: 5s, 10s) para simular digitação humanizada ou delay antes da próxima mensagem. Use minutos/horas/dias para cadências de retorno.")}

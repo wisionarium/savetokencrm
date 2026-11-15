@@ -55,12 +55,12 @@ export const NODE_VISUALS: Record<NodeType, NodeVisual> = {
   },
   wait: {
     type: "wait",
-    paletteLabel: "Aguardar",
+    paletteLabel: "Delay / Aguardar",
     icon: Clock,
     chipClassName: "bg-info-bg text-info-fg",
     borderClassName: "border-l-info",
-    defaultLabel: "Aguardar",
-    defaultConfig: () => ({ mode: "fixed", duration_ms: 300_000 }),
+    defaultLabel: "Delay",
+    defaultConfig: () => ({ mode: "fixed", duration_ms: 5_000 }),
   },
   condition: {
     type: "condition",

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import {
   ImageSquare,
   Plus,
@@ -11,6 +12,8 @@ import {
   Code,
   Smiley,
 } from "@phosphor-icons/react/dist/ssr";
+import { ChatCircle } from "@/lib/ui/icons";
+import { QuickMessagePickerDialog } from "@/components/templates/QuickMessagePickerDialog";
 
 import { Label } from "@/components/ui/label";
 import {
@@ -110,7 +113,20 @@ export function ActionForm({
     config.mode === "ai_message" ? (config.fallback_template_id ?? "") : "",
   );
   const [templateId, setTemplateId] = useState(config.mode === "template" ? config.template_id : "");
+  const [quickMessagePickerOpen, setQuickMessagePickerOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const handleSelectQuickMessage = (templateBody: string) => {
+    if (!body.trim()) {
+      setBody(templateBody);
+      commit({ mode, ...fields, body: templateBody });
+    } else {
+      const updated = `${body}\n\n${templateBody}`;
+      setBody(updated);
+      commit({ mode, ...fields, body: updated });
+    }
+    toast.success(t("Resposta rápida inserida com sucesso!"));
+  };
 
   const commit = (next: {
     mode: ModoDaAcao;
@@ -322,23 +338,35 @@ export function ActionForm({
               </div>
             </div>
 
-            {/* Chips de Variáveis Rápidas */}
-            <div className="flex flex-wrap gap-1 border-t border-border/30 pt-2">
-              {[
-                { tag: "{{primeiro_nome}}", label: "Nome" },
-                { tag: "{{telefone}}", label: "Telefone" },
-                { tag: "{{empresa}}", label: "Empresa" },
-                { tag: "{{email}}", label: "E-mail" },
-              ].map((v) => (
-                <button
-                  key={v.tag}
-                  type="button"
-                  onClick={() => insertVariable(v.tag)}
-                  className="rounded-md bg-muted px-2 py-0.5 text-[10px] font-medium text-text-muted hover:bg-accent/20 hover:text-accent transition-colors"
-                >
-                  +{v.label}
-                </button>
-              ))}
+            {/* Chips de Variáveis Rápidas + Botão Puxar Mensagem Rápida */}
+            <div className="flex flex-wrap items-center justify-between gap-1.5 border-t border-border/30 pt-2">
+              <div className="flex flex-wrap gap-1">
+                {[
+                  { tag: "{{primeiro_nome}}", label: "Nome" },
+                  { tag: "{{telefone}}", label: "Telefone" },
+                  { tag: "{{empresa}}", label: "Empresa" },
+                  { tag: "{{email}}", label: "E-mail" },
+                ].map((v) => (
+                  <button
+                    key={v.tag}
+                    type="button"
+                    onClick={() => insertVariable(v.tag)}
+                    className="rounded-md bg-muted px-2 py-0.5 text-[10px] font-medium text-text-muted hover:bg-accent/20 hover:text-accent transition-colors"
+                  >
+                    +{v.label}
+                  </button>
+                ))}
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-6 px-2 text-[11px] gap-1 shrink-0 border-primary/30 text-primary hover:bg-primary/10"
+                onClick={() => setQuickMessagePickerOpen(true)}
+              >
+                <ChatCircle size={13} className="text-primary shrink-0" />
+                {t("Puxar mensagem rápida")}
+              </Button>
             </div>
 
             {/* Seção de Botões Reais Estilo ManyChat / Nextags */}
@@ -591,6 +619,12 @@ export function ActionForm({
         </div>
       )}
       {error && <p className="text-xs text-error-fg">{error}</p>}
+
+      <QuickMessagePickerDialog
+        open={quickMessagePickerOpen}
+        onOpenChange={setQuickMessagePickerOpen}
+        onSelect={handleSelectQuickMessage}
+      />
     </div>
   );
 }

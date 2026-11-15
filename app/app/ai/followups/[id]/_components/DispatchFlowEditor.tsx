@@ -27,7 +27,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useT } from "@/hooks/i18n/useT";
 import { apiClient } from "@/lib/api/client";
-import { CaretLeft } from "@/lib/ui/icons";
+import { CaretLeft, ChatCircle } from "@/lib/ui/icons";
+import { QuickMessagePickerDialog } from "@/components/templates/QuickMessagePickerDialog";
 import { useDispatchImageUpload } from "@/hooks/followup/useDispatchImageUpload";
 import {
   buildDispatchGraph,
@@ -104,8 +105,18 @@ export function DispatchFlowEditor({ flowId, initialData }: Props) {
   const [isSaving, setIsSaving] = useState(false);
   const [showUrlInput, setShowUrlInput] = useState(false);
   const [galeriaOpen, setGaleriaOpen] = useState(false);
+  const [quickMessagePickerOpen, setQuickMessagePickerOpen] = useState(false);
   const [dragKey, setDragKey] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+
+  const handleSelectQuickMessage = (templateBody: string) => {
+    if (!selected.text.trim()) {
+      patchStep(selected.key, { text: templateBody });
+    } else {
+      patchStep(selected.key, { text: `${selected.text}\n\n${templateBody}` });
+    }
+    toast.success(t("Resposta rápida inserida com sucesso!"));
+  };
 
   // Upload mecânico (sem estado próprio de imagem: o destino é o passo
   // selecionado).
@@ -609,9 +620,21 @@ export function DispatchFlowEditor({ flowId, initialData }: Props) {
             )}
 
             <div className="space-y-2 pt-1">
-              <Label htmlFor="dispatch-step-text" className="text-xs">
-                {stepImage(selected) ? t("Legenda (vai junto da imagem)") : t("Texto")}
-              </Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="dispatch-step-text" className="text-xs">
+                  {stepImage(selected) ? t("Legenda (vai junto da imagem)") : t("Texto")}
+                </Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-6 text-[11px] gap-1 px-2 border-primary/30 text-primary hover:bg-primary/10"
+                  onClick={() => setQuickMessagePickerOpen(true)}
+                >
+                  <ChatCircle size={13} className="text-primary shrink-0" />
+                  {t("Puxar mensagem rápida")}
+                </Button>
+              </div>
               <Textarea
                 id="dispatch-step-text"
                 value={selected.text}
@@ -716,6 +739,12 @@ export function DispatchFlowEditor({ flowId, initialData }: Props) {
         open={galeriaOpen}
         onOpenChange={setGaleriaOpen}
         onPick={pickFromGallery}
+      />
+
+      <QuickMessagePickerDialog
+        open={quickMessagePickerOpen}
+        onOpenChange={setQuickMessagePickerOpen}
+        onSelect={handleSelectQuickMessage}
       />
     </div>
   );

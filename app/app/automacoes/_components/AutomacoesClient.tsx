@@ -124,31 +124,16 @@ const TEMPLATES_AUTOMACAO: AutomacaoTemplate[] = [
           config: { mode: "text", body: "Olá! Seja muito bem-vindo(a). 👋 Como posso ajudar você hoje?" },
         },
         {
-          id: "node_opcoes",
-          type: "match_reply",
-          label: "Menu de Opções",
-          position: { x: 680, y: 150 },
-          config: {
-            branches: [
-              { id: "br_atendente", label: "Falar com Atendente", op: "contains", pattern: "atendente" },
-            ],
-            grace_timeout_ms: 900_000,
-          },
-        },
-        {
           id: "node_fim",
           type: "end",
           label: "Fim do Fluxo",
-          position: { x: 980, y: 150 },
+          position: { x: 680, y: 150 },
           config: { outcome: "converted", note: "Atendimento iniciado" },
         },
       ],
       edges: [
         { id: "e1", source: "node_trigger", target: "node_msg", priority: 0, condition: { type: "always" } },
-        { id: "e2", source: "node_msg", target: "node_opcoes", priority: 0, condition: { type: "always" } },
-        { id: "e3", source: "node_opcoes", target: "node_fim", priority: 0, condition: { type: "branch", branch_id: "br_atendente" } },
-        { id: "e4", source: "node_opcoes", target: "node_fim", priority: 0, condition: { type: "branch", branch_id: "no_reply" } },
-        { id: "e5", source: "node_opcoes", target: "node_fim", priority: 0, condition: { type: "always" } },
+        { id: "e2", source: "node_msg", target: "node_fim", priority: 0, condition: { type: "always" } },
       ],
     },
   },

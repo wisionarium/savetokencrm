@@ -33,7 +33,11 @@ export const triggerConfigSchema = z.discriminatedUnion("kind", [
   z.strictObject({ kind: z.literal("webhook"), ...CANCEL_ON_REPLY }),
   z.strictObject({
     kind: z.literal("first_message"),
-    params: z.strictObject({}).optional(),
+    params: z
+      .strictObject({
+        scope: z.enum(["contact", "conversation"]).optional(),
+      })
+      .optional(),
     ...CANCEL_ON_REPLY,
   }),
   z.strictObject({

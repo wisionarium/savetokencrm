@@ -121,7 +121,7 @@ describe("intervalo digitando (dispatch_delay_ms no trigger)", () => {
     expect(flowGraphSchema.safeParse(violado).success).toBe(false);
   });
 
-  it("wait de 2.6s continua recusado pelo schema (o piso existe de propósito)", () => {
+  it("wait abaixo de 1s continua recusado pelo schema (o piso existe de propósito)", () => {
     const graph = buildDispatchGraph({ specifications: "x" });
     const comWait = {
       ...graph,
@@ -130,9 +130,9 @@ describe("intervalo digitando (dispatch_delay_ms no trigger)", () => {
         {
           id: "w",
           type: "wait" as const,
-          label: "Aguardar 2.6s",
+          label: "Aguardar 500ms",
           position: { x: 0, y: 0 },
-          config: { mode: "fixed" as const, duration_ms: 2600 },
+          config: { mode: "fixed" as const, duration_ms: 500 },
         },
       ],
     };

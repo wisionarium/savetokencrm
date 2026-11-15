@@ -57,6 +57,7 @@ interface TriggerFormState {
   eventTypeIds: string[];
   keywords: string;
   tag: string;
+  firstMessageScope: "conversation" | "contact";
 }
 
 const DEFAULT_THRESHOLD_MINUTES = 60;
@@ -102,6 +103,7 @@ function parseTriggerConfig(raw: Record<string, unknown>): TriggerFormState {
       event_type_ids?: string[];
       keywords?: string[];
       tag?: string;
+      scope?: "contact" | "conversation";
     } | undefined) ?? {};
 
   return {
@@ -115,6 +117,10 @@ function parseTriggerConfig(raw: Record<string, unknown>): TriggerFormState {
     stageId: kind === "stage_change" && typeof params.stage_id === "string" ? params.stage_id : "",
     keywords: kind === "keyword" && Array.isArray(params.keywords) ? params.keywords.join(", ") : "",
     tag: kind === "tag_added" && typeof params.tag === "string" ? params.tag : "",
+    firstMessageScope:
+      kind === "first_message" && params.scope === "contact"
+        ? "contact"
+        : "conversation",
     cancelOnReply: raw.cancel_on_reply === true,
   };
 }
@@ -123,7 +129,11 @@ function toTriggerConfig(form: TriggerFormState): Record<string, unknown> {
   const cancelOnReply = form.cancelOnReply ? { cancel_on_reply: true } : {};
 
   if (form.kind === "first_message") {
-    return { kind: "first_message", ...cancelOnReply };
+    return {
+      kind: "first_message",
+      params: { scope: form.firstMessageScope ?? "conversation" },
+      ...cancelOnReply,
+    };
   }
 
   if (form.kind === "keyword") {
@@ -239,7 +249,8 @@ export function TriggerConfigControl({ flowId, triggerConfig }: Props) {
     (form.kind === "silence" && (form.thresholdMinutes !== saved.thresholdMinutes || form.segments !== saved.segments)) ||
     (form.kind === "stage_change" && form.stageId !== saved.stageId) ||
     (form.kind === "keyword" && form.keywords !== saved.keywords) ||
-    (form.kind === "tag_added" && form.tag !== saved.tag);
+    (form.kind === "tag_added" && form.tag !== saved.tag) ||
+    (form.kind === "first_message" && form.firstMessageScope !== saved.firstMessageScope);
 
   const onSave = () => {
     if (thresholdInvalid || stageInvalid || keywordInvalid || tagInvalid) return;
@@ -283,16 +294,38 @@ export function TriggerConfigControl({ flowId, triggerConfig }: Props) {
           </div>
 
           {form.kind === "first_message" && (
-            <div className="space-y-2 rounded-md bg-muted/40 p-3 text-xs text-muted-foreground border">
-              <span className="font-semibold text-foreground block">
-                {t("Gatilho de Boas-vindas")}
-              </span>
-              <p>
-                {t("O fluxo começa automaticamente quando um contato novo envia a primeira mensagem no WhatsApp ou no chat.")}
-              </p>
-              <p>
-                {t("Ideal para mensagens de recepção imediata, apresentação da empresa e início da qualificação/triagem.")}
-              </p>
+            <div className="space-y-3 rounded-md bg-muted/40 p-3 text-xs text-muted-foreground border">
+              <div>
+                <span className="font-semibold text-foreground block mb-1">
+                  {t("Gatilho de Boas-vindas")}
+                </span>
+                <p>
+                  {t("O fluxo começa automaticamente quando o contato envia uma mensagem no WhatsApp ou no chat.")}
+                </p>
+              </div>
+              <div className="space-y-1.5 pt-2 border-t border-border/50">
+                <Label htmlFor="first-msg-scope" className="text-xs font-medium text-foreground">
+                  {t("Frequência de disparo")}
+                </Label>
+                <Select
+                  value={form.firstMessageScope}
+                  onValueChange={(val: "conversation" | "contact") =>
+                    setForm((f) => ({ ...f, firstMessageScope: val }))
+                  }
+                >
+                  <SelectTrigger id="first-msg-scope" className="h-8 text-xs bg-background">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="conversation">
+                      {t("No início de cada conversa (se não houver mensagens anteriores)")}
+                    </SelectItem>
+                    <SelectItem value="contact">
+                      {t("Apenas 1 vez por contato (novo cliente / primeiro contato)")}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           )}
 

@@ -582,3 +582,8 @@ export const GATILHOS: Record<TipoDeGatilho, string> = {
   case_opened: "Quando o agente pede ajuda de um humano",
   conversation_end: "Fim da conversa",
 };
+
+export const ESCOPOS_DE_BOAS_VINDAS: Record<string, string> = {
+  conversation: "No início de cada conversa",
+  contact: "Apenas uma vez por contato",
+};

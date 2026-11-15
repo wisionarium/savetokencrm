@@ -58,6 +58,7 @@ import {
 import { useDuplicateFollowupFlow } from "@/hooks/followup/useFollowupFlow";
 import { apiClient } from "@/lib/api/client";
 import { showApiError } from "@/components/feedback/ApiErrorToast";
+import { AutomacoesLogsTab } from "./AutomacoesLogsTab";
 
 interface Props {
   initialData: FollowupFlowPointerRow[];
@@ -278,18 +279,19 @@ export function AutomacoesClient({ initialData, canWrite }: Props) {
   const router = useRouter();
 
   const searchParams = useSearchParams();
-  const initialTab = searchParams.get("tab") === "instagram" ? "instagram" : "nodes";
-  const [activeTab, setActiveTab] = useState<"instagram" | "nodes">(initialTab);
+  const rawTab = searchParams.get("tab");
+  const initialTab = rawTab === "instagram" || rawTab === "logs" ? rawTab : "nodes";
+  const [activeTab, setActiveTab] = useState<"instagram" | "nodes" | "logs">(initialTab);
 
   useEffect(() => {
     const tab = searchParams.get("tab");
-    if (tab === "nodes" || tab === "instagram") {
+    if (tab === "nodes" || tab === "instagram" || tab === "logs") {
       setActiveTab(tab);
     }
   }, [searchParams]);
 
   const handleTabChange = (val: string) => {
-    const nextTab = val as "instagram" | "nodes";
+    const nextTab = val as "instagram" | "nodes" | "logs";
     setActiveTab(nextTab);
     const params = new URLSearchParams(searchParams.toString());
     params.set("tab", nextTab);
@@ -579,6 +581,10 @@ export function AutomacoesClient({ initialData, canWrite }: Props) {
                 </Badge>
               )}
             </TabsTrigger>
+            <TabsTrigger value="logs" className="gap-2 font-medium">
+              <Clock size={18} weight="bold" className="text-amber-500" />
+              {t("Logs de Execução")}
+            </TabsTrigger>
           </TabsList>
 
           {activeTab === "instagram" ? (
@@ -590,7 +596,7 @@ export function AutomacoesClient({ initialData, canWrite }: Props) {
               <Plus size={18} weight="bold" />
               {t("Nova Automação de Comentário / Reels")}
             </Button>
-          ) : (
+          ) : activeTab === "nodes" ? (
             <Button
               type="button"
               onClick={() => openCreateDialog()}
@@ -600,7 +606,7 @@ export function AutomacoesClient({ initialData, canWrite }: Props) {
               <Plus size={18} weight="bold" />
               {t("Criar Fluxo em Nós")}
             </Button>
-          )}
+          ) : null}
         </div>
 
         {/* ══════════════════════════════════════════════════════════════════════════ */}
@@ -917,6 +923,13 @@ export function AutomacoesClient({ initialData, canWrite }: Props) {
               </table>
             </div>
           </div>
+        </TabsContent>
+
+        {/* ══════════════════════════════════════════════════════════════════════════ */}
+        {/* ABA 3: LOGS DE EXECUÇÃO DE AUTOMAÇÕES E FLUXOS EM NÓS                    */}
+        {/* ══════════════════════════════════════════════════════════════════════════ */}
+        <TabsContent value="logs" className="mt-6 space-y-6">
+          <AutomacoesLogsTab />
         </TabsContent>
       </Tabs>
 

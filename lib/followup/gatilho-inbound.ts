@@ -6,6 +6,7 @@ import { triggerConfigSchema } from "./api-schemas";
 import { resolveAgentForAutomaticTrigger, type FollowupGateDb } from "./agent-followup-gate";
 import { serviceForEvent, beginServiceAtOrigin } from "@/lib/atendimento/origem";
 import type { ServiceBoundary } from "@/lib/atendimento/fronteira";
+import { autorizarContatoParaIA } from "@/lib/ai/elegibilidade/autorizacao";
 
 export const EVENTO_DE_INBOUND = "message.received";
 
@@ -390,6 +391,51 @@ export function createSupabaseGatilhoInboundDb(admin: SupabaseClient): GatilhoIn
         if (error.code === "23505") return { inserted: false, id: null, reason: "already_live" };
         throw new Error(error.message);
       }
+
+      // Reativa o bot na conversa para permitir o envio das mensagens da automação
+      const convId = boundary.conversation_id ?? input.conversation_id;
+      if (convId) {
+        try {
+          await admin.rpc("fn_conversation_assign", {
+            p_organization_id: input.organization_id,
+            p_conversation_id: convId,
+            p_to_user_id: null,
+            p_reason: "release",
+            p_expected_assignee: null,
+            p_enforce_expected: false,
+          });
+        } catch {
+          // ignore se rpc falhar
+        }
+
+        await admin
+          .from("conversations")
+          .update({
+            bot_silenced_until: null,
+            assignee_kind: "ai",
+            assigned_to_user_id: null,
+            status: "ai_handling",
+          })
+          .eq("organization_id", input.organization_id)
+          .eq("id", convId);
+
+        await admin
+          .from("contacts")
+          .update({ force_human: false })
+          .eq("organization_id", input.organization_id)
+          .eq("id", input.contact_id);
+
+        try {
+          await autorizarContatoParaIA(admin, {
+            organizationId: input.organization_id,
+            contactId: input.contact_id,
+            reason: "automacao:gatilho_inbound",
+          });
+        } catch {
+          // não falha o enrollment se autorização falhar
+        }
+      }
+
       return { inserted: true, id: (data as { id: string } | null)?.id ?? null };
     },
 

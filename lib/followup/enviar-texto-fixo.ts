@@ -118,6 +118,10 @@ export async function enviarTextoFixoPendente(
           conversation_id: conversationId,
           motivo: elegib.motivo,
         });
+        await completeTurnForEnrollment(ponte, job.organization_id as string, enrollmentId, nodeId, {
+          kind: "skipped",
+          reason: elegib.motivo,
+        }, undefined, job.id, jobClaim);
         await settle(job.organization_id,job.id,jobClaim.acquired_at,true);
         continue;
       }

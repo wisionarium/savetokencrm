@@ -8,6 +8,7 @@
 import type { EventHandler, HandlerResult } from "@/lib/event-log/dispatcher";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseFollowupGateDb } from "@/lib/followup/agent-followup-gate";
+import { aplicarTextoNosFollowups, textoDoPayloadInbound } from "@/lib/followup/aplicar-inbound";
 import {
   EVENTO_DE_INBOUND,
   aplicaGatilhoInbound,
@@ -30,6 +31,21 @@ export const followupGatilhoInboundHandler: EventHandler = {
         },
         row,
       );
+      if (summary.enrolled > 0) {
+        const contactId = typeof row.payload.contact_id === "string" ? row.payload.contact_id : null;
+        if (contactId) {
+          try {
+            await aplicarTextoNosFollowups(admin, {
+              organizationId: row.organization_id,
+              contactId,
+              texto: textoDoPayloadInbound(row.payload) || null,
+            });
+          } catch {
+            // falha em avançar inline não invalida o enrollment gravado
+          }
+        }
+      }
+
       return {
         consumer_key: FOLLOWUP_GATILHO_INBOUND_HANDLER_KEY,
         status: summary.matched && summary.enrolled > 0 ? "ok" : "skipped",

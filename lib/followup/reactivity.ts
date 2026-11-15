@@ -303,7 +303,7 @@ async function acordarPorInbound(
     wakeKey,
     "inbound_woke",
     {},
-    { next_eval_at: agora, updated_at: clock().toISOString() },
+    { next_eval_at: agora },
   );
 }
 

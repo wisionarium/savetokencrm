@@ -32,7 +32,7 @@ export const followupGatilhoInboundHandler: EventHandler = {
         row,
       );
       if (summary.enrolled > 0) {
-        const contactId = typeof row.payload.contact_id === "string" ? row.payload.contact_id : null;
+        const contactId = summary.contact_id ?? (typeof row.payload.contact_id === "string" ? row.payload.contact_id : null);
         if (contactId) {
           try {
             await aplicarTextoNosFollowups(admin, {

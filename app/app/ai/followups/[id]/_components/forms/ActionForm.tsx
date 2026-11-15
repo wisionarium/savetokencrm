@@ -439,7 +439,7 @@ export function ActionForm({
                     {btn.type === "url" && (
                       <Input
                         value={btn.url ?? ""}
-                        placeholder="https://exemplo.com/pagina"
+                        placeholder="https://..."
                         className="h-7 text-xs bg-background"
                         onChange={(e) => updateButton(btn.id, { url: e.target.value })}
                       />

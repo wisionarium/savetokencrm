@@ -98,6 +98,7 @@ export interface GatilhoInboundSummary {
   matched: boolean;
   pointers_armados: number;
   enrolled: number;
+  contact_id?: string | null;
   skipped_existing: number;
   skipped_stale_origin?: number;
   skipped_blocked?: number;
@@ -148,6 +149,7 @@ export async function aplicaGatilhoInbound(
   }
 
   if (!contactId || !conversationId) return summary;
+  summary.contact_id = contactId;
 
   const isBlocked = await deps.db.carregaContatoBloqueado(row.organization_id, contactId);
   if (isBlocked) {
@@ -371,7 +373,7 @@ export function createSupabaseGatilhoInboundDb(admin: SupabaseClient): GatilhoIn
       }
       if (!boundary) return { inserted: false, id: null, reason: "stale_origin" };
 
-      const { data, error } = await admin
+      let { data, error } = await admin
         .from("followup_enrollments")
         .insert({
           organization_id: input.organization_id,
@@ -383,9 +385,41 @@ export function createSupabaseGatilhoInboundDb(admin: SupabaseClient): GatilhoIn
           current_node_id: input.current_node_id,
           agent_id: input.agent_id,
           status: "active",
+          next_eval_at: new Date().toISOString(),
         })
         .select("id")
         .maybeSingle();
+
+      if (error && error.code === "23505") {
+        // Se já existe um fluxo ativo para o contato (ex: aguardando resposta ou travado),
+        // uma nova palavra-chave explícita reinicia o atendimento cancelando o anterior
+        await admin
+          .from("followup_enrollments")
+          .update({ status: "cancelled", cancel_reason: "interrompido_por_novo_gatilho" })
+          .eq("organization_id", input.organization_id)
+          .eq("contact_id", input.contact_id)
+          .in("status", ["active", "waiting_reply", "dormente", "paused_handoff", "paused_manual"]);
+
+        const retry = await admin
+          .from("followup_enrollments")
+          .insert({
+            organization_id: input.organization_id,
+            pointer_id: input.pointer_id,
+            version_id: input.version_id,
+            contact_id: input.contact_id,
+            conversation_id: boundary.conversation_id ?? input.conversation_id,
+            service_boundary: boundary,
+            current_node_id: input.current_node_id,
+            agent_id: input.agent_id,
+            status: "active",
+            next_eval_at: new Date().toISOString(),
+          })
+          .select("id")
+          .maybeSingle();
+
+        data = retry.data;
+        error = retry.error;
+      }
 
       if (error) {
         if (error.code === "23505") return { inserted: false, id: null, reason: "already_live" };

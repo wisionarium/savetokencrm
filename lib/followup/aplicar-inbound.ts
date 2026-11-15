@@ -54,7 +54,10 @@ function tickDepsDe(admin: SupabaseClient): TickDeps {
  * em `waiting_reply` (confirmação de nome, pergunta de endereço, etc.).
  */
 export function inboundEhDestaPergunta(enviadaEm: string, esperaDesde: string): boolean {
-  return enviadaEm >= esperaDesde;
+  const tEnviada = new Date(enviadaEm).getTime();
+  const tEspera = new Date(esperaDesde).getTime();
+  // Tolerância de 60s para diferenças de relógio entre os servidores da Meta e da aplicação
+  return tEnviada >= (tEspera - 60_000);
 }
 
 type InboundResolvido = { texto: string; enviadaEm: string | null };

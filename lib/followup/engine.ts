@@ -383,9 +383,9 @@ async function applyResult(
     const frescos = await db.loadEnrollmentEvents(enrollment.id);
     const prior = frescos.find((e) => e.idempotency_key === idemKey);
     if (prior?.event_type && prior.event_type !== wantedType) {
-      if (result.kind === "advance" && prior.event_type === "action_sent") {
-        // action_sent gravado; o update do completeTurn pode ter se perdido —
-        // aplica só o avanço sem inventar outro evento.
+      if (result.kind === "advance" && (prior.event_type === "action_sent" || prior.event_type === "wait_started")) {
+        // action_sent ou wait_started gravado; o update do completeTurn ou o despertar do wait
+        // colide na mesma chave de passo — aplica o avanço para o próximo nó.
         await db.updateEnrollment(enrollment.id, enrollment.organization_id, {
           current_node_id: result.next_node_id,
           status: "active",

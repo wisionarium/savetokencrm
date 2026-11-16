@@ -16,6 +16,7 @@ import { ok, fail } from "@/lib/api/wrappers";
 import { audit } from "@/lib/audit";
 import { requireRole } from "@/lib/auth/require-role";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { patchFollowupFlowSchema } from "@/lib/followup/api-schemas";
 import { traduzir } from "@/lib/i18n/dicionario";
 
@@ -184,8 +185,8 @@ export async function DELETE(_req: NextRequest, ctx: RouteCtx): Promise<Response
   const t = (texto: string) => traduzir(texto, authz.user.idioma);
   const { user, org: activeOrg } = authz;
 
-  const supabase = await createClient();
-  const { data: existing, error: fetchErr } = await supabase
+  const admin = createAdminClient();
+  const { data: existing, error: fetchErr } = await admin
     .from("followup_flow_pointers")
     .select("id")
     .eq("id", id)
@@ -196,28 +197,28 @@ export async function DELETE(_req: NextRequest, ctx: RouteCtx): Promise<Response
 
   // Enrollment referencia version_id; pointer referencia active_version_id.
   // Soltar o relógio nessa ordem evita 23503 no Postgres.
-  const { error: enrErr } = await supabase
+  const { error: enrErr } = await admin
     .from("followup_enrollments")
     .delete()
     .eq("pointer_id", id)
     .eq("organization_id", activeOrg.orgId);
   if (enrErr) return fail("internal_error", enrErr.message, 500, { requestId });
 
-  const { error: unpinErr } = await supabase
+  const { error: unpinErr } = await admin
     .from("followup_flow_pointers")
     .update({ active_version_id: null, updated_at: new Date().toISOString() })
     .eq("id", id)
     .eq("organization_id", activeOrg.orgId);
   if (unpinErr) return fail("internal_error", unpinErr.message, 500, { requestId });
 
-  const { error: verErr } = await supabase
+  const { error: verErr } = await admin
     .from("followup_flow_versions")
     .delete()
     .eq("pointer_id", id)
     .eq("organization_id", activeOrg.orgId);
   if (verErr) return fail("internal_error", verErr.message, 500, { requestId });
 
-  const { error: delErr } = await supabase
+  const { error: delErr } = await admin
     .from("followup_flow_pointers")
     .delete()
     .eq("id", id)

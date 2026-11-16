@@ -316,6 +316,7 @@ export function AutomacoesClient({ initialData, canWrite }: Props) {
   const [flowName, setFlowName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Carrega automações do Instagram
   const carregarAutomacoesInstagram = useCallback(async () => {
@@ -532,13 +533,19 @@ export function AutomacoesClient({ initialData, canWrite }: Props) {
 
   const handleDelete = async () => {
     if (!deleteId) return;
+    setIsDeleting(true);
     try {
       await apiClient.delete(`/api/v1/ai/followup-flows/${deleteId}`);
+      qc.setQueryData<FollowupFlowPointerRow[]>(followupFlowsListQueryKey, (prev) =>
+        prev ? prev.filter((p) => p.id !== deleteId) : prev,
+      );
       await qc.invalidateQueries({ queryKey: followupFlowsListQueryKey });
       toast.success(t("Automação excluída com sucesso."));
       setDeleteId(null);
     } catch (err) {
       showApiError(err);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -1179,7 +1186,7 @@ export function AutomacoesClient({ initialData, canWrite }: Props) {
       </Dialog>
 
       {/* Confirmação de Exclusão de Nós */}
-      <AlertDialog open={Boolean(deleteId)} onOpenChange={(open) => !open && setDeleteId(null)}>
+      <AlertDialog open={Boolean(deleteId)} onOpenChange={(open) => !open && !isDeleting && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t("Excluir esta automação?")}</AlertDialogTitle>
@@ -1188,9 +1195,16 @@ export function AutomacoesClient({ initialData, canWrite }: Props) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t("Cancelar")}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              {t("Excluir")}
+            <AlertDialogCancel disabled={isDeleting}>{t("Cancelar")}</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isDeleting}
+              onClick={(e) => {
+                e.preventDefault();
+                handleDelete();
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? t("Excluindo…") : t("Excluir")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

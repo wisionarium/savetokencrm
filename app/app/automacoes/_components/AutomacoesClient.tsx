@@ -386,14 +386,14 @@ export function AutomacoesClient({ initialData, canWrite }: Props) {
     setSelectedPost(
       rule.post_id
         ? {
-            id: rule.post_id,
-            caption: rule.post_caption || "",
-            media_url: rule.post_thumbnail || "",
-            thumbnail_url: rule.post_thumbnail || "",
-            permalink: "",
-            media_type: "IMAGE",
-            timestamp: "",
-          }
+          id: rule.post_id,
+          caption: rule.post_caption || "",
+          media_url: rule.post_thumbnail || "",
+          thumbnail_url: rule.post_thumbnail || "",
+          permalink: "",
+          media_type: "IMAGE",
+          timestamp: "",
+        }
         : null,
     );
     setKeywordsText(rule.keywords.join(", "));
@@ -984,11 +984,10 @@ export function AutomacoesClient({ initialData, canWrite }: Props) {
                       setTargetType("all_posts");
                       setSelectedPost(null);
                     }}
-                    className={`flex flex-col items-start gap-1 p-3 rounded-lg border text-left transition-all ${
-                      targetType === "all_posts"
-                        ? "border-primary bg-primary/5 ring-1 ring-primary"
-                        : "border-border hover:bg-muted/30"
-                    }`}
+                    className={`flex flex-col items-start gap-1 p-3 rounded-lg border text-left transition-all ${targetType === "all_posts"
+                      ? "border-primary bg-primary/5 ring-1 ring-primary"
+                      : "border-border hover:bg-muted/30"
+                      }`}
                   >
                     <span className="text-sm font-semibold text-foreground">{t("Qualquer Publicação")}</span>
                     <span className="text-xs text-muted-foreground">
@@ -999,11 +998,10 @@ export function AutomacoesClient({ initialData, canWrite }: Props) {
                   <button
                     type="button"
                     onClick={() => setTargetType("specific_post")}
-                    className={`flex flex-col items-start gap-1 p-3 rounded-lg border text-left transition-all ${
-                      targetType === "specific_post"
-                        ? "border-primary bg-primary/5 ring-1 ring-primary"
-                        : "border-border hover:bg-muted/30"
-                    }`}
+                    className={`flex flex-col items-start gap-1 p-3 rounded-lg border text-left transition-all ${targetType === "specific_post"
+                      ? "border-primary bg-primary/5 ring-1 ring-primary"
+                      : "border-border hover:bg-muted/30"
+                      }`}
                   >
                     <span className="text-sm font-semibold text-foreground">{t("Post ou Reel Específico")}</span>
                     <span className="text-xs text-muted-foreground">
@@ -1046,9 +1044,8 @@ export function AutomacoesClient({ initialData, canWrite }: Props) {
                             <div
                               key={m.id}
                               onClick={() => setSelectedPost(m)}
-                              className={`relative group rounded-lg overflow-hidden border cursor-pointer transition-all aspect-square bg-muted ${
-                                isSelected ? "ring-2 ring-primary border-transparent" : "hover:opacity-80"
-                              }`}
+                              className={`relative group rounded-lg overflow-hidden border cursor-pointer transition-all aspect-square bg-muted ${isSelected ? "ring-2 ring-primary border-transparent" : "hover:opacity-80"
+                                }`}
                             >
                               {thumb ? (
                                 /* eslint-disable-next-line @next/next/no-img-element */
